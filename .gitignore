@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# System
+.DS_Store
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Docker
+*.override.yml
+
+# Supabase
+.supabase/
+snippets/
