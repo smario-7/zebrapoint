@@ -1,0 +1,35 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth
+from app.config import settings
+
+app = FastAPI(
+    title="ZebraPoint API",
+    description="API dla platformy wsparcia opiekunów osób z rzadkimi chorobami",
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth.router)
+
+
+@app.get("/", tags=["Health"])
+def root():
+    return {"status": "ok", "service": "ZebraPoint API", "version": "0.1.0"}
+
+
+@app.get("/health", tags=["Health"])
+def health():
+    return {"status": "healthy"}
