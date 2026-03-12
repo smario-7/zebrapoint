@@ -1,3 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-zebra-50: #f0fdfa;
+  --color-zebra-100: #ccfbf1;
+  --color-zebra-200: #99f6e4;
+  --color-zebra-300: #5eead4;
+  --color-zebra-400: #2dd4bf;
+  --color-zebra-500: #14b8a6;
+  --color-zebra-600: #0d9488;
+  --color-zebra-700: #0f766e;
+  --color-zebra-800: #115e59;
+  --color-zebra-900: #134e4a;
+}

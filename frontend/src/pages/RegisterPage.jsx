@@ -4,16 +4,21 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useAuthStore from "../store/authStore";
+import PublicLayout from "../components/layout/PublicLayout";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
 
-const schema = z.object({
-  display_name: z.string().min(2, "Min. 2 znaki").max(100),
-  email:        z.string().email("Nieprawidłowy email"),
-  password:     z.string().min(8, "Min. 8 znaków"),
-  confirm:      z.string()
-}).refine((d) => d.password === d.confirm, {
-  message: "Hasła nie są identyczne",
-  path: ["confirm"]
-});
+const schema = z
+  .object({
+    display_name: z.string().min(2, "Min. 2 znaki").max(100),
+    email: z.string().email("Nieprawidłowy email"),
+    password: z.string().min(8, "Min. 8 znaków"),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: "Hasła nie są identyczne",
+    path: ["confirm"],
+  });
 
 export default function RegisterPage() {
   const { register: registerUser, isLoading, error } = useAuthStore();
@@ -21,7 +26,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema)
+    resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data) => {
@@ -34,103 +39,76 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold text-slate-800">Konto utworzone!</h2>
-          <p className="text-slate-500">Przekierowuję do logowania...</p>
+      <PublicLayout>
+        <div className="flex items-center justify-center px-4 py-16">
+          <div className="text-center bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
+            <div className="text-5xl mb-4">✅</div>
+            <h2 className="text-2xl font-bold text-slate-800">Konto utworzone!</h2>
+            <p className="text-slate-500">Przekierowuję do logowania...</p>
+          </div>
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🦓</div>
-          <h1 className="text-2xl font-bold text-slate-800">Utwórz konto</h1>
-          <p className="text-slate-500 text-sm mt-1">Bezpłatnie i anonimowo</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
-            {error}
+    <PublicLayout>
+      <div className="flex items-center justify-center px-4 py-16">
+        <div className="bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="text-4xl mb-2">🦓</div>
+            <h1 className="text-2xl font-bold text-slate-800">Utwórz konto</h1>
+            <p className="text-slate-500 text-sm mt-1">Bezpłatnie i anonimowo</p>
           </div>
-        )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Pseudonim (widoczny dla innych)
-            </label>
-            <input
-              {...register("display_name")}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Input
+              label="Pseudonim (widoczny dla innych)"
               placeholder="np. Mama Zosi"
-              className="w-full border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500"
+              error={errors.display_name?.message}
+              {...register("display_name")}
             />
-            {errors.display_name && (
-              <p className="text-red-500 text-xs mt-1">{errors.display_name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <input
-              {...register("email")}
+            <Input
+              label="Email"
               type="email"
               placeholder="twoj@email.com"
-              className="w-full border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500"
+              error={errors.email?.message}
+              {...register("email")}
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Hasło</label>
-            <input
-              {...register("password")}
+            <Input
+              label="Hasło"
               type="password"
               placeholder="Min. 8 znaków"
-              className="w-full border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500"
+              hint="Min. 8 znaków"
+              error={errors.password?.message}
+              {...register("password")}
             />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Potwierdź hasło
-            </label>
-            <input
-              {...register("confirm")}
+            <Input
+              label="Potwierdź hasło"
               type="password"
               placeholder="Powtórz hasło"
-              className="w-full border rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500"
+              error={errors.confirm?.message}
+              {...register("confirm")}
             />
-            {errors.confirm && (
-              <p className="text-red-500 text-xs mt-1">{errors.confirm.message}</p>
-            )}
-          </div>
+            <Button type="submit" fullWidth loading={isLoading}>
+              {isLoading ? "Tworzę konto..." : "Utwórz konto"}
+            </Button>
+          </form>
 
-          <button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isLoading}
-            className="w-full bg-zebra-600 hover:bg-zebra-700 text-white font-semibold py-3 rounded-xl transition disabled:opacity-50"
-          >
-            {isLoading ? "Tworzę konto..." : "Utwórz konto"}
-          </button>
+          <p className="text-center text-sm text-slate-500 mt-6">
+            Masz już konto?{" "}
+            <Link to="/login" className="text-zebra-600 font-medium hover:underline">
+              Zaloguj się
+            </Link>
+          </p>
         </div>
-
-        <p className="text-center text-sm text-slate-500 mt-6">
-          Masz już konto?{" "}
-          <Link to="/login" className="text-zebra-600 font-medium hover:underline">
-            Zaloguj się
-          </Link>
-        </p>
       </div>
-    </div>
+    </PublicLayout>
   );
 }

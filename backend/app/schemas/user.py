@@ -43,6 +43,33 @@ class UserOut(BaseModel):
         from_attributes = True
 
 
+class UpdateProfile(BaseModel):
+    display_name: str | None = None
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_name(cls, v):
+        if v is not None:
+            v = v.strip()
+            if len(v) < 2:
+                raise ValueError("Min. 2 znaki")
+            if len(v) > 100:
+                raise ValueError("Max. 100 znaków")
+        return v
+
+
+class UpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password(cls, v):
+        if len(v) < 8:
+            raise ValueError("Min. 8 znaków")
+        return v
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

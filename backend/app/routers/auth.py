@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserOut, TokenResponse
+from app.schemas.user import UserCreate, UserLogin, UserOut, TokenResponse, UpdateProfile, UpdatePassword
 from app.auth.jwt import create_access_token
 from app.auth.dependencies import get_current_user
 
@@ -86,3 +86,34 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     """Dane zalogowanego użytkownika."""
     return current_user
+
+
+@router.patch("/me", response_model=UserOut)
+def update_profile(
+    data: UpdateProfile,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Aktualizacja display_name."""
+    if data.display_name is not None:
+        current_user.display_name = data.display_name.strip()
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me/password")
+def change_password(
+    data: UpdatePassword,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Zmiana hasła."""
+    if not _verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aktualne hasło jest nieprawidłowe",
+        )
+    current_user.password_hash = _hash_password(data.new_password)
+    db.commit()
+    return {"message": "Hasło zostało zmienione"}

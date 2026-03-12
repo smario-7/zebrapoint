@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "../services/api";
+import AppShell from "../components/layout/AppShell";
 
 const schema = z.object({
   description: z
@@ -56,39 +57,41 @@ export default function SymptomsForm() {
 
   if (matchResult) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl shadow-sm border p-10 max-w-md w-full text-center">
-          <div className="text-6xl mb-4">
-            {matchResult.is_new ? "🌱" : "🦓"}
-          </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">
-            {matchResult.is_new
-              ? "Tworzymy dla Ciebie nową grupę!"
-              : "Znaleziono Twoją grupę!"}
-          </h2>
-          {!matchResult.is_new && (
-            <p className="text-zebra-600 font-medium mb-2">
-              {matchResult.group_name}
+      <AppShell>
+        <div className="min-h-[60vh] flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-sm border p-10 max-w-md w-full text-center">
+            <div className="text-6xl mb-4">
+              {matchResult.is_new ? "🌱" : "🦓"}
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+              {matchResult.is_new
+                ? "Tworzymy dla Ciebie nową grupę!"
+                : "Znaleziono Twoją grupę!"}
+            </h2>
+            {!matchResult.is_new && (
+              <p className="text-zebra-600 font-medium mb-2">
+                {matchResult.group_name}
+              </p>
+            )}
+            {matchResult.score > 0 && (
+              <p className="text-slate-400 text-sm mb-4">
+                Podobieństwo: {Math.round(matchResult.score * 100)}%
+              </p>
+            )}
+            <p className="text-slate-500 text-sm">
+              Przekierowuję do czatu grupowego...
             </p>
-          )}
-          {matchResult.score > 0 && (
-            <p className="text-slate-400 text-sm mb-4">
-              Podobieństwo: {Math.round(matchResult.score * 100)}%
-            </p>
-          )}
-          <p className="text-slate-500 text-sm">
-            Przekierowuję do czatu grupowego...
-          </p>
-          <div className="mt-4 h-1 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-zebra-500 animate-pulse rounded-full w-full" />
+            <div className="mt-4 h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-zebra-500 animate-pulse rounded-full w-full" />
+            </div>
           </div>
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10">
+    <AppShell>
       <div className="max-w-2xl mx-auto">
 
         <div className="mb-8">
@@ -180,6 +183,6 @@ export default function SymptomsForm() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
