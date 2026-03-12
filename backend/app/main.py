@@ -2,9 +2,10 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, symptoms, groups
-from app.services.embedding_service import get_model
+
 from app.config import settings
+from app.routers import auth, chat, groups, symptoms
+from app.services.embedding_service import get_model
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(symptoms.router)
 app.include_router(groups.router)
+app.include_router(chat.router)
+app.include_router(chat.rest_router)
 
 
 @app.get("/", tags=["Health"])

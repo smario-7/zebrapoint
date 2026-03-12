@@ -5,6 +5,7 @@ import ErrorMessage from "../components/ui/ErrorMessage";
 import { SkeletonMember } from "../components/ui/Skeleton";
 import { useGroupMembers } from "../hooks/useGroupMembers";
 import { useProfile } from "../hooks/useProfile";
+import ChatWindow from "../components/chat/ChatWindow";
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -13,74 +14,66 @@ export default function GroupPage() {
 
   return (
     <AppShell>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-slate-400 mb-6">
+      <div className="flex items-center gap-2 text-sm text-slate-400 mb-4">
         <Link to="/dashboard" className="hover:text-slate-600 transition">
           Tablica
         </Link>
         <span>/</span>
-        <span className="text-slate-600 font-medium">
+        <span className="text-slate-600 font-medium truncate">
           {group?.name || "Grupa"}
         </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="flex gap-4 flex-1 min-h-[480px]">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <ChatWindow
+            groupId={groupId}
+            groupName={group?.name}
+          />
+        </div>
 
-        {/* Główna sekcja — czat (stub) */}
-        <div className="sm:col-span-2">
-          <div className="bg-white rounded-2xl border overflow-hidden">
-            <div className="p-4 border-b bg-slate-50">
-              <p className="font-semibold text-slate-700">
-                💬 Czat grupowy
-              </p>
-            </div>
-            <div className="h-96 flex items-center justify-center text-center p-8">
-              <div>
-                <div className="text-4xl mb-3">🔧</div>
-                <p className="text-slate-500 font-medium">
-                  Czat będzie dostępny w następnym etapie
-                </p>
-                <p className="text-slate-400 text-sm mt-1">
-                  Sprint 4 — WebSocket
+        <aside className="hidden lg:flex flex-col w-64 flex-shrink-0">
+          <div className="bg-white rounded-2xl border p-4 flex-1">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">
+              Członkowie ({members.length})
+            </p>
+
+            {error && <ErrorMessage message={error} />}
+
+            {membersLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => <SkeletonMember key={i} />)}
+              </div>
+            ) : (
+              <div className="space-y-3 overflow-y-auto">
+                {members.map((m) => (
+                  <div key={m.user_id} className="flex items-center gap-2">
+                    <Avatar name={m.display_name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-700 truncate">
+                        {m.display_name}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        od {new Date(m.joined_at).toLocaleDateString("pl-PL")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {group && (
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs text-slate-400">
+                  Grupa od{" "}
+                  {new Date(group.created_at).toLocaleDateString("pl-PL")}
                 </p>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-
-        {/* Panel boczny — członkowie */}
-        <div className="bg-white rounded-2xl border p-4">
-          <p className="font-semibold text-slate-700 mb-4 text-sm uppercase tracking-wide">
-            Członkowie ({members.length})
-          </p>
-
-          {error && <ErrorMessage message={error} />}
-
-          {membersLoading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <SkeletonMember key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {members.map((m) => (
-                <div key={m.user_id} className="flex items-center gap-2">
-                  <Avatar name={m.display_name} size="sm" />
-                  <div>
-                    <p className="text-sm font-medium text-slate-700">
-                      {m.display_name}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      od {new Date(m.joined_at).toLocaleDateString("pl-PL")}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        </aside>
       </div>
     </AppShell>
   );
 }
+

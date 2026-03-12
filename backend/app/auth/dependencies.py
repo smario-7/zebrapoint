@@ -1,9 +1,16 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import logging
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Query, WebSocket, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError
 from sqlalchemy.orm import Session
-from app.database import get_db
+
 from app.auth.jwt import decode_access_token
+from app.database import get_db
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 bearer_scheme = HTTPBearer()
 
@@ -35,3 +42,33 @@ def get_current_user(
             detail="Konto jest nieaktywne"
         )
     return user
+
+
+async def get_current_user_ws(
+    websocket: WebSocket,
+    token: str = Query(...),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """
+    Weryfikacja użytkownika dla połączeń WebSocket.
+
+    Token JWT jest przekazywany w parametrze query: ?token=JWT.
+    Zwraca obiekt User lub None (bez podnoszenia HTTPException),
+    ponieważ WebSocket nie obsługuje standardowych odpowiedzi HTTP.
+    """
+    try:
+        payload = decode_access_token(token)
+    except JWTError as exc:
+        logger.warning("WebSocket auth failed: %s", exc)
+        return None
+
+    user_id: str | None = payload.get("sub")  # type: ignore[assignment]
+    if not user_id:
+        return None
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.is_active:
+        return None
+
+    return user
+
