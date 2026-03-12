@@ -1,12 +1,35 @@
+from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth
+from app.routers import auth, symptoms, groups
+from app.services.embedding_service import get_model
 from app.config import settings
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Wykonuje się przy starcie i zamknięciu aplikacji."""
+
+    # ── STARTUP ──
+    logger.info("ZebraPoint API — uruchamianie...")
+    logger.info("Ładowanie modelu embeddingów (może potrwać do 30s)...")
+    get_model()
+    logger.info("Aplikacja gotowa!")
+
+    yield
+
+    # ── SHUTDOWN ──
+    logger.info("Zamykanie aplikacji...")
+
 
 app = FastAPI(
     title="ZebraPoint API",
     description="API dla platformy wsparcia opiekunów osób z rzadkimi chorobami",
-    version="0.1.0",
+    version="0.2.0",
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -23,11 +46,13 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(symptoms.router)
+app.include_router(groups.router)
 
 
 @app.get("/", tags=["Health"])
 def root():
-    return {"status": "ok", "service": "ZebraPoint API", "version": "0.1.0"}
+    return {"status": "ok", "service": "ZebraPoint API", "version": "0.2.0"}
 
 
 @app.get("/health", tags=["Health"])

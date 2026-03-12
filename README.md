@@ -9,8 +9,10 @@ Platforma wsparcia dla opiekunów osób z rzadkimi chorobami.
 conda create -n zebrapoint python=3.12
 conda activate zebrapoint
 pip install -r backend/requirements.txt
-cd backend
-uvicorn app.main:app --reload
+# Z katalogu głównego projektu:
+./run-backend.sh
+# Lub z katalogu backend:
+cd backend && uvicorn app.main:app --reload
 ```
 
 ### Frontend

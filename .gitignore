@@ -32,3 +32,8 @@ dist/
 # Supabase
 .supabase/
 snippets/
+
+AGENTS.md
+.cursor/
+.opencode/
+.vscode/

@@ -1,6 +1,6 @@
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 
 from app.database import get_db
 from app.models.user import User
@@ -9,7 +9,24 @@ from app.auth.jwt import create_access_token
 from app.auth.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+BCRYPT_MAX_BYTES = 72
+
+
+def _password_bytes(password: str) -> bytes:
+    """Hasło jako bajty, max 72 (limit bcrypt)."""
+    return password.encode("utf-8")[:BCRYPT_MAX_BYTES]
+
+
+def _hash_password(password: str) -> str:
+    """Hash bcrypt do zapisu w bazie (string)."""
+    raw = bcrypt.hashpw(_password_bytes(password), bcrypt.gensalt())
+    return raw.decode("ascii")
+
+
+def _verify_password(password: str, password_hash: str) -> bool:
+    """Weryfikacja hasła; hash w bazie mógł powstać z bcrypt lub passlib."""
+    return bcrypt.checkpw(_password_bytes(password), password_hash.encode("ascii"))
 
 
 @router.post(
@@ -29,7 +46,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
     user = User(
         email=user_data.email,
-        password_hash=pwd_context.hash(user_data.password),
+        password_hash=_hash_password(user_data.password),
         display_name=user_data.display_name.strip()
     )
     db.add(user)
@@ -45,7 +62,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
     user = db.query(User).filter(User.email == credentials.email).first()
 
-    if not user or not pwd_context.verify(credentials.password, user.password_hash):
+    if not user or not _verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nieprawidłowy email lub hasło"

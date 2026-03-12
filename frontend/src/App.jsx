@@ -6,6 +6,8 @@ import LandingPage  from "./pages/LandingPage";
 import LoginPage    from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard    from "./pages/Dashboard";
+import SymptomsForm from "./pages/SymptomsForm";
+import GroupPage    from "./pages/GroupPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -30,7 +32,9 @@ export default function App() {
         } />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard"    element={<Dashboard />} />
+          <Route path="/symptoms/new" element={<SymptomsForm />} />
+          <Route path="/groups/:groupId" element={<GroupPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
