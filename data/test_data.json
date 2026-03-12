@@ -1,0 +1,164 @@
+[
+   {
+    "email": "test0004@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko urodziło się z bardzo niską masą ciała i mimo upływu lat nadal jest dużo mniejsze od rówieśników. Je mało, szybko się męczy i ma trudności z przybieraniem na wadze.",
+    "display_name": "Mama 4"
+  },
+  {
+    "email": "test0005@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Od urodzenia zauważyliśmy u córki bardzo jasną skórę i włosy, a oczy są bardzo wrażliwe na światło. Dodatkowo ma problemy ze wzrokiem i często mruży oczy nawet przy zwykłym świetle.",
+    "display_name": "Mama 5"
+  },
+  {
+    "email": "test0006@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn od pierwszych miesięcy życia miał trudności z jedzeniem. Często się krztusił i długo trwało zanim nauczył się jeść stałe pokarmy. Nadal ma problem z połykaniem i wolno przybiera na wadze.",
+    "display_name": "Mama 6"
+  },
+  {
+    "email": "test0007@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko od małego bardzo mało mówiło. Teraz ma kilka lat i nadal używa głównie gestów. Rozumie dużo, ale nie potrafi wyrazić tego słowami.",
+    "display_name": "Mama 7"
+  },
+  {
+    "email": "test0008@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od niemowlęctwa miała częste napady drgawek. Oprócz tego rozwój ruchowy jest opóźniony. Nadal ma trudności z chodzeniem i utrzymaniem równowagi.",
+    "display_name": "Mama 8"
+  },
+  {
+    "email": "test0009@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn urodził się z bardzo małą głową w stosunku do reszty ciała. W miarę dorastania zaczęliśmy zauważać też trudności w nauce i koncentracji.",
+    "display_name": "Mama 9"
+  },
+  {
+    "email": "test0010@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasza córka ma bardzo elastyczne stawy. Może wyginać ręce i palce w nienaturalny sposób. Często skarży się też na bóle stawów po dłuższym chodzeniu.",
+    "display_name": "Mama 10"
+  },
+  {
+    "email": "test0011@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn od małego miał problemy z napięciem mięśniowym. Był bardzo sztywny, a później pojawiły się trudności z chodzeniem. Teraz jego ruchy są powolne i niezgrabne.",
+    "display_name": "Mama 11"
+  },
+  {
+    "email": "test0012@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko rozwijało się prawidłowo do około drugiego roku życia, a potem zaczęło tracić niektóre umiejętności. Przestało mówić kilka słów, które wcześniej używało.",
+    "display_name": "Mama 12"
+  },
+  {
+    "email": "test0013@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od urodzenia ma problemy ze słuchem. Musimy mówić bardzo głośno, żeby reagowała. Dodatkowo rozwój mowy jest opóźniony.",
+    "display_name": "Mama 13"
+  },
+  {
+    "email": "test0014@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma bardzo charakterystyczny sposób chodzenia. Chodzi na szeroko rozstawionych nogach i często traci równowagę. Lekarze podejrzewają problem neurologiczny.",
+    "display_name": "Mama 14"
+  },
+  {
+    "email": "test0015@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasza córka od małego była bardzo spokojna i mało reagowała na otoczenie. Z czasem zauważyliśmy też opóźnienie w rozwoju mowy i trudności w kontaktach z innymi dziećmi.",
+    "display_name": "Mama 15"
+  },
+  {
+    "email": "test0016@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma bardzo duży obwód głowy w porównaniu do reszty ciała. Lekarz zauważył to już w pierwszych miesiącach życia. Oprócz tego ma trudności z koordynacją ruchów.",
+    "display_name": "Mama 16"
+  },
+  {
+    "email": "test0017@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko ma problemy ze wzrokiem od urodzenia. Nie skupia wzroku na przedmiotach i często mruży oczy.",
+    "display_name": "Mama 17"
+  },
+  {
+    "email": "test0018@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka bardzo późno zaczęła chodzić. Nawet teraz porusza się wolniej niż rówieśnicy i szybko się męczy.",
+    "display_name": "Mama 18"
+  },
+  {
+    "email": "test0019@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma bardzo cienką i delikatną skórę. Nawet małe zadrapania długo się goją i zostawiają ślady. Zawsze jego skóra była blada",
+    "display_name": "Mama 19"
+  },
+  {
+    "email": "test0020@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko ma problemy z koordynacją ruchową. Trudno mu łapać piłkę, rysować czy zapinać guziki. Nie lubi bawić się w zabawy sprawnościowe.",
+    "display_name": "Mama 20"
+  },
+  {
+    "email": "test0021@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od urodzenia ma bardzo słabe mięśnie twarzy. Często ma otwarte usta i trudniej jej wyraźnie mówić. Jest apatyczna.",
+    "display_name": "Mama 21"
+  },
+  {
+    "email": "test0022@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn od kilku lat ma coraz większy problem z bieganiem. Wcześniej radził sobie dobrze, ale z czasem jego mięśnie nóg wydają się słabsze.",
+    "display_name": "Mama 22"
+  },
+  {
+    "email": "test0023@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko bardzo wolno uczy się nowych rzeczy. Potrzebuje dużo powtórzeń, żeby zapamiętać proste czynności.",
+    "display_name": "Mama 23"
+  },
+  {
+    "email": "test0024@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka ma bardzo małe dłonie i stopy w porównaniu do reszty ciała. Lekarze zwrócili na to uwagę podczas badań.",
+    "display_name": "Mama 24"
+  },
+  {
+    "email": "test0025@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn od małego miał trudności z utrzymaniem równowagi. Nawet teraz często się przewraca bez wyraźnego powodu.",
+    "display_name": "Mama 25"
+  },
+  {
+    "email": "test0026@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko ma bardzo wysokie podbicie stóp i nietypowy sposób chodzenia. Często skarży się też na bóle nóg.",
+    "display_name": "Mama 26"
+  },
+  {
+    "email": "test0027@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od urodzenia ma problemy z oddychaniem podczas snu. Często budzi się w nocy i jest bardzo zmęczona w ciągu dnia.",
+    "display_name": "Mama 27"
+  },
+  {
+    "email": "test0028@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma trudności z kontrolą ruchów rąk. Czasami pojawiają się mimowolne ruchy, których nie potrafi zatrzymać.",
+    "display_name": "Mama 28"
+  },
+  {
+    "email": "test0029@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko ma bardzo niską tolerancję na wysiłek. Po krótkiej zabawie musi długo odpoczywać. Często jest zmęczone.",
+    "display_name": "Mama 29"
+  },
+  {
+    "email": "test0030@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka rozwijała się dobrze przez pierwsze lata, ale w ostatnim czasie zauważyliśmy pogorszenie pamięci i koncentracji. Zaczęła też mieć trudności z mówieniem.",
+    "display_name": "Mama 30"
+  }
+]

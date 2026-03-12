@@ -1,0 +1,121 @@
+1 test0001@zebra.pl
+test1234
+
+Nasz syn od urodzenia rozwija się wolniej niż inne dzieci. Później zaczął trzymać głowę i długo nie potrafił samodzielnie siedzieć. Teraz ma kilka lat i nadal ma problem z równowagą oraz koordynacją ruchów. Chodzi, ale bardzo niepewnie i często się przewraca.
+
+2 test0002@zebra.pl
+test1234
+
+Nasza córka od urodzenia ma bardzo wiotkie mięśnie. Lekarze zwrócili uwagę, że trudno jej utrzymać napięcie w ciele. Późno zaczęła siadać i raczkować. Do dziś szybko się męczy przy chodzeniu i ma słaby chwyt w dłoniach.
+
+3
+
+Syn od małego miał bardzo charakterystyczne rysy twarzy i lekarze sugerowali konsultację genetyczną. Oprócz tego zauważyliśmy opóźnienie w rozwoju mowy. Rozumie polecenia, ale mówi tylko pojedyncze słowa.
+
+4
+
+Nasze dziecko urodziło się z bardzo niską masą ciała i mimo upływu lat nadal jest dużo mniejsze od rówieśników. Je mało, szybko się męczy i ma trudności z przybieraniem na wadze.
+
+5
+
+Od urodzenia zauważyliśmy u córki bardzo jasną skórę i włosy, a oczy są bardzo wrażliwe na światło. Dodatkowo ma problemy ze wzrokiem i często mruży oczy nawet przy zwykłym świetle.
+
+6
+
+Syn od pierwszych miesięcy życia miał trudności z jedzeniem. Często się krztusił i długo trwało zanim nauczył się jeść stałe pokarmy. Nadal ma problem z połykaniem i wolno przybiera na wadze.
+
+7
+
+Nasze dziecko od małego bardzo mało mówiło. Teraz ma kilka lat i nadal używa głównie gestów. Rozumie dużo, ale nie potrafi wyrazić tego słowami.
+
+8
+
+Córka od niemowlęctwa miała częste napady drgawek. Oprócz tego rozwój ruchowy jest opóźniony. Nadal ma trudności z chodzeniem i utrzymaniem równowagi.
+
+9
+
+Syn urodził się z bardzo małą głową w stosunku do reszty ciała. W miarę dorastania zaczęliśmy zauważać też trudności w nauce i koncentracji.
+
+10
+
+Nasza córka ma bardzo elastyczne stawy. Może wyginać ręce i palce w nienaturalny sposób. Często skarży się też na bóle stawów po dłuższym chodzeniu.
+
+11
+
+Syn od małego miał problemy z napięciem mięśniowym. Był bardzo sztywny, a później pojawiły się trudności z chodzeniem. Teraz jego ruchy są powolne i niezgrabne.
+
+12
+
+Nasze dziecko rozwijało się prawidłowo do około drugiego roku życia, a potem zaczęło tracić niektóre umiejętności. Przestało mówić kilka słów, które wcześniej używało.
+
+13
+
+Córka od urodzenia ma problemy ze słuchem. Musimy mówić bardzo głośno, żeby reagowała. Dodatkowo rozwój mowy jest opóźniony.
+
+14
+
+Syn ma bardzo charakterystyczny sposób chodzenia. Chodzi na szeroko rozstawionych nogach i często traci równowagę. Lekarze podejrzewają problem neurologiczny.
+
+15
+
+Nasza córka od małego była bardzo spokojna i mało reagowała na otoczenie. Z czasem zauważyliśmy też opóźnienie w rozwoju mowy i trudności w kontaktach z innymi dziećmi.
+
+16
+
+Syn ma bardzo duży obwód głowy w porównaniu do reszty ciała. Lekarz zauważył to już w pierwszych miesiącach życia. Oprócz tego ma trudności z koordynacją ruchów.
+
+17
+
+Nasze dziecko ma problemy ze wzrokiem od urodzenia. Nie skupia wzroku na przedmiotach i często mruży oczy.
+
+18
+
+Córka bardzo późno zaczęła chodzić. Nawet teraz porusza się wolniej niż rówieśnicy i szybko się męczy.
+
+19
+
+Syn ma bardzo cienką i delikatną skórę. Nawet małe zadrapania długo się goją i zostawiają ślady.
+
+20
+
+Nasze dziecko ma problemy z koordynacją ruchową. Trudno mu łapać piłkę, rysować czy zapinać guziki.
+
+21
+
+Córka od urodzenia ma bardzo słabe mięśnie twarzy. Często ma otwarte usta i trudniej jej wyraźnie mówić.
+
+22
+
+Syn od kilku lat ma coraz większy problem z bieganiem. Wcześniej radził sobie dobrze, ale z czasem jego mięśnie nóg wydają się słabsze.
+
+23
+
+Nasze dziecko bardzo wolno uczy się nowych rzeczy. Potrzebuje dużo powtórzeń, żeby zapamiętać proste czynności.
+
+24
+
+Córka ma bardzo małe dłonie i stopy w porównaniu do reszty ciała. Lekarze zwrócili na to uwagę podczas badań.
+
+25
+
+Syn od małego miał trudności z utrzymaniem równowagi. Nawet teraz często się przewraca bez wyraźnego powodu.
+
+26
+
+Nasze dziecko ma bardzo wysokie podbicie stóp i nietypowy sposób chodzenia. Często skarży się też na bóle nóg.
+
+27
+
+Córka od urodzenia ma problemy z oddychaniem podczas snu. Często budzi się w nocy i jest bardzo zmęczona w ciągu dnia.
+
+28
+
+Syn ma trudności z kontrolą ruchów rąk. Czasami pojawiają się mimowolne ruchy, których nie potrafi zatrzymać.
+
+29
+
+Nasze dziecko ma bardzo niską tolerancję na wysiłek. Po krótkiej zabawie musi długo odpoczywać.
+
+30
+
+Córka rozwijała się dobrze przez pierwsze lata, ale w ostatnim czasie zauważyliśmy pogorszenie pamięci i koncentracji. Zaczęła też mieć trudności z mówieniem.
