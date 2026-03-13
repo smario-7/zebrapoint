@@ -1,10 +1,13 @@
-# 🦓 ZebraPoint
+<p align="center">
+  <img src="frontend/public/logo_circle_text_wh.svg" alt="ZebraPoint" width="400">
+</p>
 
 Platforma wsparcia dla opiekunów osób z rzadkimi chorobami.
 
 ## Quick Start
 
 ### Backend
+
 ```bash
 conda create -n zebrapoint python=3.12
 conda activate zebrapoint
@@ -16,6 +19,7 @@ cd backend && uvicorn app.main:app --reload
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -23,6 +27,7 @@ npm run dev
 ```
 
 ### Docker
+
 ```bash
 docker-compose up --build
 ```

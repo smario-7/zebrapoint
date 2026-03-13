@@ -9,12 +9,16 @@ env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE:  ghcr.io/${{ github.repository_owner }}/zebrapoint-backend
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/zebrapoint-frontend
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
 
   test-backend:
     name: Backend Tests
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./test.db
+      SECRET_KEY: test-secret-key-ci
     steps:
       - uses: actions/checkout@v4
 
@@ -37,6 +41,9 @@ jobs:
   test-frontend:
     name: Frontend Tests
     runs-on: ubuntu-latest
+    env:
+      VITE_API_URL: http://localhost:8000
+      VITE_WS_URL: ws://localhost:8000
     steps:
       - uses: actions/checkout@v4
 

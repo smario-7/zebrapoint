@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -37,7 +38,14 @@ def db():
 
 
 @pytest.fixture
-def client(db):
+def mock_embedding_model():
+  """Wyłącza ładowanie prawdziwego modelu sentence-transformers przy starcie aplikacji w testach."""
+  with patch("app.main.get_model", return_value=MagicMock()):
+    yield
+
+
+@pytest.fixture
+def client(db, mock_embedding_model):
   def override_get_db():
     try:
       yield db
