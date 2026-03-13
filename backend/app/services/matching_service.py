@@ -73,6 +73,10 @@ def add_user_to_group(
     Używa merge() żeby uniknąć duplikatów w group_members.
     Inkrementuje licznik członków grupy.
     """
+    if isinstance(user_id, str):
+        user_id = UUID(user_id)
+    if isinstance(group_id, str):
+        group_id = UUID(group_id)
 
     existing = db.query(GroupMember).filter(
         GroupMember.user_id == user_id,
