@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+
+  backend:
+    image: ghcr.io/TWOJ_GITHUB_USER/zebrapoint-backend:latest
+    container_name: zebrapoint_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    volumes:
+      - model_cache:/root/.cache
+    networks:
+      - zebrapoint_net
+    mem_limit: 1200m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+  frontend:
+    image: ghcr.io/TWOJ_GITHUB_USER/zebrapoint-frontend:latest
+    container_name: zebrapoint_frontend
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - zebrapoint_net
+    mem_limit: 128m
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: zebrapoint_nginx
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - zebrapoint_net
+    depends_on:
+      - frontend
+      - backend
+
+networks:
+  zebrapoint_net:
+    driver: bridge
+
+volumes:
+  model_cache:
+    driver: local
