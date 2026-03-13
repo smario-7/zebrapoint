@@ -45,3 +45,9 @@ uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 wheel==0.46.3
+
+# Testy backendu (Sprint 5)
+pytest
+pytest-asyncio
+httpx
+pytest-cov

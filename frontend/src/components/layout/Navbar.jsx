@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import useAuthStore from "../../store/authStore";
 import Avatar from "../ui/Avatar";
+import LogoBrand from "../ui/LogoBrand";
 
 const NAV_LINKS = [
   { to: "/dashboard", label: "Tablica" },
@@ -24,12 +25,10 @@ export default function Navbar() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link
           to="/dashboard"
-          className="flex items-center gap-2 font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+          className="group flex items-center gap-2 font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+          aria-label="ZebraPoint"
         >
-          <span>🦓</span>
-          <span>
-            Zebra<span className="text-zebra-600">Point</span>
-          </span>
+          <LogoBrand className="h-8 w-auto" />
         </Link>
 
         <div className="hidden sm:flex items-center gap-1">

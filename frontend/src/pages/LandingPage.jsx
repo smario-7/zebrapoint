@@ -1,31 +1,47 @@
 import { Link } from "react-router-dom";
-import PublicLayout from "../components/layout/PublicLayout";
-import Button from "../components/ui/Button";
+import LogoBrand from "../components/ui/LogoBrand";
+import HeroSection from "../components/landing/HeroSection";
+import HowItWorks from "../components/landing/HowItWorks";
+import ForWhom from "../components/landing/ForWhom";
+import PrivacySection from "../components/landing/PrivacySection";
+import StatsSection from "../components/landing/StatsSection";
+import CtaFooter from "../components/landing/CtaFooter";
 
 export default function LandingPage() {
   return (
-    <PublicLayout>
-      <div className="flex flex-col items-center justify-center px-4 py-16 min-h-[60vh]">
-        <div className="text-center max-w-2xl">
-          <div className="text-7xl mb-6">🦓</div>
-          <h1 className="text-5xl font-bold text-slate-800 mb-4">
-            Zebra<span className="text-zebra-600">Point</span>
-          </h1>
-          <p className="text-xl text-slate-500 mb-10">
-            Nie jesteś sam. Znajdź grupę wsparcia dla opiekunów osób z rzadkimi chorobami.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg">Dołącz bezpłatnie</Button>
+    <div className="min-h-screen bg-white">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <Link
+            to="/"
+            className="group font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+            aria-label="ZebraPoint"
+          >
+            <LogoBrand className="h-8 w-auto" />
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-slate-600 hover:text-slate-800 transition px-3 py-1.5"
+            >
+              Zaloguj się
             </Link>
-            <Link to="/login">
-              <Button variant="secondary" size="lg">
-                Zaloguj się
-              </Button>
+            <Link
+              to="/register"
+              className="text-sm font-semibold bg-zebra-600 hover:bg-zebra-700 text-white px-4 py-2 rounded-xl transition"
+            >
+              Dołącz bezpłatnie
             </Link>
           </div>
         </div>
-      </div>
-    </PublicLayout>
+      </nav>
+
+      <HeroSection />
+      <HowItWorks />
+      <ForWhom />
+      <PrivacySection />
+      <StatsSection />
+      <CtaFooter />
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import LogoBrand from "../ui/LogoBrand";
 
 export default function PublicLayout({ children }) {
   return (
@@ -6,9 +7,10 @@ export default function PublicLayout({ children }) {
       <header className="px-6 py-4 flex items-center justify-between max-w-5xl mx-auto w-full">
         <Link
           to="/"
-          className="font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+          className="group font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+          aria-label="ZebraPoint"
         >
-          🦓 Zebra<span className="text-zebra-600">Point</span>
+          <LogoBrand className="h-8 w-auto" />
         </Link>
         <div className="flex items-center gap-3">
           <Link

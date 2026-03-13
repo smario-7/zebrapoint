@@ -32,7 +32,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center px-4 py-16">
         <div className="bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <div className="text-4xl mb-2">🦓</div>
+            <img src="/logo_circle.svg" alt="" className="h-16 w-auto mx-auto mb-2" />
             <h1 className="text-2xl font-bold text-slate-800">Zaloguj się</h1>
           </div>
 
