@@ -19,6 +19,7 @@ jobs:
     env:
       DATABASE_URL: sqlite:///./test.db
       SECRET_KEY: test-secret-key-ci
+      PYTHONUTF8: 1
     steps:
       - uses: actions/checkout@v4
 

@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, Query, WebSocket, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -23,11 +24,18 @@ def get_current_user(
     token = credentials.credentials
     payload = decode_access_token(token)
 
-    user_id: str = payload.get("sub")
-    if not user_id:
+    user_id_raw = payload.get("sub")
+    if not user_id_raw:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nieprawidłowy token — brak user_id"
+        )
+    try:
+        user_id = UUID(user_id_raw) if isinstance(user_id_raw, str) else user_id_raw
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Nieprawidłowy token — błędny user_id"
         )
 
     user = db.query(User).filter(User.id == user_id).first()
@@ -62,8 +70,12 @@ async def get_current_user_ws(
         logger.warning("WebSocket auth failed: %s", exc)
         return None
 
-    user_id: str | None = payload.get("sub")  # type: ignore[assignment]
-    if not user_id:
+    user_id_raw = payload.get("sub")
+    if not user_id_raw:
+        return None
+    try:
+        user_id = UUID(user_id_raw) if isinstance(user_id_raw, str) else user_id_raw
+    except (ValueError, TypeError):
         return None
 
     user = db.query(User).filter(User.id == user_id).first()
