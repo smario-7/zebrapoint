@@ -9,9 +9,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 
-# CPU-only torch — Pi nie ma GPU, ta wersja waży ~200MB zamiast ~2GB
+# Oficjalny build PyTorch CPU dla linux/arm64 (Pi) — najpierw torch, żeby pip z requirements nie nadpisał z PyPI
 RUN pip install --no-cache-dir \
-    torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+    torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
 
 RUN pip install --no-cache-dir -r requirements.txt
 
