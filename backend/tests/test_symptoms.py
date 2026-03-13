@@ -16,7 +16,7 @@ def _mock_find_matching_group(db, embedding, user_id):
   db.add(g)
   db.flush()
   return {
-    "group_id": g.id,
+    "group_id": str(g.id),
     "score": 0.0,
     "is_new": True,
     "group_name": g.name

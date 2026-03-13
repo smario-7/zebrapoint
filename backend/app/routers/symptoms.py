@@ -15,6 +15,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/symptoms", tags=["Symptoms"])
 
 
+def _ensure_uuid(value):
+    """Konwertuje string na UUID - obsługuje też już istniejące UUID."""
+    if isinstance(value, str):
+        return UUID(value)
+    return value
+
+
 @router.post(
     "/",
     response_model=SymptomOut,
@@ -40,12 +47,13 @@ def create_symptom_profile(
     embedding = generate_embedding(data.description)
 
     match = find_matching_group(db, embedding, current_user.id)
+    group_id = _ensure_uuid(match["group_id"])
 
     profile = SymptomProfile(
         user_id=current_user.id,
         description=data.description,
         embedding=embedding,
-        group_id=match["group_id"],
+        group_id=group_id,
         match_score=match["score"]
     )
     db.add(profile)
@@ -114,10 +122,11 @@ def update_symptom_profile(
 
     embedding = generate_embedding(data.description)
     match = find_matching_group(db, embedding, current_user.id)
+    group_id = _ensure_uuid(match["group_id"])
 
     profile.description = data.description
     profile.embedding   = embedding
-    profile.group_id    = match["group_id"]
+    profile.group_id    = group_id
     profile.match_score = match["score"]
 
     add_user_to_group(db, current_user.id, match["group_id"])
