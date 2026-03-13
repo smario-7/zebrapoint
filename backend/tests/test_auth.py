@@ -85,6 +85,6 @@ class TestGetMe:
     assert resp.status_code == 403
 
   def test_get_me_invalid_token(self, client):
-    resp = client.get("/auth/me", headers={"Authorization": "Bearer token-nieważny"})
+    resp = client.get("/auth/me", headers={"Authorization": "Bearer invalid-token"})
     assert resp.status_code == 401
 
