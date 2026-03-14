@@ -57,6 +57,8 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+from app.models.ml_pipeline_run import MlPipelineRun  # noqa: F401, E402
+
 
 def get_db():
     """Dependency — tworzy sesję DB na czas jednego requestu."""

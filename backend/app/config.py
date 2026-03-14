@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     environment: str = "development"
     debug: bool = True
+    redis_url: str = "redis://redis:6379/0"
 
     class Config:
         env_file = _BACKEND_DIR / ".env"

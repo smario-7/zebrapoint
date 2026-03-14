@@ -1,0 +1,3 @@
+-- Sprint 6: kolumna role dla endpointów admin (require_admin)
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user';

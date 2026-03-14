@@ -6,6 +6,7 @@ from sqlalchemy import text, func
 from app.models.group import Group
 from app.models.group_member import GroupMember
 from app.models.symptom_profile import SymptomProfile
+from app.services.group_naming import generate_group_name, generate_group_color
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,19 @@ def add_user_to_group(
         {Group.member_count: Group.member_count + 1}
     )
 
-    logger.info(f"Dodano user {user_id} do grupy {group_id}")
+    logger.info("Dodano user %s do grupy %s", user_id, group_id)
+
+    try:
+        from app.tasks.ml_tasks import update_group_characteristics_task
+        update_group_characteristics_task.apply_async(
+            args=[str(group_id)],
+            queue="ml",
+            countdown=5
+        )
+    except Exception as e:
+        logger.warning(
+            "Nie można zakolejkować update_group_characteristics: %s", e
+        )
 
 
 def _format_embedding(embedding: list[float]) -> str:
@@ -135,17 +148,21 @@ def _query_similar_profiles(
 
 
 def _create_new_group(db: Session) -> dict:
-    """Tworzy nową, pustą grupę (tymczasową)."""
+    """Tworzy nową grupę z deterministyczną nazwą i kolorem."""
+    import uuid as uuid_module
+    group_id = uuid_module.uuid4()
     group = Group(
-        name="Nowa grupa — oczekuje na dopasowania",
-        description="Grupa tymczasowa. Zostanie nazwana gdy zbierze więcej członków.",
+        id=group_id,
+        name=generate_group_name(str(group_id)),
+        accent_color=generate_group_color(str(group_id)),
+        description="Grupa tymczasowa. Zostanie uzupełniona przy retrain.",
         is_active=True,
         member_count=0
     )
     db.add(group)
     db.flush()
 
-    logger.info(f"Utworzono nową grupę: {group.id}")
+    logger.info("Utworzono nową grupę: %s", group.id)
     return {
         "group_id": str(group.id),
         "score": 0.0,

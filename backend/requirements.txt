@@ -46,6 +46,15 @@ watchfiles==1.1.1
 websockets==16.0
 wheel==0.46.3
 
+# Celery + Redis (Sprint 6)
+celery==5.4.0
+redis==5.2.0
+flower==2.0.1
+kombu==5.3.4
+
+# ML Pipeline — HDBSCAN (Sprint 7)
+hdbscan==0.8.40
+
 # Testy backendu (Sprint 5)
 pytest
 pytest-asyncio
