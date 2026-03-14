@@ -1,18 +1,52 @@
+import os
+from datetime import datetime, timezone, timedelta
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_admin
 from app.database import get_db
 from app.models.user import User
+from app.models.report import Report
+from app.models.admin_action import AdminAction
+from app.models.user_warning import UserWarning
+from app.models.post import Post
+from app.models.comment import Comment
+from app.models.message import Message
+from app.schemas.moderation import (
+    ReportOut,
+    ModerationAction,
+    AdminActionOut,
+    UserModerationStatus,
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
-def require_admin(current_user: User = Depends(get_current_user)):
-    if getattr(current_user, "role", None) != "admin":
-        raise HTTPException(status_code=403, detail="Wymagane uprawnienia admina")
-    return current_user
+@router.post("/bootstrap", include_in_schema=False)
+def bootstrap_admin(
+    secret: str,
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Jednorazowe nadanie roli admina. Wymaga ADMIN_BOOTSTRAP_SECRET z .env.
+    Usuń lub wyłącz po pierwszym użyciu!
+    """
+    expected_secret = os.getenv("ADMIN_BOOTSTRAP_SECRET", "")
+    if not expected_secret or secret != expected_secret:
+        raise HTTPException(403, "Nieprawidłowy sekret")
+
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(404, "Użytkownik nie istnieje")
+
+    user.role = "admin"
+    db.commit()
+    return {"message": f"Nadano rolę admin dla {email}"}
 
 
 # ── Redis (Sprint 6) ─────────────────────────────────────────────
@@ -149,3 +183,344 @@ def update_group_note(
     db.commit()
 
     return {"group_id": group_id, "admin_note": group.admin_note}
+
+
+# ── Kolejka zgłoszeń i moderacja (Sprint 10) ──────────────────────
+
+@router.get(
+    "/reports",
+    response_model=list[ReportOut],
+    summary="Kolejka zgłoszeń (admin)"
+)
+def list_reports(
+    status_filter: str = "pending",
+    target_type: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Report)
+    if status_filter != "all":
+        query = query.filter(Report.status == status_filter)
+    if target_type:
+        query = query.filter(Report.target_type == target_type)
+    reports = (
+        query.order_by(Report.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    result = []
+    for r in reports:
+        preview = _get_content_preview(db, r.target_type, r.target_id)
+        count = db.query(func.count(Report.id)).filter(
+            Report.target_type == r.target_type,
+            Report.target_id == r.target_id
+        ).scalar()
+        result.append(ReportOut(
+            id=r.id,
+            reporter_id=r.reporter_id,
+            reporter_name=r.reporter.display_name if r.reporter else "",
+            target_type=r.target_type,
+            target_id=r.target_id,
+            reason=r.reason,
+            description=r.description,
+            status=r.status,
+            created_at=r.created_at,
+            target_preview=preview,
+            report_count=count or 1
+        ))
+    return result
+
+
+@router.get("/reports/stats", summary="Statystyki zgłoszeń")
+def report_stats(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    rows = db.query(Report.status, func.count(Report.id).label("cnt")).group_by(Report.status).all()
+    stats = {row.status: row.cnt for row in rows}
+    return {
+        "pending": stats.get("pending", 0),
+        "reviewed": stats.get("reviewed", 0),
+        "dismissed": stats.get("dismissed", 0),
+        "total": sum(stats.values())
+    }
+
+
+@router.post(
+    "/reports/{report_id}/action",
+    response_model=AdminActionOut,
+    summary="Wykonaj akcję moderacyjną"
+)
+def take_action(
+    report_id: str,
+    data: ModerationAction,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(404, "Zgłoszenie nie istnieje")
+    if report.status != "pending":
+        raise HTTPException(400, "Zgłoszenie zostało już rozpatrzone")
+
+    target_user = _get_content_author(db, report.target_type, report.target_id)
+    target_user_id = target_user.id if target_user else None
+
+    if data.action_type == "dismiss":
+        pass
+    elif data.action_type == "warn":
+        if target_user:
+            warning_msg = data.warning_message or "Twoja treść naruszała zasady społeczności."
+            warning = UserWarning(
+                user_id=target_user.id,
+                admin_id=admin.id,
+                message=warning_msg,
+                report_id=report.id
+            )
+            db.add(warning)
+    elif data.action_type == "delete_content":
+        _delete_reported_content(db, report.target_type, report.target_id)
+    elif data.action_type in ("ban_temp", "ban_permanent"):
+        if not target_user:
+            raise HTTPException(400, "Nie można zidentyfikować autora treści")
+        _delete_reported_content(db, report.target_type, report.target_id)
+        target_user.is_banned = True
+        target_user.ban_reason = data.reason or "naruszenie regulaminu"
+        if data.action_type == "ban_temp":
+            hours = data.ban_hours or 24
+            target_user.banned_until = datetime.now(timezone.utc) + timedelta(hours=hours)
+        else:
+            target_user.banned_until = None
+
+    report.status = "reviewed"
+    report.reviewed_by = admin.id
+    report.reviewed_at = datetime.now(timezone.utc)
+
+    expires_at = None
+    if data.action_type == "ban_temp" and data.ban_hours:
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=data.ban_hours)
+
+    action = AdminAction(
+        admin_id=admin.id,
+        target_user_id=target_user_id,
+        report_id=report.id,
+        action_type=data.action_type,
+        reason=data.reason,
+        expires_at=expires_at
+    )
+    db.add(action)
+    db.commit()
+    db.refresh(action)
+
+    return AdminActionOut(
+        id=action.id,
+        admin_id=action.admin_id,
+        admin_name=admin.display_name,
+        target_user_id=action.target_user_id,
+        target_user_name=target_user.display_name if target_user else None,
+        report_id=action.report_id,
+        action_type=action.action_type,
+        reason=action.reason,
+        expires_at=action.expires_at,
+        created_at=action.created_at
+    )
+
+
+@router.get(
+    "/users",
+    response_model=list[UserModerationStatus],
+    summary="Lista użytkowników (admin)"
+)
+def list_users(
+    search: str | None = None,
+    is_banned: bool | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    query = db.query(User)
+    if search:
+        query = query.filter(
+            User.display_name.ilike(f"%{search}%") | User.email.ilike(f"%{search}%")
+        )
+    if is_banned is not None:
+        query = query.filter(User.is_banned == is_banned)
+    users = query.order_by(User.created_at.desc()).offset(offset).limit(limit).all()
+    result = []
+    for u in users:
+        warning_count = db.query(func.count(UserWarning.id)).filter(UserWarning.user_id == u.id).scalar() or 0
+        report_count = db.query(func.count(Report.id)).filter(
+            Report.target_type == "user", Report.target_id == u.id
+        ).scalar() or 0
+        result.append(UserModerationStatus(
+            user_id=u.id,
+            display_name=u.display_name,
+            email=u.email,
+            role=u.role,
+            is_banned=getattr(u, "is_banned", False),
+            banned_until=getattr(u, "banned_until", None),
+            ban_reason=getattr(u, "ban_reason", None),
+            warning_count=warning_count,
+            report_count=report_count
+        ))
+    return result
+
+
+@router.post("/users/{user_id}/unban", summary="Odbanuj użytkownika")
+def unban_user(
+    user_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "Użytkownik nie istnieje")
+    user.is_banned = False
+    user.banned_until = None
+    user.ban_reason = None
+    db.commit()
+    action = AdminAction(
+        admin_id=admin.id,
+        target_user_id=user.id,
+        action_type="unban",
+        reason="Manualne odbanowanie przez admina"
+    )
+    db.add(action)
+    db.commit()
+    return {"message": f"Użytkownik {user.display_name} odbanowany"}
+
+
+@router.get("/users/{user_id}/history", summary="Historia akcji moderacyjnych dla usera")
+def user_moderation_history(
+    user_id: str,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(404, "Użytkownik nie istnieje")
+    warnings = db.query(UserWarning).filter(UserWarning.user_id == user_id).order_by(UserWarning.created_at.desc()).all()
+    actions = db.query(AdminAction).filter(AdminAction.target_user_id == user_id).order_by(AdminAction.created_at.desc()).all()
+    return {
+        "user": {
+            "id": str(user.id),
+            "display_name": user.display_name,
+            "email": user.email,
+            "role": user.role,
+            "is_banned": getattr(user, "is_banned", False),
+            "banned_until": user.banned_until.isoformat() if getattr(user, "banned_until", None) else None,
+        },
+        "warnings": [{"id": str(w.id), "message": w.message, "created_at": w.created_at.isoformat()} for w in warnings],
+        "actions": [
+            {
+                "id": str(a.id),
+                "action_type": a.action_type,
+                "reason": a.reason,
+                "expires_at": a.expires_at.isoformat() if a.expires_at else None,
+                "created_at": a.created_at.isoformat()
+            }
+            for a in actions
+        ]
+    }
+
+
+def _get_content_preview(db: Session, target_type: str, target_id: UUID) -> str | None:
+    try:
+        if target_type == "post":
+            obj = db.query(Post).filter(Post.id == target_id).first()
+            if obj:
+                content = (obj.content or "")[:150]
+                return f"[Post] {obj.title}: {content}..."
+        elif target_type == "comment":
+            obj = db.query(Comment).filter(Comment.id == target_id).first()
+            if obj:
+                return f"[Komentarz] {(obj.content or '')[:200]}"
+        elif target_type == "message":
+            obj = db.query(Message).filter(Message.id == target_id).first()
+            if obj:
+                return f"[Wiadomość] {(obj.content or '')[:200]}"
+        elif target_type == "user":
+            obj = db.query(User).filter(User.id == target_id).first()
+            if obj:
+                return f"[Użytkownik] {obj.display_name} ({obj.email})"
+    except Exception:
+        pass
+    return None
+
+
+def _get_content_author(db: Session, target_type: str, target_id: UUID) -> User | None:
+    try:
+        if target_type == "post":
+            obj = db.query(Post).filter(Post.id == target_id).first()
+            return db.query(User).filter(User.id == obj.user_id).first() if obj else None
+        if target_type == "comment":
+            obj = db.query(Comment).filter(Comment.id == target_id).first()
+            return db.query(User).filter(User.id == obj.user_id).first() if obj else None
+        if target_type == "message":
+            obj = db.query(Message).filter(Message.id == target_id).first()
+            return db.query(User).filter(User.id == obj.user_id).first() if obj else None
+        if target_type == "user":
+            return db.query(User).filter(User.id == target_id).first()
+    except Exception:
+        pass
+    return None
+
+
+def _delete_reported_content(db: Session, target_type: str, target_id: UUID) -> bool:
+    try:
+        if target_type == "post":
+            obj = db.query(Post).filter(Post.id == target_id).first()
+        elif target_type == "comment":
+            obj = db.query(Comment).filter(Comment.id == target_id).first()
+        elif target_type == "message":
+            obj = db.query(Message).filter(Message.id == target_id).first()
+        else:
+            return False
+        if obj:
+            db.delete(obj)
+            return True
+    except Exception:
+        pass
+    return False
+
+
+# ── Forum Moderation (Sprint 8) ───────────────────────────────────
+
+class PostModerationUpdate(BaseModel):
+    is_pinned: bool | None = None
+    is_locked: bool | None = None
+
+
+@router.patch("/posts/{post_id}/moderate")
+def moderate_post(
+    post_id: str,
+    data:    PostModerationUpdate,
+    admin:   User = Depends(require_admin),
+    db:      Session = Depends(get_db)
+):
+    """
+    Admin może:
+    - Przypiąć post (is_pinned=True) — pojawi się na górze listy
+    - Zablokować post (is_locked=True) — brak nowych komentarzy
+    """
+    from app.models.post import Post
+
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(404, "Post nie istnieje")
+
+    if data.is_pinned is not None:
+        post.is_pinned = data.is_pinned
+    if data.is_locked is not None:
+        post.is_locked = data.is_locked
+
+    db.commit()
+    return {
+        "post_id":   post_id,
+        "is_pinned": post.is_pinned,
+        "is_locked": post.is_locked
+    }

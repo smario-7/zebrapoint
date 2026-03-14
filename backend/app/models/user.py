@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy import Column, String, Boolean, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -15,6 +15,9 @@ class User(Base):
     display_name  = Column(String(100), nullable=False)
     avatar_url    = Column(String(500), nullable=True)
     role          = Column(String(20), default="user", nullable=False)
+    is_banned     = Column(Boolean, default=False, nullable=False)
+    banned_until  = Column(DateTime(timezone=True), nullable=True)
+    ban_reason    = Column(Text, nullable=True)
     age_range     = Column(String(20), nullable=True)
     is_active     = Column(Boolean, default=True)
     created_at    = Column(DateTime(timezone=True), server_default=func.now())

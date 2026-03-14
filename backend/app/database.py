@@ -58,6 +58,12 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 from app.models.ml_pipeline_run import MlPipelineRun  # noqa: F401, E402
+from app.models.post import Post      # noqa: F401, E402
+from app.models.comment import Comment  # noqa: F401, E402
+from app.models.reaction import Reaction  # noqa: F401, E402
+from app.models.report import Report  # noqa: F401, E402
+from app.models.admin_action import AdminAction  # noqa: F401, E402
+from app.models.user_warning import UserWarning  # noqa: F401, E402
 
 
 def get_db():

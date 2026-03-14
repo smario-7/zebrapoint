@@ -1,0 +1,161 @@
+import { useState, useEffect } from "react";
+import api from "../../services/api";
+import toast from "react-hot-toast";
+
+export default function AdminUsers() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const params = search ? `?search=${encodeURIComponent(search)}` : "";
+      const { data } = await api.get(`/admin/users${params}`);
+      setUsers(data);
+    } catch {
+      toast.error("Nie udało się pobrać użytkowników");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const handleUnban = async (userId, displayName) => {
+    if (!window.confirm(`Odbanować użytkownika ${displayName}?`)) return;
+    try {
+      await api.post(`/admin/users/${userId}/unban`);
+      toast.success(`${displayName} odbanowany`);
+      loadUsers();
+    } catch {
+      toast.error("Nie udało się odbanować");
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">👥 Użytkownicy</h1>
+      <div className="flex gap-2 mb-5">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && loadUsers()}
+          placeholder="Szukaj po nazwie lub emailu..."
+          className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500 text-sm"
+        />
+        <button
+          type="button"
+          onClick={loadUsers}
+          className="bg-zebra-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-zebra-700 transition text-sm"
+        >
+          Szukaj
+        </button>
+      </div>
+      <div className="bg-white rounded-2xl border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b">
+            <tr>
+              {["Użytkownik", "Rola", "Status", "Ostrzeżenia", "Zgłoszenia", "Akcje"].map(
+                (h) => (
+                  <th
+                    key={h}
+                    className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide"
+                  >
+                    {h}
+                  </th>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8 text-slate-400">
+                  Ładowanie...
+                </td>
+              </tr>
+            ) : (
+              users.map((user) => (
+                <tr key={user.user_id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-slate-800">{user.display_name}</p>
+                    <p className="text-xs text-slate-400">{user.email}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        user.role === "admin"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {user.is_banned ? (
+                      <div>
+                        <span className="text-xs font-semibold bg-red-100 text-red-700 px-2 py-0.5 rounded-full">
+                          Zbanowany
+                        </span>
+                        {user.banned_until && (
+                          <p className="text-xs text-slate-400 mt-0.5">
+                            do{" "}
+                            {new Date(user.banned_until).toLocaleDateString("pl-PL")}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-emerald-600 font-medium">
+                        Aktywny
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={
+                        user.warning_count > 0
+                          ? "text-amber-600 font-bold"
+                          : "text-slate-400"
+                      }
+                    >
+                      {user.warning_count}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span
+                      className={
+                        user.report_count > 0
+                          ? "text-red-600 font-bold"
+                          : "text-slate-400"
+                      }
+                    >
+                      {user.report_count}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {user.is_banned && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleUnban(user.user_id, user.display_name)
+                        }
+                        className="text-xs text-emerald-600 hover:underline"
+                      >
+                        Odbanuj
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

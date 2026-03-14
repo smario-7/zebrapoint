@@ -37,6 +37,7 @@ class UserOut(BaseModel):
     display_name: str
     avatar_url: str | None
     is_active: bool
+    role: str = "user"
     created_at: datetime
 
     class Config:

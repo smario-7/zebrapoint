@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from app.models.group import Group
+from app.services.matching_service import GroupMatch
 
 MOCK_EMBEDDING = [0.1] * 384
 
@@ -67,4 +68,59 @@ class TestSymptomProfile:
     client.post("/symptoms/", json={"description": "A" * 150}, headers=auth_headers)
     resp = client.get("/symptoms/me", headers=auth_headers)
     assert resp.status_code == 200
+    data = resp.json()
+    assert "description" in data
+    assert "match_score" in data
+
+
+def _mock_find_top_matches(*_args, **_kwargs):
+  """Zwraca listę GroupMatch do testów PATCH /symptoms/me i GET /my-matches."""
+  return [
+    GroupMatch(
+      group_id="g1",
+      name="Testowa",
+      accent_color="#0d9488",
+      score=0.9,
+      score_pct=90,
+      member_count=5,
+      avg_match_score=0.85,
+      keywords=["a", "b"],
+      age_range=None,
+      symptom_category="Neurologiczne",
+      admin_note=None,
+      is_new_group=False,
+    )
+  ]
+
+
+class TestUpdateSymptoms:
+
+  @patch("app.routers.symptoms.find_top_matches", side_effect=_mock_find_top_matches)
+  @patch("app.services.embedding_service.generate_embedding", return_value=MOCK_EMBEDDING)
+  def test_update_description_success(self, mock_emb, mock_top, client, auth_headers):
+    with patch("app.routers.symptoms.find_matching_group", side_effect=_mock_find_matching_group):
+      client.post("/symptoms/", json={"description": "A" * 150}, headers=auth_headers)
+    resp = client.patch("/symptoms/me", json={
+      "description": "Zaktualizowany opis " + "x" * 80
+    }, headers=auth_headers)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "matches" in data
+    assert isinstance(data["matches"], list)
+    assert data["description"].startswith("Zaktualizowany opis")
+
+  def test_update_description_no_profile(self, client, auth_headers):
+    resp = client.patch("/symptoms/me", json={
+      "description": "x" * 150
+    }, headers=auth_headers)
+    assert resp.status_code == 404
+
+  def test_update_description_too_short(self, client, auth_headers):
+    with patch("app.routers.symptoms.find_matching_group", side_effect=_mock_find_matching_group), \
+         patch("app.services.embedding_service.generate_embedding", return_value=MOCK_EMBEDDING):
+      client.post("/symptoms/", json={"description": "A" * 150}, headers=auth_headers)
+    resp = client.patch("/symptoms/me", json={
+      "description": "Za krótki"
+    }, headers=auth_headers)
+    assert resp.status_code == 422
 
