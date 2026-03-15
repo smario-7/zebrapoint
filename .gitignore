@@ -29,6 +29,11 @@ dist/
 # Docker
 *.override.yml
 
+# dev2 helper scripts (generated)
+.dev2-tab-scripts/
+dev.sh
+dev2.sh
+
 # Supabase
 .supabase/
 snippets/

@@ -22,7 +22,11 @@ TestingSessionLocal = sessionmaker(
 
 
 @pytest.fixture(autouse=True)
-def setup_database():
+def setup_database(request):
+  # test_ml_pipeline używa tylko mocków, bez SQLite (ARRAY/Vector nie są wspierane)
+  if request.module.__name__.endswith("test_ml_pipeline"):
+    yield
+    return
   Base.metadata.create_all(bind=engine_test)
   yield
   Base.metadata.drop_all(bind=engine_test)

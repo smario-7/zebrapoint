@@ -10,6 +10,9 @@ class GroupOut(BaseModel):
     member_count: int
     is_active: bool
     created_at: datetime
+    accent_color: str | None = None
+    keywords: list[str] | None = None
+    symptom_category: str | None = None
 
     class Config:
         from_attributes = True

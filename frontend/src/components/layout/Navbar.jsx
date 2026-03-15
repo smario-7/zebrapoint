@@ -14,6 +14,11 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const links =
+    user?.role === "admin"
+      ? [...NAV_LINKS, { to: "/admin", label: "Panel admin" }]
+      : NAV_LINKS;
+
   const handleLogout = () => {
     logout();
     toast.success("Wylogowano pomyślnie");
@@ -32,19 +37,25 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-1">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                location.pathname === link.to
-                  ? "bg-zebra-50 text-zebra-700"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {links.map((link) => {
+            const isActive =
+              link.to === "/admin"
+                ? location.pathname.startsWith("/admin")
+                : location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                  isActive
+                    ? "bg-zebra-50 text-zebra-700"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-3">

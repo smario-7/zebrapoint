@@ -1,0 +1,84 @@
+
+# Redis + Worker + Beat w Dockerze; backend i frontend uruchamiane natywnie (conda) — dev2.sh
+# Zgodnie z docs/ZebraPoint_Dev_Lokalnie.md
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: zebrapoint_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - zebrapoint_dev
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zebrapoint_worker_dev
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      celery -A app.tasks.celery_app worker
+      --loglevel=info
+      --concurrency=2
+      --queues=ml,notifications,default
+      --hostname=worker@dev
+    volumes:
+      - ./backend:/app
+    networks:
+      - zebrapoint_dev
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zebrapoint_beat_dev
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    command: >
+      celery -A app.tasks.celery_app beat
+      --loglevel=info
+      --schedule /tmp/celerybeat-schedule-dev
+    volumes:
+      - ./backend:/app
+    networks:
+      - zebrapoint_dev
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+
+networks:
+  zebrapoint_dev:
+    driver: bridge
+
+volumes:
+  redis_dev_data:
+    driver: local

@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -50,6 +51,43 @@ def get_current_user(
             detail="Konto jest nieaktywne"
         )
     return user
+
+
+def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> User:
+    """
+    Sprawdza czy konto aktywne i czy ban nie wygasł (auto-odbanowanie).
+    """
+    is_banned = getattr(current_user, "is_banned", False)
+    banned_until = getattr(current_user, "banned_until", None)
+    if is_banned and banned_until and datetime.now(timezone.utc) > banned_until:
+        current_user.is_banned = False
+        current_user.banned_until = None
+        current_user.ban_reason = None
+        db.commit()
+        db.refresh(current_user)
+
+    if getattr(current_user, "is_banned", False):
+        reason = getattr(current_user, "ban_reason", None) or "naruszenie regulaminu"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Konto zablokowane. Powód: {reason}"
+        )
+    return current_user
+
+
+def require_admin(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """Wymagana rola admin — 403 dla zwykłego użytkownika."""
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Wymagane uprawnienia administratora"
+        )
+    return current_user
 
 
 async def get_current_user_ws(

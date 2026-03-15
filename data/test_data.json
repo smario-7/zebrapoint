@@ -1,5 +1,23 @@
 [
-   {
+  {
+    "email": "test0001@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn od urodzenia ma bardzo obniżone napięcie mięśniowe. Przez długi czas nie trzymał główki, późno zaczął siadać i raczkować. Teraz chodzi, ale szybko się męczy i ma trudności z utrzymaniem równowagi. Rozwój mowy też jest opóźniony — mówi niewyraźnie i mało. Szukamy kontaktu z innymi rodzicami dzieci z podobnymi objawami.",
+    "display_name": "Mama 1"
+  },
+  {
+    "email": "test0002@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka ma zdiagnozowaną rzadką chorobę metaboliczną. Po nawet krótkim wysiłku fizycznym bardzo się męczy, a potem przez długi czas skarży się na bóle mięśni i nóg. Musi pilnować diety i unikać pewnych produktów. W szkole potrzebuje przerw i nie może uczestniczyć we wszystkich zajęciach sportowych. Chciałabym porozmawiać z kimś, kto przechodzi przez coś podobnego.",
+    "display_name": "Mama 2"
+  },
+  {
+    "email": "test0003@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko urodziło się z wadą serca, która wymaga regularnych kontroli i leków. Nie może się zbytnio forsować, unikamy gwałtownych zabaw i sportu. Często jest blade i męczy się szybciej niż rówieśnicy. Życie codzienne wymaga planowania pod kątem wizyt u kardiologa i badań. Szukam wsparcia u innych opiekunów dzieci z wadami serca.",
+    "display_name": "Mama 3"
+  },
+  {
     "email": "test0004@zebra.pl",
     "haslo": "test1234",
     "opis": "Nasze dziecko urodziło się z bardzo niską masą ciała i mimo upływu lat nadal jest dużo mniejsze od rówieśników. Je mało, szybko się męczy i ma trudności z przybieraniem na wadze.",
@@ -160,5 +178,65 @@
     "haslo": "test1234",
     "opis": "Córka rozwijała się dobrze przez pierwsze lata, ale w ostatnim czasie zauważyliśmy pogorszenie pamięci i koncentracji. Zaczęła też mieć trudności z mówieniem.",
     "display_name": "Mama 30"
+  },
+  {
+    "email": "test0031@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma rzadki zespół genetyczny. Lekarze zwrócili uwagę na charakterystyczne rysy twarzy i wadę serca wykrytą w pierwszych miesiącach. Rozwój jest opóźniony — zarówno ruchowy, jak i mowa. Szukam innych rodzin z podobnym rozpoznaniem, żeby wymienić się doświadczeniami i radami.",
+    "display_name": "Mama 31"
+  },
+  {
+    "email": "test0032@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasza córka od urodzenia ma bardzo jasną skórę i włosy oraz ogromną wrażliwość na światło. Na słońcu musi mieć okulary i krem z wysokim filtrem. Wzrok się pogarsza i ma problemy z widzeniem w jasnym świetle. Chciałabym porozmawiać z opiekunami dzieci z podobnymi objawami.",
+    "display_name": "Mama 32"
+  },
+  {
+    "email": "test0033@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn w pierwszych latach chodził i biegał normalnie. Z czasem zaczęły się problemy z wchodzeniem po schodach i wstawaniem z podłogi. Mięśnie nóg słabną i lekarze mówią o postępującej chorobie. Szukam wsparcia u innych rodziców dzieci z osłabieniem mięśni.",
+    "display_name": "Mama 33"
+  },
+  {
+    "email": "test0034@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od niemowlęctwa miała napady drgawek. Rozwój ruchowy i mowy jest opóźniony. Zauważyliśmy też, że ma trudności w kontaktach z rówieśnikami, unika zabawy w grupie i preferuje stałe rytuały. Szukam osób, które łączą napady z opóźnieniem rozwoju i trudnościami w relacjach.",
+    "display_name": "Mama 34"
+  },
+  {
+    "email": "test0035@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko ma rzadką chorobę skóry. Nawet lekkie otarcie powoduje pęcherze i rany. Skóra jest bardzo wrażliwa, musimy unikać urazów i nosić odpowiednie ubrania. Codzienna pielęgnacja zajmuje dużo czasu. Chciałabym poznać inne rodziny z podobnym doświadczeniem.",
+    "display_name": "Mama 35"
+  },
+  {
+    "email": "test0036@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn jest znacznie niższy od rówieśników i ma nietypowe proporcje ciała — krótsze kończyny, większą głowę. Rozwój intelektualny przebiega inaczej niż u innych dzieci. Szukam kontaktu z rodzicami dzieci z niskim wzrostem i specyficznymi proporcjami.",
+    "display_name": "Mama 36"
+  },
+  {
+    "email": "test0037@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka bardzo źle znosi zimno. Już przy lekkim chłodzie skarży się na bóle stawów i mięśni i jest bardzo zmęczona. Unikamy wychodzenia w chłodne dni bez odpowiedniego ubrania. Chciałabym porozmawiać z kimś, kto ma dziecko z podobną nietolerancją zimna i bólami.",
+    "display_name": "Mama 37"
+  },
+  {
+    "email": "test0038@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Nasze dziecko od urodzenia ma problemy z wątrobą. Musi być na specjalnej diecie i przyjmować leki. Często jest zmęczone i ma gorsze dni. Kontrole i badania są regularne. Szukam wsparcia u innych opiekunów dzieci z chorobami wątroby.",
+    "display_name": "Mama 38"
+  },
+  {
+    "email": "test0039@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Syn ma rzadkie zaburzenie dotyczące kości. Kości są kruche i łatwo dochodzi do złamań nawet przy niewielkich urazach. Unikamy zabaw ruchowych i sportu. Każde upadki są dla nas stresujące. Chciałabym wymienić się doświadczeniami z innymi rodzicami.",
+    "display_name": "Mama 39"
+  },
+  {
+    "email": "test0040@zebra.pl",
+    "haslo": "test1234",
+    "opis": "Córka od małego ma problemy z nerkami. Wymaga stałej diety, ograniczenia pewnych produktów i regularnych badań. Czasami musi być w szpitalu. Szukam grupy rodziców dzieci z chorobami nerek, żeby wspierać się nawzajem i dzielić praktycznymi radami.",
+    "display_name": "Mama 40"
   }
 ]
