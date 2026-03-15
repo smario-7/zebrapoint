@@ -38,6 +38,9 @@ export default function GroupDrawer({
   if (!isOpen) return null;
 
   const accentColor = group?.accent_color || "#0d9488";
+  const realMatches = matches.filter(
+    (m) => !m.is_new_group && m.group_id !== "__new__"
+  );
 
   return (
     <div
@@ -122,7 +125,7 @@ export default function GroupDrawer({
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
                 Najbliższe grupy
               </p>
-              {!loadingMatches && matches.length > 0 && (
+              {!loadingMatches && realMatches.length > 0 && (
                 <p className="text-xs text-slate-400">
                   na podstawie Twojego opisu
                 </p>
@@ -135,7 +138,7 @@ export default function GroupDrawer({
                   <SkeletonCard key={i} />
                 ))}
               </div>
-            ) : matches.length === 0 ? (
+            ) : realMatches.length === 0 ? (
               <div className="text-center py-8 bg-slate-50 rounded-2xl">
                 <p className="text-4xl mb-2">🔍</p>
                 <p className="text-sm text-slate-500 font-medium">
@@ -160,7 +163,7 @@ export default function GroupDrawer({
               </div>
             ) : (
               <div className="space-y-3">
-                {matches.map((match) => (
+                {realMatches.map((match) => (
                   <GroupMatchMini
                     key={match.group_id}
                     match={match}

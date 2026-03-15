@@ -281,6 +281,11 @@ def choose_group(
     db: Session = Depends(get_db)
 ):
     """Przypisuje użytkownika do grupy wybranej z listy TOP 3."""
+    if data.group_id == "__new__":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nie można wybrać tworzenia nowej grupy. Wybierz jedną z proponowanych grup.",
+        )
     profile = db.query(SymptomProfile).filter(
         SymptomProfile.id == data.profile_id,
         SymptomProfile.user_id == current_user.id

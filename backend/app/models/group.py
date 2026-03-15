@@ -1,5 +1,5 @@
-from sqlalchemy import Column, String, Boolean, Integer, DateTime, Text, Float, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy import Column, String, Boolean, Integer, DateTime, Text, Float, ForeignKey, JSON
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
@@ -19,7 +19,7 @@ class Group(Base):
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     updated_at       = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     accent_color     = Column(String(7), default="#0d9488")
-    keywords         = Column(ARRAY(Text), nullable=True)
+    keywords         = Column(JSON, nullable=True)
     age_range        = Column(String(20), nullable=True)
     symptom_category = Column(String(50), nullable=True)
     avg_match_score  = Column(Float, nullable=True)
