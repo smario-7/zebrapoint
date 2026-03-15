@@ -124,3 +124,20 @@ class TestUpdateSymptoms:
     }, headers=auth_headers)
     assert resp.status_code == 422
 
+
+@patch("app.routers.symptoms.find_matching_group", side_effect=_mock_find_matching_group)
+@patch("app.services.embedding_service.generate_embedding", return_value=MOCK_EMBEDDING)
+def test_choose_group_rejects_new(mock_emb, mock_find, client, auth_headers):
+  """Wyboru 'stwórz nową grupę' nie można wysłać — API zwraca 400."""
+  create_resp = client.post("/symptoms/", json={"description": "A" * 150}, headers=auth_headers)
+  assert create_resp.status_code == 201
+  profile_id = create_resp.json()["id"]
+
+  resp = client.post(
+    "/symptoms/choose-group",
+    json={"profile_id": profile_id, "group_id": "__new__", "score": 0.0},
+    headers=auth_headers,
+  )
+  assert resp.status_code == 400
+  assert "nowej grupy" in resp.json().get("detail", "")
+

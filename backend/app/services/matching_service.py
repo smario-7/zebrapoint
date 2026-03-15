@@ -223,9 +223,8 @@ def find_top_matches(
     for row in rows:
         gid = str(row.group_id)
         score = float(row.similarity)
-        if score >= SIMILARITY_THRESHOLD:
-            if gid not in best_per_group or score > best_per_group[gid]:
-                best_per_group[gid] = score
+        if gid not in best_per_group or score > best_per_group[gid]:
+            best_per_group[gid] = score
 
     top_groups = sorted(best_per_group.items(), key=lambda x: -x[1])[:top_k]
     results: list[GroupMatch] = []
@@ -248,9 +247,6 @@ def find_top_matches(
             admin_note=group.admin_note,
             is_new_group=False
         ))
-
-    if not results:
-        results.append(_build_new_group_match())
 
     return results
 
