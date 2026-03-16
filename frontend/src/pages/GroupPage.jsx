@@ -22,6 +22,13 @@ export default function GroupPage() {
         <span className="text-slate-600 font-medium truncate">
           {group?.name || "Grupa"}
         </span>
+        <span className="mx-2">·</span>
+        <Link
+          to={`/groups/${groupId}/forum`}
+          className="text-zebra-600 hover:text-zebra-700 font-medium transition"
+        >
+          📋 Forum
+        </Link>
       </div>
 
       <div className="flex gap-4 flex-1 min-h-[480px]">

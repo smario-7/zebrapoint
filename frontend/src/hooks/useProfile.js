@@ -12,18 +12,27 @@ export function useProfile() {
     setLoading(true);
     setError(null);
     try {
-      const { data: profileData } = await api.get("/symptoms/me");
-      setProfile(profileData);
-
-      const { data: groupData } = await api.get("/groups/me");
-      setGroup(groupData);
-    } catch (err) {
-      if (err.response?.status === 404) {
-        setProfile(null);
-        setGroup(null);
+      const [profileRes, groupRes] = await Promise.allSettled([
+        api.get("/symptoms/me"),
+        api.get("/groups/me"),
+      ]);
+      if (profileRes.status === "fulfilled") {
+        setProfile(profileRes.value.data);
       } else {
+        setProfile(null);
+      }
+      if (groupRes.status === "fulfilled") {
+        setGroup(groupRes.value.data);
+      } else {
+        setGroup(null);
+      }
+      const profileFailed = profileRes.status === "rejected" && profileRes.reason?.response?.status !== 404;
+      const groupFailed = groupRes.status === "rejected" && groupRes.reason?.response?.status !== 404;
+      if (profileFailed || groupFailed) {
         setError("Nie udało się pobrać danych. Odśwież stronę.");
       }
+    } catch {
+      setError("Nie udało się pobrać danych. Odśwież stronę.");
     } finally {
       setLoading(false);
     }

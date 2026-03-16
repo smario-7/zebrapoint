@@ -21,6 +21,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 90s
+    depends_on:
+      redis:
+        condition: service_healthy
 
   frontend:
     image: ghcr.io/TWOJ_GITHUB_USER/zebrapoint-frontend:latest
@@ -48,10 +51,75 @@ services:
       - frontend
       - backend
 
+  redis:
+    image: redis:7-alpine
+    container_name: zebrapoint_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - zebrapoint_net
+    mem_limit: 160m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  worker:
+    image: ghcr.io/TWOJ_GITHUB_USER/zebrapoint-backend:latest
+    container_name: zebrapoint_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: >
+      celery -A app.tasks.celery_app worker
+      --loglevel=info
+      --concurrency=1
+      --queues=ml,notifications,default
+      --hostname=worker@zebrapoint
+    volumes:
+      - model_cache:/root/.cache
+    networks:
+      - zebrapoint_net
+    mem_limit: 1200m
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  beat:
+    image: ghcr.io/TWOJ_GITHUB_USER/zebrapoint-backend:latest
+    container_name: zebrapoint_beat
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: >
+      celery -A app.tasks.celery_app beat
+      --loglevel=info
+      --scheduler celery.beat.PersistentScheduler
+      --schedule /tmp/celerybeat-schedule
+    networks:
+      - zebrapoint_net
+    mem_limit: 256m
+    depends_on:
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
+
 networks:
   zebrapoint_net:
     driver: bridge
 
 volumes:
   model_cache:
+    driver: local
+  redis_data:
     driver: local

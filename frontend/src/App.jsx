@@ -9,8 +9,16 @@ import Dashboard    from "./pages/Dashboard";
 import SymptomsForm from "./pages/SymptomsForm";
 import GroupPage    from "./pages/GroupPage";
 import ProfilePage  from "./pages/ProfilePage";
+import ForumPage    from "./pages/ForumPage";
+import PostDetailPage from "./pages/PostDetailPage";
+import AdminLayout    from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminReports   from "./pages/admin/AdminReports";
+import AdminUsers     from "./pages/admin/AdminUsers";
+import AdminGroups    from "./pages/admin/AdminGroups";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminGuard     from "./components/AdminGuard";
 
 export default function App() {
   const { token, fetchMe } = useAuthStore();
@@ -37,6 +45,17 @@ export default function App() {
           <Route path="/profile"     element={<ProfilePage />} />
           <Route path="/symptoms/new" element={<SymptomsForm />} />
           <Route path="/groups/:groupId" element={<GroupPage />} />
+          <Route path="/groups/:groupId/forum" element={<ForumPage />} />
+          <Route path="/groups/:groupId/posts/:postId" element={<PostDetailPage />} />
+        </Route>
+
+        <Route path="/admin" element={<AdminGuard />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="groups" element={<AdminGroups />} />
+          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

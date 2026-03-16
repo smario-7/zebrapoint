@@ -11,4 +11,16 @@
   --color-zebra-700: #0f766e;
   --color-zebra-800: #115e59;
   --color-zebra-900: #134e4a;
+  --animate-modal-enter: modal-enter 0.2s ease-out;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
