@@ -260,7 +260,11 @@ def take_action(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    report = db.query(Report).filter(Report.id == report_id).first()
+    try:
+        report_id_uuid = UUID(report_id)
+    except ValueError:
+        raise HTTPException(404, "Zgłoszenie nie istnieje")
+    report = db.query(Report).filter(Report.id == report_id_uuid).first()
     if not report:
         raise HTTPException(404, "Zgłoszenie nie istnieje")
     if report.status != "pending":

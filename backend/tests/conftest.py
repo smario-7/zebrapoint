@@ -27,6 +27,7 @@ def setup_database(request):
   if request.module.__name__.endswith("test_ml_pipeline"):
     yield
     return
+  Base.metadata.drop_all(bind=engine_test)
   Base.metadata.create_all(bind=engine_test)
   yield
   Base.metadata.drop_all(bind=engine_test)

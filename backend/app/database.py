@@ -57,6 +57,11 @@ SessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+from app.models.user import User  # noqa: F401, E402
+from app.models.group import Group  # noqa: F401, E402
+from app.models.symptom_profile import SymptomProfile  # noqa: F401, E402
+from app.models.group_member import GroupMember  # noqa: F401, E402
+from app.models.message import Message  # noqa: F401, E402
 from app.models.ml_pipeline_run import MlPipelineRun  # noqa: F401, E402
 from app.models.post import Post      # noqa: F401, E402
 from app.models.comment import Comment  # noqa: F401, E402
