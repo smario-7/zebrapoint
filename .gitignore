@@ -37,3 +37,6 @@ AGENTS.md
 .cursor/
 .opencode/
 .vscode/
+
+.dev2-tab-scripts/
+dev.sh
