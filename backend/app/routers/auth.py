@@ -1,10 +1,22 @@
+import random
+
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.database import get_db
 from app.models.user import User
-from app.schemas.user import UserCreate, UserLogin, UserOut, TokenResponse, UpdateProfile, UpdatePassword
+from app.schemas.user import (
+    UserCreate,
+    UserLogin,
+    UserOut,
+    TokenResponse,
+    UpdateProfile,
+    UpdatePassword,
+    NICK_PATTERN,
+    RESERVED_NICKS,
+)
 from app.auth.jwt import create_access_token
 from app.auth.dependencies import get_current_user
 
@@ -29,6 +41,25 @@ def _verify_password(password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(_password_bytes(password), password_hash.encode("ascii"))
 
 
+def _generate_nick_suggestions(nick: str, db: Session) -> list[str]:
+    """Generuje do 3 dostępnych alternatyw dla zajętego nicku."""
+    suggestions = []
+    attempts = [f"{nick}_{i}" for i in range(1, 10)] + [
+        f"{nick}{random.randint(10, 99)}" for _ in range(5)
+    ]
+    for candidate in attempts:
+        if len(suggestions) >= 3:
+            break
+        if not NICK_PATTERN.match(candidate):
+            continue
+        taken = db.query(User).filter(
+            func.lower(User.display_name) == candidate.lower()
+        ).first()
+        if not taken:
+            suggestions.append(candidate)
+    return suggestions
+
+
 @router.post(
     "/register",
     response_model=UserOut,
@@ -44,16 +75,72 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
             detail="Podany adres email jest już zarejestrowany"
         )
 
+    existing_nick = db.query(User).filter(
+        func.lower(User.display_name) == user_data.display_name.lower()
+    ).first()
+    if existing_nick:
+        suggestions = _generate_nick_suggestions(user_data.display_name, db)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "field": "display_name",
+                "message": f"Nick '{user_data.display_name}' jest już zajęty",
+                "suggestions": suggestions,
+            },
+        )
+
     user = User(
         email=user_data.email,
         password_hash=_hash_password(user_data.password),
-        display_name=user_data.display_name.strip()
+        display_name=user_data.display_name,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
 
     return user
+
+
+@router.get("/check-nick")
+def check_nick_availability(nick: str, db: Session = Depends(get_db)):
+    """
+    Sprawdza dostępność nicku (real-time przy rejestracji, z debounce).
+    """
+    nick = nick.strip()
+
+    if not NICK_PATTERN.match(nick):
+        return {
+            "available": False,
+            "reason": "format",
+            "message": "Dozwolone: litery, cyfry, _ i - (3–30 znaków)",
+            "suggestions": [],
+        }
+
+    if nick.lower() in RESERVED_NICKS:
+        return {
+            "available": False,
+            "reason": "reserved",
+            "message": "Ten nick jest zarezerwowany",
+            "suggestions": [],
+        }
+
+    taken = db.query(User).filter(
+        func.lower(User.display_name) == nick.lower()
+    ).first()
+    if taken:
+        suggestions = _generate_nick_suggestions(nick, db)
+        return {
+            "available": False,
+            "reason": "taken",
+            "message": f"Nick '{nick}' jest już zajęty",
+            "suggestions": suggestions,
+        }
+
+    return {
+        "available": True,
+        "message": "Nick jest dostępny ✓",
+        "suggestions": [],
+    }
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -94,9 +181,28 @@ def update_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Aktualizacja display_name."""
+    """Aktualizacja display_name z zachowaniem unikalności (case-insensitive)."""
     if data.display_name is not None:
-        current_user.display_name = data.display_name.strip()
+        new_name = data.display_name.strip()
+        if new_name.lower() != current_user.display_name.lower():
+            conflict = (
+                db.query(User)
+                .filter(
+                    func.lower(User.display_name) == new_name.lower(),
+                    User.id != current_user.id,
+                )
+                .first()
+            )
+            if conflict:
+                suggestions = _generate_nick_suggestions(new_name, db)
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "message": f"Nick '{new_name}' jest już zajęty",
+                        "suggestions": suggestions,
+                    },
+                )
+        current_user.display_name = new_name
     db.commit()
     db.refresh(current_user)
     return current_user

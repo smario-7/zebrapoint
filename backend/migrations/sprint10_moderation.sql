@@ -1,5 +1,4 @@
 -- Sprint 10: Moderacja treści — tabele zgłoszeń, akcji admina, ostrzeżeń
--- Uruchom w Supabase → SQL Editor
 
 -- Zgłoszenia treści
 CREATE TABLE IF NOT EXISTS reports (

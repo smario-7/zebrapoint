@@ -1,6 +1,14 @@
-from pydantic import BaseModel, EmailStr, field_validator
-from uuid import UUID
+import re
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, field_validator
+
+NICK_PATTERN = re.compile(r"^[a-zA-Z0-9_\-]{3,30}$")
+RESERVED_NICKS = {
+    "admin", "moderator", "zebrapoint", "support",
+    "system", "bot", "help", "info", "kontakt"
+}
 
 
 class UserCreate(BaseModel):
@@ -17,12 +25,14 @@ class UserCreate(BaseModel):
 
     @field_validator("display_name")
     @classmethod
-    def display_name_length(cls, v: str) -> str:
+    def validate_nick(cls, v: str) -> str:
         v = v.strip()
-        if len(v) < 2:
-            raise ValueError("Nazwa musi mieć co najmniej 2 znaki")
-        if len(v) > 100:
-            raise ValueError("Nazwa może mieć maksymalnie 100 znaków")
+        if not NICK_PATTERN.match(v):
+            raise ValueError(
+                "Nick może zawierać tylko litery, cyfry, _ i -. Długość: 3–30 znaków."
+            )
+        if v.lower() in RESERVED_NICKS:
+            raise ValueError(f"Nick '{v}' jest zarezerwowany")
         return v
 
 
@@ -49,13 +59,15 @@ class UpdateProfile(BaseModel):
 
     @field_validator("display_name")
     @classmethod
-    def validate_name(cls, v):
+    def validate_nick(cls, v):
         if v is not None:
             v = v.strip()
-            if len(v) < 2:
-                raise ValueError("Min. 2 znaki")
-            if len(v) > 100:
-                raise ValueError("Max. 100 znaków")
+            if not NICK_PATTERN.match(v):
+                raise ValueError(
+                    "Nick może zawierać tylko litery, cyfry, _ i -. Długość: 3–30 znaków."
+                )
+            if v.lower() in RESERVED_NICKS:
+                raise ValueError(f"Nick '{v}' jest zarezerwowany")
         return v
 
 

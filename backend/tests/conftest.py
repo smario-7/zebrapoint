@@ -83,3 +83,58 @@ def auth_headers(client, registered_user):
   token = resp.json()["access_token"]
   return {"Authorization": f"Bearer {token}"}
 
+
+@pytest.fixture
+def other_user(client):
+  """Drugi użytkownik — do testów DM (konwersacja z registered_user)."""
+  resp = client.post("/auth/register", json={
+    "email": "other@zebrapoint.pl",
+    "password": "haslo1234",
+    "display_name": "OtherUser",
+  })
+  assert resp.status_code == 201
+  return resp.json()
+
+
+@pytest.fixture
+def third_user(client):
+  """Trzeci użytkownik — do testu braku dostępu do cudzej konwersacji."""
+  resp = client.post("/auth/register", json={
+    "email": "third@zebrapoint.pl",
+    "password": "haslo1234",
+    "display_name": "ThirdUser",
+  })
+  assert resp.status_code == 201
+  return resp.json()
+
+
+@pytest.fixture
+def conversation(client, auth_headers, other_user):
+  """Konwersacja między registered_user a other_user (istnieje przed testem)."""
+  resp = client.post(
+    f"/dm/start?other_user_id={other_user['id']}",
+    headers=auth_headers,
+  )
+  assert resp.status_code == 200
+  return resp.json()
+
+
+@pytest.fixture
+def other_conversation(client, other_user, third_user):
+  """
+  Konwersacja między other_user a third_user.
+  registered_user nie jest jej uczestnikiem — używane w test_cannot_access_other_conversation.
+  """
+  login_resp = client.post("/auth/login", json={
+    "email": "other@zebrapoint.pl",
+    "password": "haslo1234",
+  })
+  token = login_resp.json()["access_token"]
+  headers = {"Authorization": f"Bearer {token}"}
+  resp = client.post(
+    f"/dm/start?other_user_id={third_user['id']}",
+    headers=headers,
+  )
+  assert resp.status_code == 200
+  return str(resp.json()["id"])
+

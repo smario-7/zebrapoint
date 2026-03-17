@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import auth, chat, groups, symptoms, admin, forum, reports
+from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm, dm_ws
 from app.services.embedding_service import get_model
 
 logger = logging.getLogger(__name__)
@@ -54,6 +54,8 @@ app.include_router(chat.rest_router)
 app.include_router(admin.router)
 app.include_router(forum.router)
 app.include_router(reports.router)
+app.include_router(dm.router)
+app.include_router(dm_ws.router)
 
 
 @app.get("/", tags=["Health"])

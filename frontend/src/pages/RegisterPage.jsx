@@ -1,16 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useController } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useAuthStore from "../store/authStore";
 import PublicLayout from "../components/layout/PublicLayout";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import NickInput from "../components/auth/NickInput";
 
 const schema = z
   .object({
-    display_name: z.string().min(2, "Min. 2 znaki").max(100),
+    display_name: z
+      .string()
+      .min(3, "Min. 3 znaki")
+      .max(30, "Max. 30 znaków")
+      .regex(/^[a-zA-Z0-9_-]+$/, "Dozwolone: litery, cyfry, _ i -"),
     email: z.string().email("Nieprawidłowy email"),
     password: z.string().min(8, "Min. 8 znaków"),
     confirm: z.string(),
@@ -21,13 +26,23 @@ const schema = z
   });
 
 export default function RegisterPage() {
-  const { register: registerUser, isLoading, error } = useAuthStore();
+  const { register: registerUser, isLoading, error, registerErrorDetail, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [success, setSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, control, handleSubmit, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   });
+
+  const { field: displayNameField } = useController({
+    name: "display_name",
+    control,
+  });
+
+  useEffect(() => {
+    if (registerErrorDetail) clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear only when user changes nick
+  }, [displayNameField.value]);
 
   const onSubmit = async (data) => {
     const result = await registerUser(data.email, data.password, data.display_name);
@@ -63,16 +78,32 @@ export default function RegisterPage() {
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
-              {error}
+              <p>{error}</p>
+              {registerErrorDetail?.field === "display_name" && registerErrorDetail?.suggestions?.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-slate-600 text-xs mb-1">Dostępne alternatywy:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {registerErrorDetail.suggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setValue("display_name", s)}
+                        className="text-xs bg-white border border-red-200 hover:bg-red-50 text-red-700 px-2.5 py-1 rounded-full transition"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <Input
-              label="Pseudonim (widoczny dla innych)"
-              placeholder="np. Mama Zosi"
+            <NickInput
+              value={displayNameField.value}
+              onChange={displayNameField.onChange}
               error={errors.display_name?.message}
-              {...register("display_name")}
             />
             <Input
               label="Email"

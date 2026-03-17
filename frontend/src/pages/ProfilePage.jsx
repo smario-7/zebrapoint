@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/ui/Avatar";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import NickInput from "../components/auth/NickInput";
 import api from "../services/api";
 import { useProfile } from "../hooks/useProfile";
 import { SkeletonCard } from "../components/ui/Skeleton";
@@ -16,8 +17,9 @@ import { SkeletonCard } from "../components/ui/Skeleton";
 const nameSchema = z.object({
   display_name: z
     .string()
-    .min(2, "Min. 2 znaki")
-    .max(100, "Max. 100 znaków")
+    .min(3, "Min. 3 znaki")
+    .max(30, "Max. 30 znaków")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Dozwolone: litery, cyfry, _ i -")
     .transform((v) => v.trim()),
 });
 
@@ -37,15 +39,27 @@ export default function ProfilePage() {
   const { group, loading } = useProfile();
   const [editingName, setEditingName] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
+  const [nickValue, setNickValue] = useState(user?.display_name ?? "");
+  const [nickStatus, setNickStatus] = useState(null);
+  const [nameSaving, setNameSaving] = useState(false);
 
-  const {
-    register: regName,
-    handleSubmit: submitName,
-    formState: { errors: nameErrors, isSubmitting: nameSaving },
-  } = useForm({
-    resolver: zodResolver(nameSchema),
-    defaultValues: { display_name: user?.display_name },
-  });
+  useEffect(() => {
+    if (editingName) {
+      setNickValue(user?.display_name ?? "");
+      setNickStatus(null);
+    }
+  }, [editingName, user?.display_name]);
+
+  const nameSchemaParsed = nameSchema.safeParse({ display_name: nickValue.trim() });
+  const nameValid = nameSchemaParsed.success;
+  const nameError = nameSchemaParsed.success ? null : nameSchemaParsed.error?.errors?.[0]?.message ?? null;
+  const canSaveName =
+    nameValid &&
+    (nickStatus === "available" ||
+      (nickStatus === null &&
+        user?.display_name &&
+        nickValue.trim().toLowerCase() === user.display_name.toLowerCase()));
+  const nameSubmitDisabled = !canSaveName || nameSaving;
 
   const {
     register: regPwd,
@@ -54,14 +68,27 @@ export default function ProfilePage() {
     formState: { errors: pwdErrors, isSubmitting: pwdSaving },
   } = useForm({ resolver: zodResolver(passwordSchema) });
 
-  const onSaveName = async (data) => {
+  const onSaveName = async (e) => {
+    e.preventDefault();
+    const parsed = nameSchema.safeParse({ display_name: nickValue.trim() });
+    if (!parsed.success) return;
+    setNameSaving(true);
     try {
-      await api.patch("/auth/me", { display_name: data.display_name });
+      await api.patch("/auth/me", { display_name: parsed.data.display_name });
       await fetchMe();
       setEditingName(false);
+      setNickValue(user?.display_name ?? "");
+      setNickStatus(null);
       toast.success("Nazwa zaktualizowana!");
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Nie udało się zapisać nazwy.");
+      const detail = err.response?.data?.detail;
+      const msg =
+        typeof detail === "object" && detail?.message
+          ? detail.message
+          : detail || "Nie udało się zapisać nazwy.";
+      toast.error(msg);
+    } finally {
+      setNameSaving(false);
     }
   };
 
@@ -102,21 +129,33 @@ export default function ProfilePage() {
           </div>
 
           {editingName ? (
-            <form onSubmit={submitName(onSaveName)} className="space-y-3">
-              <Input
+            <form onSubmit={onSaveName} className="space-y-3">
+              <NickInput
                 label="Nowa nazwa (pseudonim)"
-                error={nameErrors.display_name?.message}
-                defaultValue={user?.display_name}
-                {...regName("display_name")}
+                value={nickValue}
+                onChange={setNickValue}
+                currentNick={user?.display_name}
+                onStatusChange={setNickStatus}
+                error={nameError}
               />
               <div className="flex gap-2">
-                <Button type="submit" size="sm" loading={nameSaving}>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={nameSubmitDisabled}
+                  loading={nameSaving}
+                >
                   Zapisz
                 </Button>
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={() => setEditingName(false)}
+                  type="button"
+                  onClick={() => {
+                    setEditingName(false);
+                    setNickValue(user?.display_name ?? "");
+                    setNickStatus(null);
+                  }}
                 >
                   Anuluj
                 </Button>
