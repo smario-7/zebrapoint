@@ -1,10 +1,24 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Avatar from "../ui/Avatar";
 import ReportButton from "../moderation/ReportButton";
+import DmModal from "../dm/DmModal";
+import useAuthStore from "../../store/authStore";
 
 export default function PostCard({ post, groupId }) {
+  const { user } = useAuthStore();
+  const [showDm, setShowDm] = useState(false);
+
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("pl-PL");
+  };
+
+  const isOwn = user?.id === post.user_id;
+
+  const handleDmClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowDm(true);
   };
 
   return (
@@ -37,8 +51,20 @@ export default function PostCard({ post, groupId }) {
             {post.title}
           </h3>
 
-          <p className="text-xs text-slate-400 mt-1">
-            {post.display_name} · {formatDate(post.created_at)}
+          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+            <span>{post.display_name}</span>
+            {!isOwn && (
+              <button
+                type="button"
+                onClick={handleDmClick}
+                className="text-slate-400 hover:text-zebra-600 p-0.5
+                           rounded hover:bg-zebra-50 transition"
+                title={`Napisz do ${post.display_name}`}
+              >
+                ✉️
+              </button>
+            )}
+            <span>· {formatDate(post.created_at)}</span>
           </p>
             </div>
             <div className="opacity-0 group-hover:opacity-100 transition flex-shrink-0">
@@ -64,6 +90,19 @@ export default function PostCard({ post, groupId }) {
           </div>
         )}
       </div>
+      {showDm && (
+        <DmModal
+          targetUserId={post.user_id}
+          targetUserNick={post.display_name}
+          onClose={() => setShowDm(false)}
+          forumContext={{
+            postId: post.id,
+            postTitle: post.title,
+            postExcerpt: post.content?.slice(0, 150),
+            groupId,
+          }}
+        />
+      )}
     </Link>
   );
 }

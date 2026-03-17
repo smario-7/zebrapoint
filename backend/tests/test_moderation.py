@@ -4,19 +4,21 @@ import pytest
 
 from app.models.report import Report
 from app.models.user import User
+from app.routers.auth import _hash_password
 
 
 @pytest.fixture
 def admin_user(client, db):
-    """Rejestruje drugiego użytkownika i nadaje mu rolę admin."""
-    client.post("/auth/register", json={
-        "email": "admin@zebrapoint.pl",
-        "password": "haslo1234",
-        "display_name": "Admin"
-    })
-    user = db.query(User).filter(User.email == "admin@zebrapoint.pl").first()
-    user.role = "admin"
+    """Tworzy użytkownika z rolą admin wyłącznie w bazie (bez API)."""
+    user = User(
+        email="admin@zebrapoint.pl",
+        password_hash=_hash_password("haslo1234"),
+        display_name="AdminUser",
+        role="admin",
+    )
+    db.add(user)
     db.commit()
+    db.refresh(user)
     return {"email": "admin@zebrapoint.pl", "password": "haslo1234", "id": str(user.id)}
 
 

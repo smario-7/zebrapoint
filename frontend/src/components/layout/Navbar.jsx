@@ -1,8 +1,37 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import useAuthStore from "../../store/authStore";
+import api from "../../services/api";
 import Avatar from "../ui/Avatar";
 import LogoBrand from "../ui/LogoBrand";
+
+function UnreadBadge() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = () => {
+      api
+        .get("/dm/conversations/unread-count")
+        .then((r) => setCount(r.data.unread_count ?? 0))
+        .catch(() => {});
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (count === 0) return null;
+
+  return (
+    <span
+      className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+      aria-label={`${count} nieprzeczytanych wiadomości`}
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
 
 const NAV_LINKS = [
   { to: "/dashboard", label: "Tablica" },
@@ -59,6 +88,19 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            to="/messages"
+            className={`relative p-2 rounded-xl transition ${
+              location.pathname.startsWith("/messages")
+                ? "bg-zebra-50 text-zebra-700"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+            title="Wiadomości"
+            aria-label="Wiadomości"
+          >
+            💬
+            <UnreadBadge />
+          </Link>
           <Link to="/profile" className="flex items-center gap-2 group">
             <Avatar name={user?.display_name} size="sm" />
             <span className="hidden sm:block text-sm text-slate-600 group-hover:text-slate-800 transition">

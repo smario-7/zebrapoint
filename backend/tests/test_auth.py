@@ -3,21 +3,32 @@ class TestRegister:
     resp = client.post("/auth/register", json={
       "email": "nowy@test.pl",
       "password": "haslo1234",
-      "display_name": "Nowy User"
+      "display_name": "Nowy_User"
     })
     assert resp.status_code == 201
     data = resp.json()
     assert data["email"] == "nowy@test.pl"
-    assert data["display_name"] == "Nowy User"
+    assert data["display_name"] == "Nowy_User"
     assert "password_hash" not in data
 
   def test_register_duplicate_email(self, client, registered_user):
     resp = client.post("/auth/register", json={
       "email": "test@zebrapoint.pl",
       "password": "inne_haslo",
-      "display_name": "Duplikat"
+      "display_name": "Inny_Nick"
     })
     assert resp.status_code == 409
+
+  def test_register_duplicate_nick(self, client, registered_user):
+    resp = client.post("/auth/register", json={
+      "email": "inny@test.pl",
+      "password": "haslo1234",
+      "display_name": "Tester"
+    })
+    assert resp.status_code == 409
+    data = resp.json()
+    assert data["detail"]["field"] == "display_name"
+    assert "suggestions" in data["detail"]
 
   def test_register_short_password(self, client):
     resp = client.post("/auth/register", json={

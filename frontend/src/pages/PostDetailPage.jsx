@@ -5,6 +5,7 @@ import Avatar from "../components/ui/Avatar";
 import Button from "../components/ui/Button";
 import ReactionBar from "../components/forum/ReactionBar";
 import CommentItem from "../components/forum/CommentItem";
+import DmModal from "../components/dm/DmModal";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/authStore";
@@ -18,6 +19,7 @@ export default function PostDetailPage() {
   const [loading, setLoading]   = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [showDm, setShowDm] = useState(false);
 
   useEffect(() => {
     loadPost();
@@ -121,8 +123,20 @@ export default function PostDetailPage() {
                 )}
               </div>
               <h1 className="text-xl font-bold text-slate-800">{post.title}</h1>
-              <p className="text-xs text-slate-400 mt-1">
-                {post.display_name} · {new Date(post.created_at).toLocaleDateString("pl-PL")}
+              <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+                <span>{post.display_name}</span>
+                {!isAuthor && (
+                  <button
+                    type="button"
+                    onClick={() => setShowDm(true)}
+                    className="text-slate-400 hover:text-zebra-600 p-0.5 rounded
+                               hover:bg-zebra-50 transition"
+                    title={`Napisz do ${post.display_name}`}
+                  >
+                    ✉️
+                  </button>
+                )}
+                <span>· {new Date(post.created_at).toLocaleDateString("pl-PL")}</span>
               </p>
             </div>
             {(isAuthor || isAdmin) && (
@@ -151,6 +165,20 @@ export default function PostDetailPage() {
             />
           </div>
         </div>
+
+        {showDm && (
+          <DmModal
+            targetUserId={post.user_id}
+            targetUserNick={post.display_name}
+            onClose={() => setShowDm(false)}
+            forumContext={{
+              postId: post.id,
+              postTitle: post.title,
+              postExcerpt: post.content?.slice(0, 150),
+              groupId,
+            }}
+          />
+        )}
 
         <div className="mt-6">
           <h2 className="font-semibold text-slate-800 mb-4">Komentarze</h2>
@@ -198,6 +226,7 @@ export default function PostDetailPage() {
                 comment={comment}
                 groupId={groupId}
                 postId={post.id}
+                postTitle={post.title}
                 onDelete={handleDeleteComment}
               />
             ))}

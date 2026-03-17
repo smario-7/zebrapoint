@@ -69,6 +69,7 @@ from app.models.reaction import Reaction  # noqa: F401, E402
 from app.models.report import Report  # noqa: F401, E402
 from app.models.admin_action import AdminAction  # noqa: F401, E402
 from app.models.user_warning import UserWarning  # noqa: F401, E402
+from app.models.dm_conversation import DmConversation, DmMessage  # noqa: F401, E402
 
 
 def get_db():

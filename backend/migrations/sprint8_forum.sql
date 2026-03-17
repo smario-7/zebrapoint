@@ -1,5 +1,4 @@
 -- ── ZebraPoint Sprint 8: Forum ─────────────────────────────────────────────
--- Uruchom w Supabase → SQL Editor
 
 -- ── Posty forum ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS posts (

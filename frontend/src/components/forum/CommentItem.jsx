@@ -2,15 +2,17 @@ import { useState } from "react";
 import Avatar from "../ui/Avatar";
 import ReactionBar from "./ReactionBar";
 import ReportButton from "../moderation/ReportButton";
+import DmModal from "../dm/DmModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../../store/authStore";
 
-export default function CommentItem({ comment, groupId, postId, onDelete }) {
-  const { user }          = useAuthStore();
+export default function CommentItem({ comment, groupId, postId, postTitle, onDelete }) {
+  const { user } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(comment.content);
-  const [saving, setSaving]   = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showDm, setShowDm] = useState(false);
 
   const isOwn = user?.id === comment.user_id;
 
@@ -54,8 +56,21 @@ export default function CommentItem({ comment, groupId, postId, onDelete }) {
       <div className="flex-1 min-w-0">
         <div className="bg-slate-50 rounded-2xl rounded-tl-sm px-4 py-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-semibold text-zebra-700">
-              {comment.display_name}
+            <span className="flex items-center gap-1.5">
+              <span className="text-sm font-semibold text-zebra-700">
+                {comment.display_name}
+              </span>
+              {!isOwn && (
+                <button
+                  type="button"
+                  onClick={() => setShowDm(true)}
+                  className="text-xs text-slate-400 hover:text-zebra-600
+                             p-1 rounded-lg hover:bg-zebra-50 transition"
+                  title={`Napisz do ${comment.display_name}`}
+                >
+                  ✉️
+                </button>
+              )}
             </span>
             <span className="text-xs text-slate-400">
               {new Date(comment.created_at).toLocaleDateString("pl-PL")}
@@ -126,6 +141,23 @@ export default function CommentItem({ comment, groupId, postId, onDelete }) {
           </div>
         </div>
       </div>
+      {showDm && (
+        <DmModal
+          targetUserId={comment.user_id}
+          targetUserNick={comment.display_name}
+          onClose={() => setShowDm(false)}
+          forumContext={
+            postId && postTitle
+              ? {
+                  postId,
+                  postTitle,
+                  postExcerpt: comment.content?.slice(0, 150),
+                  groupId,
+                }
+              : null
+          }
+        />
+      )}
     </div>
   );
 }

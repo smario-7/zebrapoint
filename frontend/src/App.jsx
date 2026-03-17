@@ -11,6 +11,8 @@ import GroupPage    from "./pages/GroupPage";
 import ProfilePage  from "./pages/ProfilePage";
 import ForumPage    from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
+import MessagesPage     from "./pages/MessagesPage";
+import ConversationPage from "./pages/ConversationPage";
 import AdminLayout    from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReports   from "./pages/admin/AdminReports";
@@ -47,6 +49,8 @@ export default function App() {
           <Route path="/groups/:groupId" element={<GroupPage />} />
           <Route path="/groups/:groupId/forum" element={<ForumPage />} />
           <Route path="/groups/:groupId/posts/:postId" element={<PostDetailPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/messages/:conversationId" element={<ConversationPage />} />
         </Route>
 
         <Route path="/admin" element={<AdminGuard />}>

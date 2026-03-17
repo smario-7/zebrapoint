@@ -4,11 +4,12 @@ import api from "../services/api";
 const TOKEN_KEY = "zp_token";
 
 const useAuthStore = create((set, get) => ({
-  user:            null,
-  token:           localStorage.getItem(TOKEN_KEY),
-  isAuthenticated: !!localStorage.getItem(TOKEN_KEY),
-  isLoading:       false,
-  error:           null,
+  user:                null,
+  token:               localStorage.getItem(TOKEN_KEY),
+  isAuthenticated:     !!localStorage.getItem(TOKEN_KEY),
+  isLoading:           false,
+  error:               null,
+  registerErrorDetail: null,
 
   login: async (email, password) => {
     set({ isLoading: true, error: null });
@@ -30,7 +31,7 @@ const useAuthStore = create((set, get) => ({
   },
 
   register: async (email, password, displayName) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, registerErrorDetail: null });
     try {
       await api.post("/auth/register", {
         email,
@@ -39,9 +40,14 @@ const useAuthStore = create((set, get) => ({
       });
       set({ isLoading: false });
       return { success: true };
-    } catch (error) {
-      const msg = error.response?.data?.detail || "Błąd rejestracji";
-      set({ error: msg, isLoading: false });
+    } catch (err) {
+      const d = err.response?.data?.detail;
+      const msg = typeof d === "object" && d !== null ? d.message : (d || "Błąd rejestracji");
+      set({
+        error: msg,
+        registerErrorDetail: typeof d === "object" && d !== null ? d : null,
+        isLoading: false
+      });
       return { success: false, error: msg };
     }
   },
@@ -60,7 +66,7 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null, registerErrorDetail: null })
 }));
 
 export default useAuthStore;
