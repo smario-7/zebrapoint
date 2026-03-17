@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 NICK_PATTERN = re.compile(r"^[a-zA-Z0-9_\-]{3,30}$")
 RESERVED_NICKS = {
@@ -42,6 +42,7 @@ class UserLogin(BaseModel):
 
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     email: str
     display_name: str
@@ -49,9 +50,6 @@ class UserOut(BaseModel):
     is_active: bool
     role: str = "user"
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class UpdateProfile(BaseModel):

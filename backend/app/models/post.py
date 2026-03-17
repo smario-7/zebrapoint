@@ -32,5 +32,6 @@ class Post(Base):
         "Reaction",
         primaryjoin="and_(Post.id == foreign(Reaction.target_id), "
                     "Reaction.target_type == 'post')",
-        lazy="dynamic"
+        lazy="dynamic",
+        overlaps="reactions",
     )

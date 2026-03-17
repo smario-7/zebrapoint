@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from uuid import UUID
 from datetime import datetime
 
@@ -31,6 +31,7 @@ class MatchResult(BaseModel):
 
 
 class SymptomOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     user_id: UUID
     description: str
@@ -39,11 +40,9 @@ class SymptomOut(BaseModel):
     created_at: datetime
     match: MatchResult
 
-    class Config:
-        from_attributes = True
-
 
 class SymptomProfilePublic(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     user_id: UUID
     description: str
@@ -51,9 +50,6 @@ class SymptomProfilePublic(BaseModel):
     match_score: float
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class SymptomUpdate(BaseModel):
