@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timezone, timedelta
 from uuid import UUID
 
@@ -24,29 +23,6 @@ from app.schemas.moderation import (
 )
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
-
-
-@router.post("/bootstrap", include_in_schema=False)
-def bootstrap_admin(
-    secret: str,
-    email: str,
-    db: Session = Depends(get_db)
-):
-    """
-    Jednorazowe nadanie roli admina. Wymaga ADMIN_BOOTSTRAP_SECRET z .env.
-    Usuń lub wyłącz po pierwszym użyciu!
-    """
-    expected_secret = os.getenv("ADMIN_BOOTSTRAP_SECRET", "")
-    if not expected_secret or secret != expected_secret:
-        raise HTTPException(403, "Nieprawidłowy sekret")
-
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(404, "Użytkownik nie istnieje")
-
-    user.role = "admin"
-    db.commit()
-    return {"message": f"Nadano rolę admin dla {email}"}
 
 
 # ── Redis (Sprint 6) ─────────────────────────────────────────────
