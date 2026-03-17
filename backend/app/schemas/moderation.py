@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from app.models.admin_action import VALID_ACTION_TYPES
 from app.models.report import VALID_REASONS, VALID_TARGET_TYPES
@@ -42,6 +42,7 @@ class ReportCreate(BaseModel):
 
 
 class ReportOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     reporter_id: UUID
     reporter_name: str = ""
@@ -53,9 +54,6 @@ class ReportOut(BaseModel):
     created_at: datetime
     target_preview: str | None = None
     report_count: int = 1
-
-    class Config:
-        from_attributes = True
 
 
 class ModerationAction(BaseModel):
@@ -83,6 +81,7 @@ class ModerationAction(BaseModel):
 
 
 class AdminActionOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     admin_id: UUID
     admin_name: str = ""
@@ -93,9 +92,6 @@ class AdminActionOut(BaseModel):
     reason: str | None
     expires_at: datetime | None
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class UserModerationStatus(BaseModel):

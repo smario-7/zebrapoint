@@ -22,5 +22,6 @@ class Comment(Base):
         "Reaction",
         primaryjoin="and_(Comment.id == foreign(Reaction.target_id), "
                     "Reaction.target_type == 'comment')",
-        lazy="dynamic"
+        lazy="dynamic",
+        overlaps="reactions",
     )

@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
 
+pytest_plugins = ["pytest_asyncio"]
 
 SQLALCHEMY_TEST_URL = "sqlite:///./test.db"
 

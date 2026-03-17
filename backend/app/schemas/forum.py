@@ -1,5 +1,6 @@
 from __future__ import annotations
-from pydantic import BaseModel, field_validator
+
+from pydantic import BaseModel, ConfigDict, field_validator
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
@@ -51,6 +52,7 @@ class PostUpdate(BaseModel):
 
 
 class PostOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id:            UUID
     group_id:      UUID
     user_id:       UUID
@@ -63,9 +65,6 @@ class PostOut(BaseModel):
     reactions_summary: dict = {}
     created_at:    datetime
     updated_at:    datetime
-
-    class Config:
-        from_attributes = True
 
 
 class PostDetail(PostOut):
@@ -102,6 +101,7 @@ class CommentUpdate(BaseModel):
 
 
 class CommentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id:            UUID
     post_id:       UUID
     user_id:       UUID
@@ -110,9 +110,6 @@ class CommentOut(BaseModel):
     reactions_summary: dict = {}
     created_at:    datetime
     updated_at:    datetime
-
-    class Config:
-        from_attributes = True
 
 
 class ReactionToggle(BaseModel):

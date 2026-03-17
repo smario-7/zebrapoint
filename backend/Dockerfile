@@ -6,13 +6,13 @@ RUN apt-get update && apt-get install -y \
     gcc libpq-dev libgomp1 curl \
     && rm -rf /var/lib/apt/lists/*
 
+COPY requirements-heavy.txt .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements-heavy.txt
+
 COPY requirements.txt .
-
-# CPU-only torch — bez CUDA
-RUN pip install --no-cache-dir \
-    torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
-
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 COPY . .
 

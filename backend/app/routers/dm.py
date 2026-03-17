@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
@@ -20,6 +20,7 @@ MAX_MESSAGE_LENGTH = 2000
 
 
 class ConversationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     other_user_id: UUID
     other_user_nick: str
@@ -27,11 +28,9 @@ class ConversationOut(BaseModel):
     last_message_text: str | None
     unread_count: int
 
-    class Config:
-        from_attributes = True
-
 
 class MessageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     sender_id: UUID
     sender_nick: str
@@ -40,9 +39,6 @@ class MessageOut(BaseModel):
     image_url: str | None
     is_read: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class SendMessageRequest(BaseModel):
