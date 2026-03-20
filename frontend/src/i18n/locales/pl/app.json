@@ -245,7 +245,7 @@
     "members": "{{count}} członków",
     "chatLink": "Czat →",
     "noGroup": "Nie jesteś przypisany do żadnej grupy",
-    "nearestGroups": "Najbliższe grupy",
+    "nearestGroups": "Twoja grupa i najbliższe dopasowania",
     "basedOnDescription": "na podstawie Twojego opisu",
     "noMatches": "Brak dopasowań",
     "fillFormFirst": "Najpierw wypełnij formularz objawów",
@@ -274,6 +274,10 @@
     "cancel": "Anuluj",
     "noDescription": "Brak opisu — kliknij żeby dodać",
     "expandHint": "Kliknij żeby zobaczyć i edytować cały opis"
+  },
+  "groupDescriptionPopover": {
+    "openLabel": "Pokaż charakterystyczne objawy grupy",
+    "title": "Charakterystyczne objawy"
   },
   "groupMatchMini": {
     "scoreGreat": "Świetne dopasowanie",

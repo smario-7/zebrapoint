@@ -1,7 +1,11 @@
 from contextlib import asynccontextmanager
 import logging
+import re
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 from app.config import settings
 from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm, dm_ws, bootstrap
@@ -40,6 +44,33 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+class DevCorsFallbackMiddleware(BaseHTTPMiddleware):
+    """W development dopina Access-Control-Allow-Origin, gdy odpowiedź go nie ma (np. niektóre ścieżki błędów)."""
+
+    _exact = frozenset(
+        {
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+        }
+    )
+    _pattern = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if settings.environment.lower() != "development":
+            return response
+        if response.headers.get("access-control-allow-origin"):
+            return response
+        origin = request.headers.get("origin")
+        if not origin:
+            return response
+        if origin in self._exact or self._pattern.match(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin
+        return response
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=(
@@ -65,6 +96,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(DevCorsFallbackMiddleware)
 
 app.include_router(auth.router)
 app.include_router(symptoms.router)

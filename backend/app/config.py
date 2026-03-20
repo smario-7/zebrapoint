@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
     frontend_origins: str = ""
     load_embeddings_on_startup: bool = False
+    openai_api_key: str = ""
 
 
 settings = Settings()

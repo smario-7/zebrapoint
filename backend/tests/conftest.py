@@ -1,6 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
+
+import app.routers.symptoms as symptoms_router
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -57,8 +59,10 @@ def client(db, mock_embedding_model):
       pass
 
   app.dependency_overrides[get_db] = override_get_db
-  with TestClient(app) as c:
-    yield c
+  # BackgroundTasks po POST/PUT symptoms używa SessionLocal — musi być ta sama baza co w teście.
+  with patch.object(symptoms_router, "SessionLocal", TestingSessionLocal):
+    with TestClient(app) as c:
+      yield c
   app.dependency_overrides.clear()
 
 

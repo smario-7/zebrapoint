@@ -1,9 +1,11 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.database import get_db
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from app.database import SessionLocal, get_db
 from app.auth.dependencies import get_current_user
 from app.models.user import User
 from app.models.symptom_profile import SymptomProfile
@@ -17,14 +19,30 @@ from app.schemas.symptom import (
     GroupChoiceRequest,
 )
 from app.services.embedding_service import generate_embedding
+from app.services.group_characteristics import update_group_characteristics
 from app.services.matching_service import (
     find_matching_group,
     add_user_to_group,
     find_top_matches,
+    merge_current_group_into_matches,
     assign_user_to_group,
+    GroupAssignConflict,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _background_update_group_characteristics(group_id: str) -> None:
+    """Po zapisie profilu przelicza słowa kluczowe i opis AI grupy (osobna sesja DB)."""
+    db = SessionLocal()
+    try:
+        update_group_characteristics(db, group_id)
+    except Exception:
+        logger.exception(
+            "Błąd update_group_characteristics w tle dla grupy %s", group_id
+        )
+    finally:
+        db.close()
 router = APIRouter(prefix="/symptoms", tags=["Symptoms"])
 
 
@@ -48,8 +66,9 @@ def _to_embedding_list(embedding) -> list[float]:
 )
 def create_symptom_profile(
     data: SymptomCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     existing = db.query(SymptomProfile).filter(
         SymptomProfile.user_id == current_user.id
@@ -80,6 +99,10 @@ def create_symptom_profile(
 
     db.commit()
     db.refresh(profile)
+
+    background_tasks.add_task(
+        _background_update_group_characteristics, str(match["group_id"])
+    )
 
     logger.info(
         f"Profil zapisany. User {current_user.id} → "
@@ -125,8 +148,9 @@ def get_my_symptom_profile(
 )
 def update_symptom_profile(
     data: SymptomCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     profile = db.query(SymptomProfile).filter(
         SymptomProfile.user_id == current_user.id
@@ -152,6 +176,10 @@ def update_symptom_profile(
     db.commit()
     db.refresh(profile)
 
+    background_tasks.add_task(
+        _background_update_group_characteristics, str(match["group_id"])
+    )
+
     return SymptomOut(
         id=profile.id,
         user_id=profile.user_id,
@@ -170,8 +198,9 @@ def update_symptom_profile(
 )
 def update_symptoms_patch(
     data: SymptomUpdate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Aktualizuje opis objawów i embedding. Nie zmienia grupy.
@@ -192,6 +221,11 @@ def update_symptoms_patch(
     profile.embedding = new_embedding
     db.commit()
     db.refresh(profile)
+
+    if profile.group_id:
+        background_tasks.add_task(
+            _background_update_group_characteristics, str(profile.group_id)
+        )
 
     embedding_list = _to_embedding_list(new_embedding)
     matches = find_top_matches(
@@ -214,6 +248,7 @@ def update_symptoms_patch(
                 keywords=m.keywords,
                 age_range=m.age_range,
                 symptom_category=m.symptom_category,
+                ai_description=m.ai_description,
                 admin_note=m.admin_note,
                 is_new_group=m.is_new_group,
             )
@@ -248,6 +283,7 @@ def get_my_matches(
         embedding=embedding_list,
         exclude_user_id=str(current_user.id)
     )
+    matches = merge_current_group_into_matches(db, profile, matches)
 
     return [
         GroupMatchOut(
@@ -260,6 +296,7 @@ def get_my_matches(
             keywords=m.keywords,
             age_range=m.age_range,
             symptom_category=m.symptom_category,
+            ai_description=m.ai_description,
             admin_note=m.admin_note,
             is_new_group=m.is_new_group,
         )
@@ -283,24 +320,49 @@ def choose_group(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Nie można wybrać tworzenia nowej grupy. Wybierz jedną z proponowanych grup.",
         )
+    try:
+        profile_uuid = UUID(str(data.profile_id))
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Nieprawidłowy identyfikator profilu",
+        )
+
     profile = db.query(SymptomProfile).filter(
-        SymptomProfile.id == data.profile_id,
-        SymptomProfile.user_id == current_user.id
+        SymptomProfile.id == profile_uuid,
+        SymptomProfile.user_id == current_user.id,
     ).first()
 
     if not profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profil nie istnieje"
+            detail="Profil nie istnieje",
         )
 
-    group = assign_user_to_group(
-        db=db,
-        user_id=str(current_user.id),
-        group_id=data.group_id,
-        profile_id=data.profile_id,
-        match_score=data.score
-    )
+    try:
+        group = assign_user_to_group(
+            db=db,
+            user_id=str(current_user.id),
+            group_id=data.group_id,
+            profile_id=data.profile_id,
+            match_score=data.score,
+        )
+    except GroupAssignConflict as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except SQLAlchemyError:
+        logger.exception("Błąd SQL przy choose-group")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Błąd bazy danych przy zmianie grupy.",
+        ) from None
 
     return {
         "group_id": str(group.id),

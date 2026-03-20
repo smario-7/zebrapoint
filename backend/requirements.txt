@@ -24,6 +24,7 @@ pydantic==2.12.5
 pydantic-settings==2.6.1
 pydantic_core==2.41.5
 python-dotenv==1.0.1
+openai>=1.60.0
 python-jose==3.3.0
 python-multipart==0.0.12
 PyYAML==6.0.3

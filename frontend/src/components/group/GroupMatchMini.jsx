@@ -20,6 +20,7 @@ export default function GroupMatchMini({
     keywords,
     age_range,
     symptom_category,
+    ai_description,
     admin_note,
     is_new_group,
     avg_match_score,
@@ -97,21 +98,38 @@ export default function GroupMatchMini({
         </div>
       )}
 
-      {keywords?.length > 0 && (
+      {(ai_description?.trim() || keywords?.length > 0) && (
         <div className="mb-2">
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">
             {t("groupMatchMini.keywordsLabel")}
           </p>
-          <div className="flex flex-wrap gap-1">
-            {keywords.slice(0, 4).map((kw, i) => (
-              <span
-                key={i}
-                className="text-xs bg-slate-100 text-slate-600 dark:bg-slate-700/40 dark:text-slate-100 px-2 py-0.5 rounded-full"
-              >
-                {kw}
-              </span>
-            ))}
-          </div>
+          {ai_description?.trim() ? (
+            <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+              {ai_description
+                .split(/\r?\n/)
+                .map((line) => line.trim())
+                .filter(Boolean)
+                .map((line) => line.replace(/^[-•*]\s*/, "").trim())
+                .filter(Boolean)
+                .slice(0, 5)
+                .map((line, i) => (
+                  <li key={i} className="marker:text-zebra-500 dark:marker:text-teal-400">
+                    {line}
+                  </li>
+                ))}
+            </ul>
+          ) : (
+            <div className="flex flex-wrap gap-1">
+              {keywords.slice(0, 4).map((kw, i) => (
+                <span
+                  key={i}
+                  className="text-xs bg-slate-100 text-slate-600 dark:bg-slate-700/40 dark:text-slate-100 px-2 py-0.5 rounded-full"
+                >
+                  {kw}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -31,6 +31,7 @@ def list_all_groups(
             "avg_match_score": group.avg_match_score,
             "admin_note": group.admin_note,
             "accent_color": group.accent_color,
+            "ai_description": group.ai_description,
         }
         for group in groups
     ]

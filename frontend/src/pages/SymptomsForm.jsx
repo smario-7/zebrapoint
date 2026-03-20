@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "../services/api";
+import useBootstrapStore from "../store/bootstrapStore";
 import AppShell from "../components/layout/AppShell";
 import { useTranslation } from "react-i18next";
 
@@ -41,6 +42,11 @@ export default function SymptomsForm() {
     setApiError(null);
     try {
       const { data } = await api.post("/symptoms/", formData);
+      try {
+        await useBootstrapStore.getState().refresh();
+      } catch {
+        // Brak aktualizacji store nie blokuje dalszego kroku.
+      }
       setMatchResult(data.match);
       setTimeout(() => {
         navigate(`/groups/${data.match.group_id}`);

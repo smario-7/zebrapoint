@@ -244,7 +244,7 @@
     "members": "{{count}} members",
     "chatLink": "Chat →",
     "noGroup": "You're not assigned to any group",
-    "nearestGroups": "Nearest groups",
+    "nearestGroups": "Your group and nearest matches",
     "basedOnDescription": "based on your description",
     "noMatches": "No matches",
     "fillFormFirst": "Fill in the symptoms form first",
@@ -273,6 +273,10 @@
     "cancel": "Cancel",
     "noDescription": "No description — click to add",
     "expandHint": "Click to view and edit the full description"
+  },
+  "groupDescriptionPopover": {
+    "openLabel": "Show characteristic group symptoms",
+    "title": "Characteristic symptoms"
   },
   "groupMatchMini": {
     "scoreGreat": "Excellent match",

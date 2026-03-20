@@ -87,6 +87,7 @@ def _mock_find_top_matches(*_args, **_kwargs):
       keywords=["a", "b"],
       age_range=None,
       symptom_category="Neurologiczne",
+      ai_description=None,
       admin_note=None,
       is_new_group=False,
     )
@@ -107,6 +108,9 @@ class TestUpdateSymptoms:
     data = resp.json()
     assert "matches" in data
     assert isinstance(data["matches"], list)
+    assert len(data["matches"]) >= 2
+    assert data["matches"][0]["group_id"] != data["matches"][1]["group_id"]
+    assert data["matches"][1]["group_id"] == "g1"
     assert data["description"].startswith("Zaktualizowany opis")
 
   def test_update_description_no_profile(self, client, auth_headers):
