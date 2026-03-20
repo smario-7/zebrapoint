@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
   --color-zebra-50: #f0fdfa;
@@ -12,6 +15,12 @@
   --color-zebra-800: #115e59;
   --color-zebra-900: #134e4a;
   --animate-modal-enter: modal-enter 0.2s ease-out;
+  --animate-fade-in-up: fade-in-up 1s ease-out both;
+  --animate-fade-in: fade-in 0.8s ease-out both;
+  --animate-slide-in-left: slide-in-left 0.5s ease-out both;
+  --animate-slide-in-right: slide-in-right 0.5s ease-out both;
+  --animate-scale-in: scale-in 0.4s ease-out both;
+  --animate-count-up: count-up 0.5s ease-out both;
 }
 
 @keyframes modal-enter {
@@ -23,4 +32,88 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* płynne przejście kolorów przy zmianie motywu */
+html {
+  transition: background-color 0.3s ease, color 0.2s ease;
+}
+html * {
+  transition: background-color 0.3s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+body {
+  background: var(--zp-app-bg);
+}
+
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.zp-logo-green-filter {
+  filter: brightness(0) saturate(100%) invert(38%) sepia(84%) saturate(403%) hue-rotate(127deg) brightness(93%) contrast(92%);
 }

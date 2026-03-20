@@ -1,16 +1,18 @@
 import clsx from "clsx";
 
 const variants = {
-  primary: "bg-zebra-600 hover:bg-zebra-700 text-white",
-  secondary: "bg-white border border-slate-300 hover:bg-slate-50 text-slate-700",
+  primary:
+    "bg-[var(--zp-accent-primary)] hover:opacity-90 text-white",
+  secondary:
+    "bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] hover:bg-[var(--zp-app-accent-bg)] text-[var(--zp-app-text-primary)]",
   danger: "bg-red-500 hover:bg-red-600 text-white",
-  ghost: "hover:bg-slate-100 text-slate-600",
+  ghost: "hover:bg-[var(--zp-app-accent-bg)] text-[var(--zp-app-text-muted)]",
 };
 
 const sizes = {
-  sm: "px-3 py-1.5 text-sm rounded-lg",
-  md: "px-5 py-2.5 text-sm rounded-xl",
-  lg: "px-7 py-3 text-base rounded-xl",
+  sm: "px-3 py-1.5 text-sm rounded-lg h-9",
+  md: "h-12 text-[15px] font-semibold rounded-xl",
+  lg: "px-7 py-3 text-base rounded-xl h-12",
 };
 
 export default function Button({
@@ -30,7 +32,7 @@ export default function Button({
       onClick={onClick}
       disabled={disabled || loading}
       className={clsx(
-        "font-semibold transition focus:outline-none focus:ring-2 focus:ring-zebra-500 focus:ring-offset-2",
+        "font-semibold transition focus:outline-none focus:ring-2 focus:ring-[var(--zp-accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--zp-app-bg)]",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         variants[variant],
         sizes[size],

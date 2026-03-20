@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
+import { useTranslation } from "react-i18next";
 
 function StatCard({ label, value, color, link, urgent }) {
+  const { t } = useTranslation("admin");
   const content = (
     <div
       className={`bg-white rounded-2xl border p-4 ${
@@ -12,7 +14,9 @@ function StatCard({ label, value, color, link, urgent }) {
       <p className="text-slate-400 text-xs mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
       {urgent && (
-        <p className="text-xs text-red-500 mt-1 font-medium">Wymaga uwagi →</p>
+        <p className="text-xs text-red-500 mt-1 font-medium">
+          {t("dashboard.requiresAttention")}
+        </p>
       )}
     </div>
   );
@@ -20,6 +24,8 @@ function StatCard({ label, value, color, link, urgent }) {
 }
 
 export default function AdminDashboard() {
+  const { t, i18n } = useTranslation("admin");
+  const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,48 +44,56 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-slate-400">Ładowanie...</p>;
+  if (loading) return <p className="text-slate-400">{t("dashboard.loading")}</p>;
 
   const { reports = {}, pipeline } = stats || {};
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-slate-800 mb-6">
+        {t("dashboard.title")}
+      </h1>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Oczekujące zgłoszenia"
+          label={t("dashboard.pendingReports")}
           value={reports.pending ?? 0}
           color="text-red-600"
           link="/admin/reports"
           urgent={(reports.pending ?? 0) > 0}
         />
         <StatCard
-          label="Rozpatrzone"
+          label={t("dashboard.reviewed")}
           value={reports.reviewed ?? 0}
           color="text-emerald-600"
         />
         <StatCard
-          label="Łącznie zgłoszeń"
+          label={t("dashboard.totalReports")}
           value={reports.total ?? 0}
           color="text-slate-600"
         />
         <StatCard
-          label="Ostatni retrain ML"
-          value={pipeline ? `${pipeline.clusters_found} grup` : "Brak danych"}
+          label={t("dashboard.lastRetrain")}
+          value={
+            pipeline
+              ? t("dashboard.groupsCount", { count: pipeline.clusters_found })
+              : t("dashboard.noData")
+          }
           color="text-zebra-600"
         />
       </div>
 
       {pipeline && (
         <div className="bg-white rounded-2xl border p-5">
-          <h2 className="font-semibold text-slate-800 mb-3">Ostatni ML Pipeline</h2>
+          <h2 className="font-semibold text-slate-800 mb-3">
+            {t("dashboard.lastPipeline")}
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             {[
-              { label: "Profiley", value: pipeline.profiles_count },
-              { label: "Klastry", value: pipeline.clusters_found },
-              { label: "Szum", value: pipeline.noise_count },
-              { label: "Przeniesieni", value: pipeline.reassigned },
+              { label: t("dashboard.profiles"), value: pipeline.profiles_count },
+              { label: t("dashboard.clusters"), value: pipeline.clusters_found },
+              { label: t("dashboard.noise"), value: pipeline.noise_count },
+              { label: t("dashboard.reassigned"), value: pipeline.reassigned },
             ].map((item) => (
               <div key={item.label} className="bg-slate-50 rounded-xl p-3">
                 <p className="text-slate-400 text-xs">{item.label}</p>
@@ -88,8 +102,8 @@ export default function AdminDashboard() {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-3">
-            {new Date(pipeline.run_at).toLocaleString("pl-PL")} · {pipeline.duration_ms}ms
-            · Status: {pipeline.status}
+            {new Date(pipeline.run_at).toLocaleString(locale)} · {pipeline.duration_ms}ms
+            · {t("dashboard.status")}: {pipeline.status}
           </p>
         </div>
       )}

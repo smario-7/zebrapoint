@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "groups": "Groups",
+    "groupChat": "Group chat",
+    "forum": "Forum",
+    "messages": "Messages",
+    "messagesShort": "Msg.",
+    "profile": "Profile",
+    "adminPanel": "Admin panel",
+    "home": "Home",
+    "chat": "Chat"
+  },
+  "theme": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "enableLight": "Enable light mode",
+    "enableDark": "Enable dark mode"
+  },
+  "logout": "Log out",
+  "logoutSuccess": "Logged out successfully",
+  "unreadCount": "{{count}} unread messages",
+  "aria": {
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "close": "Close",
+    "changeLanguage": "Change language",
+    "menu": "Menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
+  "retry": "Try again",
+  "signIn": "Sign in",
+  "join": "Join"
+}

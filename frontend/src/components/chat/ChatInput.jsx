@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const MAX_LENGTH = 500;
 
 export default function ChatInput({ onSend, disabled = false }) {
+  const { t } = useTranslation("app");
   const [value, setValue] = useState("");
   const textareaRef = useRef(null);
 
@@ -39,7 +41,7 @@ export default function ChatInput({ onSend, disabled = false }) {
   const isNearLimit = remaining < 50;
 
   return (
-    <div className="border-t bg-white p-3 sm:p-4">
+    <div className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 sm:p-4">
       <div className="flex gap-2 items-end">
         <div className="flex-1 relative">
           <textarea
@@ -48,20 +50,19 @@ export default function ChatInput({ onSend, disabled = false }) {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             disabled={disabled}
-            placeholder={disabled
-              ? "Połączenie przerwane..."
-              : "Napisz wiadomość... (Enter = wyślij, Shift+Enter = nowa linia)"
+            placeholder={
+              disabled ? t("chat.disconnected") : t("chat.placeholder")
             }
             rows={1}
-            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 pr-16 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-teal-500
+            className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 pr-16 text-sm bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
+                       focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400
                        resize-none overflow-hidden
-                       disabled:bg-slate-50 disabled:text-slate-400
-                       placeholder:text-slate-400 transition"
+                       disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500
+                       placeholder:text-slate-400 dark:placeholder:text-slate-500 transition"
           />
           {isNearLimit && (
             <span className={`absolute right-3 bottom-2 text-xs ${
-              remaining < 10 ? "text-red-500" : "text-slate-400"
+              remaining < 10 ? "text-red-500 dark:text-red-400" : "text-slate-400 dark:text-slate-500"
             }`}>
               {remaining}
             </span>
@@ -71,10 +72,10 @@ export default function ChatInput({ onSend, disabled = false }) {
         <button
           onClick={handleSend}
           disabled={disabled || !value.trim()}
-          className="flex-shrink-0 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-200
-                     disabled:text-slate-400 text-white p-2.5 rounded-xl transition
-                     focus:outline-none focus:ring-2 focus:ring-teal-500"
-          title="Wyślij (Enter)"
+          className="flex-shrink-0 bg-teal-600 dark:bg-teal-500 hover:bg-teal-700 dark:hover:bg-teal-400 disabled:bg-slate-200 dark:disabled:bg-slate-700
+                     disabled:text-slate-400 dark:disabled:text-slate-500 text-white dark:text-slate-900 p-2.5 rounded-xl transition
+                     focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+          title={t("chat.sendTitle")}
         >
           <svg
             className="w-5 h-5"

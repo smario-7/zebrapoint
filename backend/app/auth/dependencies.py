@@ -104,7 +104,7 @@ async def get_current_user_ws(
     """
     try:
         payload = decode_access_token(token)
-    except JWTError as exc:
+    except (HTTPException, JWTError) as exc:
         logger.warning("WebSocket auth failed: %s", exc)
         return None
 

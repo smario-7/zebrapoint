@@ -2,10 +2,13 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/ui/Avatar";
+import DmConversationsPanel from "../components/dm/DmConversationsPanel";
+import { useConversations } from "../hooks/useConversations";
 import { useDM, DM_STATUS } from "../hooks/useDM";
 import useAuthStore from "../store/authStore";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const EMOJIS = [
   "😊", "😢", "😂", "❤️", "👍", "👏", "🙏", "💪", "🦓", "✨", "🌈", "💚",
@@ -13,6 +16,8 @@ const EMOJIS = [
 
 export default function ConversationPage() {
   const { conversationId } = useParams();
+  const { t, i18n } = useTranslation("app");
+  const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const { user } = useAuthStore();
   const [otherUser, setOtherUser] = useState(null);
   const [input, setInput] = useState("");
@@ -21,6 +26,8 @@ export default function ConversationPage() {
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const containerRef = useRef(null);
+
+  const { conversations, loading: loadingConversations } = useConversations();
 
   const {
     messages,
@@ -35,13 +42,9 @@ export default function ConversationPage() {
     const load = async () => {
       if (!conversationId) return;
       try {
-        const convRes = await api.get("/dm/conversations");
-        const conv = convRes.data.find((c) => c.id === conversationId);
-        if (conv) {
-          setOtherUser({
-            id: conv.other_user_id,
-            nick: conv.other_user_nick,
-          });
+        const conv = conversations.find((c) => c.id === conversationId);
+        if (conv && (!otherUser || otherUser.id !== conv.other_user_id)) {
+          setOtherUser({ id: conv.other_user_id, nick: conv.other_user_nick });
         }
 
         const msgRes = await api.get(
@@ -49,13 +52,13 @@ export default function ConversationPage() {
         );
         setMessages(msgRes.data ?? []);
       } catch {
-        toast.error("Nie udało się załadować wiadomości");
+        toast.error(t("conversation.loadError"));
       } finally {
         setLoadingHistory(false);
       }
     };
     load();
-  }, [conversationId, setMessages]);
+  }, [conversationId, conversations, otherUser, setMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -92,63 +95,75 @@ export default function ConversationPage() {
 
   return (
     <AppShell fullHeight>
-      <div className="flex flex-col h-full max-w-2xl mx-auto">
+      <div className="flex h-full w-full">
+        <aside className="hidden md:flex w-[320px] shrink-0 border-r border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-4">
+          <DmConversationsPanel
+            conversations={conversations}
+            loading={loadingConversations}
+            activeConversationId={conversationId}
+            showSearchButton={false}
+            title={t("messages.title")}
+            subtitle={null}
+            className="w-full"
+          />
+        </aside>
 
-        <div className="flex items-center gap-3 px-4 py-3 bg-white border-b sticky top-0 z-10">
-          <Link
-            to="/messages"
-            className="text-slate-400 hover:text-slate-600 transition text-xl leading-none mr-1"
-          >
-            ←
-          </Link>
-
-          <div className="relative">
-            <Avatar name={otherUser?.nick ?? "?"} size="md" />
-            <span
-              className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${statusColor}`}
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-slate-800 truncate">
-              {otherUser?.nick ?? "Ładowanie..."}
-            </p>
-            <p className="text-xs text-slate-400">
-              {status === DM_STATUS.CONNECTED
-                ? "Online"
-                : status === DM_STATUS.CONNECTING
-                  ? "Łączenie..."
-                  : status === DM_STATUS.RECONNECTING
-                    ? "Ponowne łączenie..."
-                    : "Offline"}
-            </p>
-          </div>
-
-          {(status === DM_STATUS.FAILED || status === DM_STATUS.DISCONNECTED) && (
-            <button
-              type="button"
-              onClick={manualReconnect}
-              className="text-xs text-zebra-600 hover:underline"
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-center gap-3 px-4 py-3 bg-[var(--zp-app-bg)] border-b border-[var(--zp-app-border)] sticky top-0 z-10">
+            <Link
+              to="/messages"
+              className="md:hidden text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition text-xl leading-none mr-1"
             >
-              Połącz
-            </button>
-          )}
-        </div>
+              ←
+            </Link>
 
-        <div
-          ref={containerRef}
-          className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-slate-50 min-h-0"
-        >
+            <div className="relative">
+              <Avatar name={otherUser?.nick ?? "?"} size="md" />
+              <span
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[var(--zp-app-bg)] ${statusColor}`}
+              />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-slate-900 dark:text-slate-100 truncate">
+                {otherUser?.nick ?? t("conversation.loading")}
+              </p>
+              <p className="text-xs text-[var(--zp-app-text-muted)]">
+                {status === DM_STATUS.CONNECTED
+                  ? t("conversation.online")
+                  : status === DM_STATUS.CONNECTING
+                    ? t("conversation.connecting")
+                    : status === DM_STATUS.RECONNECTING
+                      ? t("conversation.reconnecting")
+                      : t("conversation.offline")}
+              </p>
+            </div>
+
+            {(status === DM_STATUS.FAILED || status === DM_STATUS.DISCONNECTED) && (
+              <button
+                type="button"
+                onClick={manualReconnect}
+                className="text-xs text-zebra-600 dark:text-teal-400 hover:underline"
+              >
+                {t("conversation.connect")}
+              </button>
+            )}
+          </div>
+
+          <div
+            ref={containerRef}
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-[var(--zp-app-bg)] min-h-0"
+          >
           {loadingHistory ? (
             <div className="flex justify-center py-8">
-              <p className="text-slate-400 text-sm">Ładowanie...</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm">{t("conversation.loading")}</p>
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[200px] py-16 text-center">
               <span className="text-5xl mb-3">👋</span>
-              <p className="text-slate-500 font-medium">Początek konwersacji</p>
-              <p className="text-slate-400 text-sm mt-1">
-                Napisz pierwszą wiadomość!
+              <p className="text-slate-500 dark:text-slate-400 font-medium">{t("conversation.startConversation")}</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
+                {t("conversation.writeFirst")}
               </p>
             </div>
           ) : (
@@ -164,8 +179,8 @@ export default function ConversationPage() {
                 <div key={msg.id ?? i}>
                   {showDate && (
                     <div className="flex justify-center my-3">
-                      <span className="text-xs text-slate-400 bg-slate-200 px-3 py-1 rounded-full">
-                        {new Date(msg.created_at).toLocaleDateString("pl-PL", {
+                      <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-full">
+                        {new Date(msg.created_at).toLocaleDateString(locale, {
                           weekday: "long",
                           day: "numeric",
                           month: "long",
@@ -180,8 +195,8 @@ export default function ConversationPage() {
                     <div
                       className={`max-w-xs sm:max-w-sm lg:max-w-md px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         isOwn
-                          ? "bg-zebra-600 text-white rounded-tr-sm"
-                          : "bg-white border text-slate-800 rounded-tl-sm shadow-sm"
+                          ? "bg-zebra-600 dark:bg-teal-400 text-white dark:text-slate-900 rounded-tr-sm"
+                          : "bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] text-slate-900 dark:text-slate-100 rounded-tl-sm"
                       }`}
                     >
                       <p className="whitespace-pre-wrap break-words">
@@ -189,10 +204,12 @@ export default function ConversationPage() {
                       </p>
                       <p
                         className={`text-xs mt-1 text-right ${
-                          isOwn ? "text-zebra-200" : "text-slate-400"
+                          isOwn
+                            ? "text-zebra-100/90 dark:text-slate-900/70"
+                            : "text-[var(--zp-app-text-muted)]"
                         }`}
                       >
-                        {new Date(msg.created_at).toLocaleTimeString("pl-PL", {
+                        {new Date(msg.created_at).toLocaleTimeString(locale, {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -209,17 +226,17 @@ export default function ConversationPage() {
             })
           )}
           <div ref={bottomRef} />
-        </div>
+          </div>
 
-        <div className="bg-white border-t px-4 py-3 flex-shrink-0">
+          <div className="bg-[var(--zp-app-bg)] border-t border-[var(--zp-app-border)] px-4 py-3 flex-shrink-0">
           {showEmoji && (
-            <div className="flex flex-wrap gap-1 mb-2 p-2 bg-slate-50 rounded-xl border">
+            <div className="flex flex-wrap gap-1 mb-2 p-2 bg-[var(--zp-app-card)] rounded-xl border border-[var(--zp-app-border)]">
               {EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
                   type="button"
                   onClick={() => addEmoji(emoji)}
-                  className="text-xl p-1 hover:bg-slate-200 rounded-lg transition"
+                  className="text-xl p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition"
                 >
                   {emoji}
                 </button>
@@ -233,10 +250,10 @@ export default function ConversationPage() {
               onClick={() => setShowEmoji(!showEmoji)}
               className={`flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl transition text-xl ${
                 showEmoji
-                  ? "bg-zebra-100 text-zebra-600"
-                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                  ? "bg-zebra-100 dark:bg-teal-900/40 text-zebra-600 dark:text-teal-400"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
               }`}
-              aria-label="Emotki"
+              aria-label={t("conversation.emojis")}
             >
               😊
             </button>
@@ -244,10 +261,10 @@ export default function ConversationPage() {
             <button
               type="button"
               onClick={() =>
-                toast("Załączanie zdjęć — wkrótce! 📸", { icon: "🚧" })
+                toast(t("conversation.attachSoon"), { icon: "🚧" })
               }
-              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition text-xl"
-              title="Załącz zdjęcie (wkrótce)"
+              className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition text-xl"
+              title={t("conversation.attachPhoto")}
             >
               📎
             </button>
@@ -260,19 +277,19 @@ export default function ConversationPage() {
               disabled={!isConnected}
               placeholder={
                 isConnected
-                  ? "Napisz wiadomość... (Enter = wyślij)"
-                  : "Łączenie..."
+                  ? t("conversation.placeholder")
+                  : t("conversation.connectingPlaceholder")
               }
               rows={1}
-              className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-zebra-500 disabled:bg-slate-50 disabled:text-slate-400 transition max-h-32 min-h-[42px]"
+              className="flex-1 border border-[var(--zp-app-border)] rounded-xl px-4 py-2.5 text-sm bg-[var(--zp-app-card)] text-slate-900 dark:text-slate-100 placeholder:text-[var(--zp-app-text-muted)] resize-none overflow-hidden focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400 disabled:opacity-70 transition max-h-32 min-h-[42px]"
             />
 
             <button
               type="button"
               onClick={handleSend}
               disabled={!isConnected || !input.trim()}
-              className="flex-shrink-0 w-9 h-9 bg-zebra-600 hover:bg-zebra-700 disabled:bg-slate-200 text-white rounded-xl flex items-center justify-center transition"
-              aria-label="Wyślij"
+              className="flex-shrink-0 w-9 h-9 bg-zebra-600 dark:bg-teal-400 hover:bg-zebra-700 dark:hover:bg-teal-300 disabled:bg-slate-200 dark:disabled:bg-slate-700 text-white dark:text-slate-900 rounded-xl flex items-center justify-center transition"
+              aria-label={t("conversation.send")}
             >
               <svg
                 className="w-4 h-4"
@@ -288,6 +305,7 @@ export default function ConversationPage() {
                 />
               </svg>
             </button>
+          </div>
           </div>
         </div>
       </div>

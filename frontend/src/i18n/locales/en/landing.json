@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "signIn": "Sign in",
+    "joinFree": "Join for free",
+    "themeLight": "☀️ Light",
+    "themeDark": "🌙 Dark",
+    "enableLight": "Enable light mode",
+    "enableDark": "Enable dark mode"
+  },
+  "hero": {
+    "badge": "Platform for caregivers of people with rare diseases",
+    "title": "You're not",
+    "titleHighlight": "alone.",
+    "subtitle": "Describe symptoms in your own words. The system will connect you with parents and caregivers who share similar experiences. Together it's easier.",
+    "quote": "\"When you hear hoofbeats, think horses, not zebras.\"",
+    "ctaPrimary": "Find your group",
+    "ctaSecondary": "How it works",
+    "footerNote": "Free · Anonymous · No ads"
+  },
+  "heroMockup": {
+    "yourGroup": "— Your Group",
+    "writeMessage": "Write a message..."
+  },
+  "howItWorks": {
+    "sectionLabel": "How it works",
+    "title": "Three steps to a support group",
+    "subtitle": "From description to first conversation — the whole process takes less than 5 minutes.",
+    "step1Title": "Describe symptoms",
+    "step1Desc": "Write in your own words — no medical jargon. Describe what you see, when it started, and what has already been checked.",
+    "step2Title": "We match you",
+    "step2Desc": "Our algorithm searches the database of descriptions and connects you with people whose experiences are closest to yours.",
+    "step3Title": "Talk with the group",
+    "step3Desc": "Join a private support group. Share experiences, ask questions, and support others."
+  },
+  "forWhom": {
+    "sectionLabel": "For whom",
+    "title": "ZebraPoint is for you if...",
+    "parentsTitle": "Parents",
+    "parentsSubtitle": "You're looking for other parents of children with similar symptoms",
+    "parents1": "Share experiences from the path to diagnosis",
+    "parents2": "Learn which specialists are worth visiting",
+    "parents3": "Find emotional support from people who understand",
+    "caregiversTitle": "Caregivers",
+    "caregiversSubtitle": "You care for an adult with an undiagnosed condition",
+    "caregivers1": "Connect with other caregivers in a similar situation",
+    "caregivers2": "Exchange knowledge about available forms of support",
+    "caregivers3": "Avoid burnout — talk to those who understand",
+    "patientsTitle": "Adult patients",
+    "patientsSubtitle": "You're coping with an undiagnosed or rare disease yourself",
+    "patients1": "Find people with identical or similar symptoms",
+    "patients2": "Share what helped — and what didn't",
+    "patients3": "Build a support network on your own terms",
+    "cta": "Join for free →"
+  },
+  "privacy": {
+    "sectionLabel": "Privacy and security",
+    "title": "Your data is yours",
+    "subtitle": "We know you're writing about personal matters. We take that seriously.",
+    "anonTitle": "Full anonymity",
+    "anonDesc": "You use a nickname. No one sees your name or email.",
+    "encryptedTitle": "Encrypted data",
+    "encryptedDesc": "All data is stored in an encrypted database on European servers.",
+    "noAdsTitle": "Zero ads",
+    "noAdsDesc": "We don't sell data. We don't show ads. Ever.",
+    "deletionTitle": "Right to deletion",
+    "deletionDesc": "You can delete your account and all data at any time, with one click."
+  },
+  "stats": {
+    "freeLabel": "Free access",
+    "gdprLabel": "EU compliance",
+    "availabilityLabel": "Available 24/7",
+    "firstGroupLabel": "To first group"
+  },
+  "ctaFooter": {
+    "title": "Ready to find your group?",
+    "subtitle": "Join ZebraPoint for free. Describe your symptoms and find people who truly understand.",
+    "button": "Start now — it's free",
+    "copyright": "© {{year}} ZebraPoint · Support for caregivers of people with rare diseases",
+    "terms": "Terms",
+    "about": "About us",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy policy (GDPR)"
+  },
+  "faq": {
+    "sectionLabel": "FAQ",
+    "title": "Frequently asked questions",
+    "intro1": "Have questions about how ZebraPoint works, data privacy, or terms of use? You'll find all details in the terms, privacy policy, and About section, which we've linked in the footer.",
+    "intro2": "If something is unclear or you want to give feedback, use the contact form we'll provide with the full release. For now we're focused on helping you find a support group as quickly as possible."
+  }
+}

@@ -33,6 +33,7 @@ export function useChat(groupId) {
   const reconnectTimer = useRef(null);
   const pingTimer      = useRef(null);
   const isMounted      = useRef(true);
+  const connectRef     = useRef(null);
 
   const addMessages = useCallback((newMessages) => {
     setMessages((prev) => {
@@ -105,6 +106,21 @@ export function useChat(groupId) {
     }
   }, []);
 
+  function scheduleReconnect() {
+    if (!isMounted.current) return;
+
+    if (reconnectCount.current >= MAX_RECONNECT) {
+      setStatus(WS_STATUS.FAILED);
+      return;
+    }
+
+    reconnectCount.current += 1;
+
+    const delay = RECONNECT_DELAY * Math.pow(2, reconnectCount.current - 1);
+    setStatus(WS_STATUS.RECONNECTING);
+    reconnectTimer.current = setTimeout(() => connectRef.current?.(), delay);
+  }
+
   const connect = useCallback(() => {
     if (!groupId || !token || !isMounted.current) return;
 
@@ -153,20 +169,8 @@ export function useChat(groupId) {
     };
   }, [groupId, token, handleServerMessage, startPing, stopPing]);
 
-  const scheduleReconnect = useCallback(() => {
-    if (!isMounted.current) return;
-
-    if (reconnectCount.current >= MAX_RECONNECT) {
-      setStatus(WS_STATUS.FAILED);
-      return;
-    }
-
-    reconnectCount.current += 1;
-
-    const delay = RECONNECT_DELAY * Math.pow(2, reconnectCount.current - 1);
-
-    setStatus(WS_STATUS.RECONNECTING);
-    reconnectTimer.current = setTimeout(connect, delay);
+  useEffect(() => {
+    connectRef.current = connect;
   }, [connect]);
 
   const disconnect = useCallback(() => {
@@ -194,7 +198,7 @@ export function useChat(groupId) {
 
   useEffect(() => {
     isMounted.current = true;
-    connect();
+    queueMicrotask(() => connect());
 
     return () => {
       isMounted.current = false;

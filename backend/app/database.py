@@ -43,9 +43,11 @@ database_url = _database_url_with_ipv4(settings.database_url)
 engine = create_engine(
     database_url,
     pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
-    echo=settings.debug
+    pool_size=3,
+    max_overflow=5,
+    pool_recycle=300,
+    echo=settings.debug,
+    connect_args={"prepare_threshold": None},
 )
 
 SessionLocal = sessionmaker(

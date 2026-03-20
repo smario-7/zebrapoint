@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, field_validator
-from sqlalchemy import func, or_
+from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
@@ -100,7 +100,7 @@ def _serialize_conversation(
     return ConversationOut(
         id=conv.id,
         other_user_id=other_user.id,
-        other_user_nick=other_user.display_name,
+        other_user_nick=str(other_user.display_name or "Użytkownik"),
         last_message_at=conv.last_message_at,
         last_message_text=conv.last_message_text,
         unread_count=unread,
@@ -147,18 +147,25 @@ def get_total_unread(
     db: Session = Depends(get_db),
 ):
     """Używane w navbar do pokazania badge z liczbą nieprzeczytanych."""
-    sum_a = (
-        db.query(func.coalesce(func.sum(DmConversation.unread_count_a), 0))
-        .filter(DmConversation.user_a_id == current_user.id)
+    total = (
+        db.query(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (DmConversation.user_a_id == current_user.id, DmConversation.unread_count_a),
+                        else_=0,
+                    )
+                    + case(
+                        (DmConversation.user_b_id == current_user.id, DmConversation.unread_count_b),
+                        else_=0,
+                    )
+                ),
+                0,
+            )
+        )
         .scalar()
     )
-    sum_b = (
-        db.query(func.coalesce(func.sum(DmConversation.unread_count_b), 0))
-        .filter(DmConversation.user_b_id == current_user.id)
-        .scalar()
-    )
-    total = int(sum_a or 0) + int(sum_b or 0)
-    return {"unread_count": total}
+    return {"unread_count": int(total or 0)}
 
 
 @router.get(
@@ -229,7 +236,7 @@ def get_messages(
         MessageOut(
             id=m.id,
             sender_id=m.sender_id,
-            sender_nick=m.sender.display_name,
+            sender_nick=str((m.sender.display_name if m.sender else None) or "Użytkownik"),
             content=m.content,
             message_type=m.message_type or "text",
             image_url=m.image_url,

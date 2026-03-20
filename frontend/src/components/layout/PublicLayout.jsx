@@ -1,36 +1,45 @@
 import { Link } from "react-router-dom";
 import LogoBrand from "../ui/LogoBrand";
+import useThemeStore from "../../store/themeStore";
 
-export default function PublicLayout({ children }) {
+function DefaultHeaderLinks() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="px-6 py-4 flex items-center justify-between max-w-5xl mx-auto w-full">
+    <div className="flex items-center gap-3">
+      <Link
+        to="/login"
+        className="text-sm font-medium text-[var(--zp-app-text-primary)] hover:text-[var(--zp-accent-primary)] transition"
+      >
+        Zaloguj się
+      </Link>
+      <Link
+        to="/register"
+        className="text-sm font-medium text-white bg-[var(--zp-accent-primary)] hover:opacity-90 px-4 py-2 rounded-xl transition"
+      >
+        Dołącz
+      </Link>
+    </div>
+  );
+}
+
+export default function PublicLayout({ children, headerRight }) {
+  const dark = useThemeStore((s) => s.dark);
+
+  return (
+    <div className="min-h-screen bg-[var(--zp-app-bg)] flex flex-col">
+      <header className="h-16 flex items-center justify-between w-full border-b border-[var(--zp-app-border)] bg-[var(--zp-app-card)] px-5 md:px-12">
         <Link
           to="/"
-          className="group font-bold text-xl text-slate-800 hover:text-zebra-600 transition"
+          className="group font-bold text-[17px] text-[var(--zp-app-text-primary)] hover:opacity-80 transition"
           aria-label="ZebraPoint"
         >
-          <LogoBrand className="h-8 w-auto" />
+          <LogoBrand inverted={dark} className="h-8 w-auto" />
         </Link>
-        <div className="flex items-center gap-3">
-          <Link
-            to="/login"
-            className="text-sm text-slate-600 hover:text-slate-800 font-medium transition"
-          >
-            Zaloguj się
-          </Link>
-          <Link
-            to="/register"
-            className="text-sm bg-zebra-600 hover:bg-zebra-700 text-white font-semibold px-4 py-2 rounded-xl transition"
-          >
-            Dołącz
-          </Link>
-        </div>
+        {headerRight ?? <DefaultHeaderLinks />}
       </header>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 flex flex-col">{children}</main>
 
-      <footer className="text-center py-6 text-xs text-slate-400">
+      <footer className="text-center py-6 text-xs text-[var(--zp-app-text-muted)]">
         © 2026 ZebraPoint · Platforma wsparcia dla opiekunów
       </footer>
     </div>

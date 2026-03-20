@@ -1,23 +1,24 @@
 import { useState } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const REASONS = [
-  { value: "spam", label: "Spam", icon: "📢" },
-  { value: "abuse", label: "Obraźliwe lub agresywne", icon: "🚫" },
-  { value: "misinformation", label: "Dezinformacja medyczna", icon: "⚠️" },
-  { value: "hate_speech", label: "Mowa nienawiści", icon: "🛑" },
-  { value: "other", label: "Inne", icon: "📝" },
+  { value: "spam", icon: "📢" },
+  { value: "abuse", icon: "🚫" },
+  { value: "misinformation", icon: "⚠️" },
+  { value: "hate_speech", icon: "🛑" },
+  { value: "other", icon: "📝" },
 ];
 
-const TARGET_LABELS = {
-  post: "post",
-  comment: "komentarz",
-  message: "wiadomość",
-  user: "użytkownika",
-};
-
 export default function ReportModal({ targetType, targetId, onClose }) {
+  const { t } = useTranslation("app");
+  const targetLabelRaw = t(`report.targets.${targetType}`);
+  const targetLabel =
+    targetLabelRaw === `report.targets.${targetType}`
+      ? targetType
+      : targetLabelRaw;
+
   const [reason, setReason] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,7 @@ export default function ReportModal({ targetType, targetId, onClose }) {
       setSubmitted(true);
     } catch (err) {
       if (err.response?.status !== 201) {
-        toast.error("Nie udało się wysłać zgłoszenia");
+        toast.error(t("report.sendError"));
       } else {
         setSubmitted(true);
       }
@@ -62,11 +63,10 @@ export default function ReportModal({ targetType, targetId, onClose }) {
           <div className="text-center py-4">
             <div className="text-5xl mb-3">✅</div>
             <h3 id="report-modal-title" className="font-bold text-slate-800 text-lg mb-2">
-              Dziękujemy za zgłoszenie
+              {t("report.submittedTitle")}
             </h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-5">
-              Nasz zespół przejrzy {TARGET_LABELS[targetType] || targetType} i podejmie
-              odpowiednie działania zgodnie z zasadami społeczności.
+              {t("report.submittedDescription", { target: targetLabel })}
             </p>
             <button
               type="button"
@@ -74,27 +74,27 @@ export default function ReportModal({ targetType, targetId, onClose }) {
               className="bg-zebra-600 text-white font-semibold px-6 py-2.5
                          rounded-xl hover:bg-zebra-700 transition"
             >
-              Zamknij
+              {t("report.close")}
             </button>
           </div>
         ) : (
           <>
             <div className="flex items-center justify-between mb-5">
               <h3 id="report-modal-title" className="font-bold text-slate-800">
-                Zgłoś {TARGET_LABELS[targetType] || targetType}
+                {t("report.submitTitle", { target: targetLabel })}
               </h3>
               <button
                 type="button"
                 onClick={onClose}
                 className="text-slate-400 hover:text-slate-600 text-xl leading-none"
-                aria-label="Zamknij"
+                aria-label={t("report.close")}
               >
                 ×
               </button>
             </div>
 
             <p className="text-sm text-slate-600 mb-3 font-medium">
-              Powód zgłoszenia:
+              {t("report.reasonLabel")}
             </p>
             <div className="space-y-2 mb-4">
               {REASONS.map((r) => (
@@ -119,7 +119,7 @@ export default function ReportModal({ targetType, targetId, onClose }) {
                   />
                   <span className="text-lg">{r.icon}</span>
                   <span className="text-sm font-medium text-slate-700">
-                    {r.label}
+                    {t(`report.reasons.${r.value}`)}
                   </span>
                 </label>
               ))}
@@ -127,13 +127,15 @@ export default function ReportModal({ targetType, targetId, onClose }) {
 
             <div className="mb-5">
               <label className="block text-sm font-medium text-slate-600 mb-1">
-                Dodatkowe informacje{" "}
-                <span className="text-slate-400 font-normal">(opcjonalnie)</span>
+                {t("report.additionalInfo")}{" "}
+                <span className="text-slate-400 font-normal">
+                  {t("report.optional")}
+                </span>
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Opisz problem krótko..."
+                  placeholder={t("report.descriptionPlaceholder")}
                 rows={2}
                 maxLength={500}
                 className="w-full border border-slate-200 rounded-xl px-3 py-2
@@ -151,7 +153,7 @@ export default function ReportModal({ targetType, targetId, onClose }) {
                            disabled:text-slate-400 text-white font-semibold
                            py-2.5 rounded-xl transition text-sm"
               >
-                {loading ? "Wysyłanie..." : "Wyślij zgłoszenie"}
+                {loading ? t("report.sending") : t("report.send")}
               </button>
               <button
                 type="button"
@@ -160,12 +162,12 @@ export default function ReportModal({ targetType, targetId, onClose }) {
                            font-semibold py-2.5 rounded-xl hover:bg-slate-50
                            transition text-sm"
               >
-                Anuluj
+                {t("report.cancel")}
               </button>
             </div>
 
             <p className="text-xs text-slate-400 text-center mt-3">
-              Fałszywe zgłoszenia mogą skutkować ostrzeżeniem konta
+              {t("report.falseReportsWarning")}
             </p>
           </>
         )}

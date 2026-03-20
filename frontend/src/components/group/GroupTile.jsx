@@ -3,7 +3,11 @@
  * Pokazuje: kolor i nazwę grupy, score dopasowania, kategorię, max 3 słowa kluczowe, liczbę członków.
  * Gdy brak grupy/profilu — zachęta do wypełnienia formularza objawów.
  */
+import { useTranslation } from "react-i18next";
+
 export default function GroupTile({ group, profile, onManage }) {
+  const { t } = useTranslation("app");
+
   if (!group || !profile) {
     return (
       <div
@@ -11,14 +15,14 @@ export default function GroupTile({ group, profile, onManage }) {
         onKeyDown={(e) => e.key === "Enter" && onManage()}
         role="button"
         tabIndex={0}
-        className="bg-white rounded-2xl border-2 border-dashed border-slate-200 hover:border-zebra-300 hover:shadow-sm transition-all cursor-pointer p-5 flex flex-col items-center justify-center text-center min-h-[160px] group"
+        className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 hover:border-zebra-300 dark:hover:border-teal-600 hover:shadow-sm transition-all cursor-pointer p-5 flex flex-col items-center justify-center text-center min-h-[160px] group"
       >
         <div className="text-4xl mb-3">🔍</div>
-        <p className="font-semibold text-slate-600 group-hover:text-zebra-700 transition">
-          Znajdź swoją grupę
+        <p className="font-semibold text-slate-600 dark:text-slate-300 group-hover:text-zebra-700 dark:group-hover:text-teal-400 transition">
+          {t("groupTile.findGroup")}
         </p>
-        <p className="text-sm text-slate-400 mt-1">
-          Opisz objawy i dołącz do społeczności
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+          {t("groupTile.findGroupHint")}
         </p>
       </div>
     );
@@ -39,7 +43,7 @@ export default function GroupTile({ group, profile, onManage }) {
         : "#94a3b8";
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-md transition-all overflow-hidden">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all overflow-hidden">
       <div
         className="h-1.5 w-full"
         style={{ backgroundColor: accentColor }}
@@ -60,32 +64,34 @@ export default function GroupTile({ group, profile, onManage }) {
               />
             </div>
             <div>
-              <p className="font-bold text-slate-800 text-base leading-tight">
+              <p className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight">
                 {group.name}
               </p>
               {group.symptom_category && (
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                   {group.symptom_category}
                 </p>
               )}
             </div>
           </div>
           {scorePct != null && (
-            <div className="flex-shrink-0 text-center bg-slate-50 rounded-xl px-2.5 py-1.5 min-w-[52px]">
+            <div className="flex-shrink-0 text-center bg-slate-50 dark:bg-slate-700/50 rounded-xl px-2.5 py-1.5 min-w-[52px]">
               <p
                 className="text-lg font-bold leading-none"
                 style={{ color: scoreColor }}
               >
                 {scorePct}%
               </p>
-              <p className="text-xs text-slate-400">match</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {t("groupTile.match")}
+              </p>
             </div>
           )}
         </div>
 
         {scorePct != null && (
           <div className="mb-3">
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -102,7 +108,7 @@ export default function GroupTile({ group, profile, onManage }) {
             {keywords.map((kw, i) => (
               <span
                 key={i}
-                className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full"
+                className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full"
               >
                 {kw}
               </span>
@@ -110,16 +116,16 @@ export default function GroupTile({ group, profile, onManage }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-          <p className="text-xs text-slate-400">
-            👥 {group.member_count ?? 0} członków
+        <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-700">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            👥 {t("groupTile.members", { count: group.member_count ?? 0 })}
           </p>
           <button
             type="button"
             onClick={onManage}
-            className="text-sm font-semibold text-zebra-600 hover:text-zebra-700 transition flex items-center gap-1"
+            className="text-sm font-semibold text-zebra-600 dark:text-teal-400 hover:text-zebra-700 dark:hover:text-teal-300 transition flex items-center gap-1"
           >
-            Zarządzaj grupą
+            {t("groupTile.manageGroup")}
             <span className="text-base leading-none">→</span>
           </button>
         </div>
