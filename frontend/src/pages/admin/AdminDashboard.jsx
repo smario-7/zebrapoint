@@ -7,11 +7,11 @@ function StatCard({ label, value, color, link, urgent }) {
   const { t } = useTranslation("admin");
   const content = (
     <div
-      className={`bg-white rounded-2xl border p-4 ${
-        urgent ? "border-red-300 shadow-sm shadow-red-100" : ""
+      className={`bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 ${
+        urgent ? "border-red-300 dark:border-red-900 shadow-sm shadow-red-100 dark:shadow-red-900/20" : ""
       }`}
     >
-      <p className="text-slate-400 text-xs mb-1">{label}</p>
+      <p className="text-slate-400 dark:text-slate-500 text-xs mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
       {urgent && (
         <p className="text-xs text-red-500 mt-1 font-medium">
@@ -44,13 +44,13 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-slate-400">{t("dashboard.loading")}</p>;
+  if (loading) return <p className="text-slate-400 dark:text-slate-500">{t("dashboard.loading")}</p>;
 
   const { reports = {}, pipeline } = stats || {};
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">
         {t("dashboard.title")}
       </h1>
 
@@ -84,8 +84,8 @@ export default function AdminDashboard() {
       </div>
 
       {pipeline && (
-        <div className="bg-white rounded-2xl border p-5">
-          <h2 className="font-semibold text-slate-800 mb-3">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
+          <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
             {t("dashboard.lastPipeline")}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
@@ -95,13 +95,13 @@ export default function AdminDashboard() {
               { label: t("dashboard.noise"), value: pipeline.noise_count },
               { label: t("dashboard.reassigned"), value: pipeline.reassigned },
             ].map((item) => (
-              <div key={item.label} className="bg-slate-50 rounded-xl p-3">
-                <p className="text-slate-400 text-xs">{item.label}</p>
-                <p className="font-bold text-slate-800 text-lg">{item.value}</p>
+              <div key={item.label} className="bg-slate-50 dark:bg-slate-900/90 rounded-xl p-3">
+                <p className="text-slate-400 dark:text-slate-500 text-xs">{item.label}</p>
+                <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">{item.value}</p>
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
             {new Date(pipeline.run_at).toLocaleString(locale)} · {pipeline.duration_ms}ms
             · {t("dashboard.status")}: {pipeline.status}
           </p>

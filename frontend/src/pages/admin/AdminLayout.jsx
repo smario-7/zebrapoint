@@ -12,8 +12,8 @@ export default function AdminLayout() {
   const { t } = useTranslation("admin");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-56 bg-slate-900 flex-shrink-0 flex flex-col min-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+      <aside className="w-56 bg-slate-900 dark:bg-slate-950 flex-shrink-0 flex flex-col min-h-screen border-r border-slate-800 dark:border-slate-800">
         <div className="p-4 border-b border-slate-700">
           <Link
             to="/admin"
@@ -55,7 +55,7 @@ export default function AdminLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <Outlet />
       </main>
     </div>

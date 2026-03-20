@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import useBootstrapStore from "../store/bootstrapStore";
+import i18n from "../i18n";
 
 /**
  * Hook do listy konwersacji DM.
@@ -19,7 +20,7 @@ export function useConversations() {
       const convRes = await api.get("/dm/conversations");
       setConversations(convRes.data ?? []);
     } catch {
-      setError("Nie udało się pobrać konwersacji");
+      setError(i18n.t("hooks.conversationsLoadError", { ns: "app" }));
       setConversations([]);
     } finally {
       setLoading(false);

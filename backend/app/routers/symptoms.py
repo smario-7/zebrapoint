@@ -35,6 +35,11 @@ def _ensure_uuid(value):
     return value
 
 
+def _to_embedding_list(embedding) -> list[float]:
+    """Ujednolica embedding do listy floatów."""
+    return embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
+
+
 @router.post(
     "/",
     response_model=SymptomOut,
@@ -188,11 +193,7 @@ def update_symptoms_patch(
     db.commit()
     db.refresh(profile)
 
-    embedding_list = (
-        new_embedding.tolist()
-        if hasattr(new_embedding, "tolist")
-        else list(new_embedding)
-    )
+    embedding_list = _to_embedding_list(new_embedding)
     matches = find_top_matches(
         db=db,
         embedding=embedding_list,
@@ -241,11 +242,7 @@ def get_my_matches(
             detail="Brak profilu objawów"
         )
 
-    embedding_list = (
-        profile.embedding.tolist()
-        if hasattr(profile.embedding, "tolist")
-        else list(profile.embedding)
-    )
+    embedding_list = _to_embedding_list(profile.embedding)
     matches = find_top_matches(
         db=db,
         embedding=embedding_list,

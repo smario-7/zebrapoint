@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,6 +7,15 @@ import api from "../services/api";
 import AppShell from "../components/layout/AppShell";
 import { useTranslation } from "react-i18next";
 
+function createSymptomsSchema(t) {
+  return z.object({
+    description: z
+      .string()
+      .min(100, t("symptoms.validationMin"))
+      .max(1000, t("symptoms.validationMax")),
+  });
+}
+
 export default function SymptomsForm() {
   const { t } = useTranslation("app");
   const [isLoading, setIsLoading] = useState(false);
@@ -14,12 +23,7 @@ export default function SymptomsForm() {
   const [matchResult, setMatchResult] = useState(null);
   const navigate = useNavigate();
 
-  const schema = z.object({
-    description: z
-      .string()
-      .min(100, t("symptoms.validationMin"))
-      .max(1000, t("symptoms.validationMax")),
-  });
+  const schema = useMemo(() => createSymptomsSchema(t), [t]);
 
   const {
     register,

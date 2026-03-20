@@ -8,6 +8,7 @@ from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm,
 from app.services.embedding_service import get_model
 
 logger = logging.getLogger(__name__)
+APP_VERSION = "0.2.0"
 
 
 @asynccontextmanager
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="ZebraPoint API",
     description="API dla platformy wsparcia opiekunów osób z rzadkimi chorobami",
-    version="0.2.0",
+    version=APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -80,7 +81,7 @@ app.include_router(bootstrap.router)
 
 @app.get("/", tags=["Health"])
 def root():
-    return {"status": "ok", "service": "ZebraPoint API", "version": "0.2.0"}
+    return {"status": "ok", "service": "ZebraPoint API", "version": APP_VERSION}
 
 
 @app.get("/health", tags=["Health"])

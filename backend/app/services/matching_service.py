@@ -1,8 +1,9 @@
 import logging
 from dataclasses import dataclass
+import uuid as uuid_module
 from uuid import UUID
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.models.group import Group
 from app.models.group_member import GroupMember
@@ -60,7 +61,8 @@ def find_matching_group(
 
     if not similar_profiles:
         logger.info(f"Brak podobnych profili w bazie — tworzę nową grupę dla user {user_id}")
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     best = similar_profiles[0]
     best_score = float(best.similarity)
@@ -69,19 +71,16 @@ def find_matching_group(
 
     if best_score < SIMILARITY_THRESHOLD:
         logger.info(f"Score {best_score:.4f} < threshold {SIMILARITY_THRESHOLD} — nowa grupa")
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     group = db.query(Group).filter(Group.id == best.group_id).first()
     if not group or not group.is_active:
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     logger.info(f"Dopasowano do grupy '{group.name}' (score={best_score:.4f})")
-    return {
-        "group_id": str(group.id),
-        "score": best_score,
-        "is_new": False,
-        "group_name": group.name
-    }
+    return _build_match_response(group, best_score, False)
 
 
 def add_user_to_group(
@@ -167,9 +166,8 @@ def _query_similar_profiles(
     return result.fetchall()
 
 
-def _create_new_group(db: Session) -> dict:
+def _create_new_group(db: Session) -> Group:
     """Tworzy nową grupę z deterministyczną nazwą i kolorem."""
-    import uuid as uuid_module
     group_id = uuid_module.uuid4()
     group = Group(
         id=group_id,
@@ -183,11 +181,15 @@ def _create_new_group(db: Session) -> dict:
     db.flush()
 
     logger.info("Utworzono nową grupę: %s", group.id)
+    return group
+
+
+def _build_match_response(group: Group, score: float, is_new: bool) -> dict:
     return {
         "group_id": str(group.id),
-        "score": 0.0,
-        "is_new": True,
-        "group_name": group.name
+        "score": score,
+        "is_new": is_new,
+        "group_name": group.name,
     }
 
 
@@ -202,22 +204,28 @@ def find_top_matches(
     Używane w drawerze zarządzania grupą i po aktualizacji opisu.
     """
     embedding_str = _format_embedding(embedding)
-    exclude_clause = "AND sp.user_id != :exclude_user_id" if exclude_user_id else ""
-
-    rows = db.execute(text(f"""
+    base_query = """
         SELECT
             sp.group_id,
             1 - (sp.embedding <=> CAST(:emb AS vector)) AS similarity
         FROM symptom_profiles sp
         WHERE sp.embedding IS NOT NULL
           AND sp.group_id IS NOT NULL
-          {exclude_clause}
         ORDER BY sp.embedding <=> CAST(:emb AS vector)
         LIMIT 50
-    """), {
-        "emb": embedding_str,
-        "exclude_user_id": exclude_user_id or ""
-    }).fetchall()
+    """
+    if exclude_user_id:
+        rows = db.execute(
+            text(
+                base_query.replace(
+                    "ORDER BY",
+                    "AND sp.user_id != :exclude_user_id\n        ORDER BY",
+                )
+            ),
+            {"emb": embedding_str, "exclude_user_id": exclude_user_id},
+        ).fetchall()
+    else:
+        rows = db.execute(text(base_query), {"emb": embedding_str}).fetchall()
 
     best_per_group: dict[str, float] = {}
     for row in rows:
@@ -228,9 +236,12 @@ def find_top_matches(
 
     top_groups = sorted(best_per_group.items(), key=lambda x: -x[1])[:top_k]
     results: list[GroupMatch] = []
+    group_ids = [group_id for group_id, _ in top_groups]
+    groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+    groups_by_id = {str(group.id): group for group in groups}
 
     for group_id, score in top_groups:
-        group = db.query(Group).filter(Group.id == group_id).first()
+        group = groups_by_id.get(group_id)
         if not group or not group.is_active:
             continue
         results.append(GroupMatch(
@@ -285,7 +296,7 @@ def assign_user_to_group(
     uid = UUID(user_id) if isinstance(user_id, str) else user_id
 
     if group_id == "__new__":
-        group = _create_new_group_entity(db)
+        group = _create_new_group(db)
         group_id = str(group.id)
     else:
         group = db.query(Group).filter(Group.id == group_id).first()
@@ -325,21 +336,4 @@ def assign_user_to_group(
     db.refresh(group)
 
     update_group_characteristics(db, str(group.id))
-    return group
-
-
-def _create_new_group_entity(db: Session) -> Group:
-    """Tworzy nową grupę i zwraca obiekt Group (dla assign_user_to_group)."""
-    import uuid as uuid_module
-    group_id = uuid_module.uuid4()
-    group = Group(
-        id=group_id,
-        name=generate_group_name(str(group_id)),
-        accent_color=generate_group_color(str(group_id)),
-        description="Grupa tymczasowa. Zostanie uzupełniona przy retrain.",
-        is_active=True,
-        member_count=0
-    )
-    db.add(group)
-    db.flush()
     return group

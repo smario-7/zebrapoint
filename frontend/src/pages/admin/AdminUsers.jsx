@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import ConfirmModal from "../../components/ui/ConfirmModal";
 
 export default function AdminUsers() {
-  const { t, i18n } = useTranslation("admin");
+  const { t, i18n } = useTranslation(["admin", "common"]);
   const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [unbanConfirm, setUnbanConfirm] = useState(null);
+  const [unbanLoading, setUnbanLoading] = useState(false);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -25,23 +28,41 @@ export default function AdminUsers() {
 
   useEffect(() => {
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tylko pierwsze wczytanie listy
   }, []);
 
-  const handleUnban = async (userId, displayName) => {
-    if (!window.confirm(t("users.unbanConfirm", { name: displayName })))
-      return;
+  const handleUnbanConfirm = async () => {
+    if (!unbanConfirm) return;
+    setUnbanLoading(true);
     try {
-      await api.post(`/admin/users/${userId}/unban`);
-      toast.success(t("users.unbanSuccess", { name: displayName }));
+      await api.post(`/admin/users/${unbanConfirm.userId}/unban`);
+      toast.success(t("users.unbanSuccess", { name: unbanConfirm.displayName }));
+      setUnbanConfirm(null);
       loadUsers();
     } catch {
       toast.error(t("users.unbanError"));
+    } finally {
+      setUnbanLoading(false);
     }
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">{t("users.title")}</h1>
+      <ConfirmModal
+        open={unbanConfirm !== null}
+        title={t("users.unban")}
+        message={
+          unbanConfirm
+            ? t("users.unbanConfirm", { name: unbanConfirm.displayName })
+            : ""
+        }
+        confirmLabel={t("common:confirm")}
+        cancelLabel={t("common:cancel")}
+        onConfirm={handleUnbanConfirm}
+        onCancel={() => setUnbanConfirm(null)}
+        loading={unbanLoading}
+      />
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">{t("users.title")}</h1>
       <div className="flex gap-2 mb-5">
         <input
           type="search"
@@ -49,7 +70,7 @@ export default function AdminUsers() {
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && loadUsers()}
           placeholder={t("users.searchPlaceholder")}
-          className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-zebra-500 text-sm"
+          className="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-4 py-2.5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-zebra-500 text-sm"
         />
         <button
           type="button"
@@ -80,7 +101,7 @@ export default function AdminUsers() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {loading ? (
               <tr>
                 <td colSpan={6} className="text-center py-8 text-slate-400">
@@ -89,10 +110,10 @@ export default function AdminUsers() {
               </tr>
             ) : (
               users.map((user) => (
-                <tr key={user.user_id} className="hover:bg-slate-50">
+                <tr key={user.user_id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-800">{user.display_name}</p>
-                    <p className="text-xs text-slate-400">{user.email}</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-100">{user.display_name}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{user.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -151,7 +172,10 @@ export default function AdminUsers() {
                       <button
                         type="button"
                         onClick={() =>
-                          handleUnban(user.user_id, user.display_name)
+                          setUnbanConfirm({
+                            userId: user.user_id,
+                            displayName: user.display_name,
+                          })
                         }
                         className="text-xs text-emerald-600 hover:underline"
                       >

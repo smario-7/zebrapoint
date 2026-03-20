@@ -66,7 +66,26 @@
     "noPostsHint": "Be the first to share knowledge or experience with the group.",
     "writeFirst": "Write the first post →",
     "loadMore": "Load older posts",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "validationTitle": "Enter a title",
+    "validationTitleMax": "Title can be at most 200 characters",
+    "validationContentMin": "Content must be at least 20 characters",
+    "validationContentMax": "Content can be at most 10,000 characters"
+  },
+  "groupManagementHooks": {
+    "loadMatchesError": "Failed to load matches",
+    "updateDescSuccess": "Description updated — check new matches",
+    "updateDescError": "Failed to update description",
+    "changeGroupSuccess": "Moved to group \"{{name}}\"! 🎉",
+    "changeGroupError": "Failed to change group"
+  },
+  "hooks": {
+    "membersLoadError": "Failed to load member list.",
+    "conversationsLoadError": "Failed to load conversations"
+  },
+  "chatSystem": {
+    "userJoined": "{{name}} joined the chat",
+    "userLeft": "{{name}} left the chat"
   },
   "postDetail": {
     "backToList": "← Back to list",
@@ -297,6 +316,7 @@
     "sending": "Sending...",
     "cancel": "Cancel",
     "sendError": "Failed to submit the report",
+    "duplicateError": "This report has already been submitted.",
     "falseReportsWarning": "False reports may result in an account warning",
     "submittedTitle": "Thank you for your report",
     "submittedDescription": "Our team will review {{target}} and take appropriate action according to community guidelines."

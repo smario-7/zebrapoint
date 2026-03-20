@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import useAuthStore from "../store/authStore";
+import i18n from "../i18n";
 
 export const WS_STATUS = {
   DISCONNECTED: "disconnected",
@@ -74,7 +75,10 @@ export function useChat(groupId) {
         addMessages([{
           id:         `sys-${Date.now()}`,
           type:       "system",
-          content:    `${data.display_name} opuścił/a czat`,
+          content:    i18n.t("chatSystem.userLeft", {
+            ns: "app",
+            name: data.display_name,
+          }),
           created_at: new Date().toISOString()
         }]);
         break;

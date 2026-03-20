@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import i18n from "../i18n";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -36,7 +37,9 @@ export function useGroupManagement({ onGroupChanged } = {}) {
       if (err.response?.status === 404) {
         setMatches([]);
       } else {
-        toast.error("Nie udało się pobrać dopasowań");
+        toast.error(
+          i18n.t("groupManagementHooks.loadMatchesError", { ns: "app" })
+        );
       }
     } finally {
       setLoadingMatches(false);
@@ -56,7 +59,8 @@ export function useGroupManagement({ onGroupChanged } = {}) {
       return true;
     } catch (err) {
       const msg =
-        err.response?.data?.detail || "Błąd aktualizacji opisu";
+        err.response?.data?.detail ||
+        i18n.t("groupManagementHooks.updateDescError", { ns: "app" });
       toast.error(Array.isArray(msg) ? msg[0]?.msg ?? msg : msg);
       return false;
     } finally {
@@ -74,7 +78,12 @@ export function useGroupManagement({ onGroupChanged } = {}) {
           group_id: match.group_id,
           score: match.score_pct / 100,
         });
-        toast.success(`Przeniesiono do grupy „${data.group_name}"! 🎉`);
+        toast.success(
+          i18n.t("groupManagementHooks.changeGroupSuccess", {
+            ns: "app",
+            name: data.group_name,
+          })
+        );
         matchesCacheRef.current = null;
         cacheTimeRef.current = null;
         setMatches([]);
@@ -83,7 +92,9 @@ export function useGroupManagement({ onGroupChanged } = {}) {
         }
         await loadMatches();
       } catch (err) {
-        const msg = err.response?.data?.detail || "Błąd zmiany grupy";
+        const msg =
+          err.response?.data?.detail ||
+          i18n.t("groupManagementHooks.changeGroupError", { ns: "app" });
         toast.error(Array.isArray(msg) ? msg[0]?.msg ?? msg : msg);
       } finally {
         setChangingGroup(false);

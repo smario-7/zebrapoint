@@ -66,7 +66,26 @@
     "noPostsHint": "Bądź pierwszą osobą która podzieli się wiedzą lub doświadczeniem z grupą.",
     "writeFirst": "Napisz pierwszy post →",
     "loadMore": "Pokaż starsze posty",
-    "loading": "Ładowanie..."
+    "loading": "Ładowanie...",
+    "validationTitle": "Wpisz tytuł",
+    "validationTitleMax": "Tytuł może mieć maks. 200 znaków",
+    "validationContentMin": "Treść musi mieć co najmniej 20 znaków",
+    "validationContentMax": "Treść może mieć maks. 10 000 znaków"
+  },
+  "groupManagementHooks": {
+    "loadMatchesError": "Nie udało się pobrać dopasowań",
+    "updateDescSuccess": "Opis zaktualizowany — sprawdź nowe dopasowania",
+    "updateDescError": "Błąd aktualizacji opisu",
+    "changeGroupSuccess": "Przeniesiono do grupy „{{name}}\"! 🎉",
+    "changeGroupError": "Błąd zmiany grupy"
+  },
+  "hooks": {
+    "membersLoadError": "Nie udało się pobrać listy członków.",
+    "conversationsLoadError": "Nie udało się pobrać konwersacji"
+  },
+  "chatSystem": {
+    "userJoined": "{{name}} dołączył/a do czatu",
+    "userLeft": "{{name}} opuścił/a czat"
   },
   "postDetail": {
     "backToList": "← Powrót do listy",
@@ -298,6 +317,7 @@
     "sending": "Wysyłanie...",
     "cancel": "Anuluj",
     "sendError": "Nie udało się wysłać zgłoszenia",
+    "duplicateError": "To zgłoszenie zostało już wysłane wcześniej.",
     "falseReportsWarning": "Fałszywe zgłoszenia mogą skutkować ostrzeżeniem konta",
     "submittedTitle": "Dziękujemy za zgłoszenie",
     "submittedDescription": "Nasz zespół przejrzy {{target}} i podejmie odpowiednie działania zgodnie z zasadami społeczności."

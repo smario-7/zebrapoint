@@ -64,7 +64,7 @@ export default function GroupsPage() {
                   {t("groupDrawer.currentGroup")}
                 </p>
                 {group ? (
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex-shrink-0"
@@ -90,12 +90,6 @@ export default function GroupsPage() {
                         </p>
                       </div>
                     </div>
-                    <Link
-                      to={`/groups/${group.id}`}
-                      className="text-sm font-semibold text-zebra-600 dark:text-teal-400 hover:text-zebra-700 dark:hover:text-teal-300 transition flex-shrink-0 flex items-center gap-1"
-                    >
-                      {t("groupDrawer.chatLink")}
-                    </Link>
                   </div>
                 ) : (
                   <p className="text-sm text-slate-400 dark:text-slate-500 italic">

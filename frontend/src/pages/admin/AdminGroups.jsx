@@ -14,18 +14,18 @@ export default function AdminGroups() {
       .then(({ data }) => setGroups(data))
       .catch(() => toast.error(t("groups.loadError")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
-  if (loading) return <p className="text-slate-400">{t("groups.loading")}</p>;
+  if (loading) return <p className="text-slate-400 dark:text-slate-500">{t("groups.loading")}</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">
         {t("groups.title")}
       </h1>
-      <div className="bg-white rounded-2xl border overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b">
+          <thead className="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
             <tr>
               {[t("groups.headers.name"), t("groups.headers.participants"), t("groups.headers.category"), t("groups.headers.keywords")].map(
                 (h) => (
@@ -39,13 +39,13 @@ export default function AdminGroups() {
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {groups.map((g) => (
-              <tr key={g.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-800">{g.name}</td>
-                <td className="px-4 py-3 text-slate-600">{g.member_count}</td>
-                <td className="px-4 py-3 text-slate-600">{g.symptom_category ?? "—"}</td>
-                <td className="px-4 py-3 text-slate-600">{g.keywords ?? "—"}</td>
+              <tr key={g.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{g.name}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{g.member_count}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{g.symptom_category ?? "—"}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{g.keywords ?? "—"}</td>
               </tr>
             ))}
           </tbody>

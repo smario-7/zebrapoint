@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api";
+import i18n from "../i18n";
 
 export function useGroupMembers(groupId) {
   const [members, setMembers] = useState([]);
@@ -15,7 +16,7 @@ export function useGroupMembers(groupId) {
         const { data } = await api.get(`/groups/${groupId}/members`);
         setMembers(data);
       } catch {
-        setError("Nie udało się pobrać listy członków.");
+        setError(i18n.t("hooks.membersLoadError", { ns: "app" }));
       } finally {
         setLoading(false);
       }
