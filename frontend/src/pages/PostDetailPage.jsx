@@ -9,11 +9,14 @@ import DmModal from "../components/dm/DmModal";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/authStore";
+import { useTranslation } from "react-i18next";
 
 export default function PostDetailPage() {
   const { groupId, postId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t, i18n } = useTranslation("app");
+  const locale = i18n.language === "en" ? "en-US" : "pl-PL";
 
   const [post, setPost]         = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -30,7 +33,7 @@ export default function PostDetailPage() {
       const { data } = await api.get(`/groups/${groupId}/posts/${postId}`);
       setPost(data);
     } catch {
-      toast.error("Nie udało się pobrać posta");
+      toast.error(t("postDetail.loadError"));
       navigate(`/groups/${groupId}/forum`);
     } finally {
       setLoading(false);
@@ -51,22 +54,24 @@ export default function PostDetailPage() {
         comment_count: prev.comment_count + 1
       }));
       setNewComment("");
-      toast.success("Komentarz dodany!");
+      toast.success(t("postDetail.addSuccess"));
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Błąd dodawania komentarza");
+      toast.error(
+        err.response?.data?.detail || t("postDetail.addError")
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeletePost = async () => {
-    if (!window.confirm("Na pewno usunąć post? To usunie też wszystkie komentarze.")) return;
+    if (!window.confirm(t("postDetail.deleteConfirm"))) return;
     try {
       await api.delete(`/groups/${groupId}/posts/${postId}`);
-      toast.success("Post usunięty");
+      toast.success(t("postDetail.deleteSuccess"));
       navigate(`/groups/${groupId}/forum`);
     } catch {
-      toast.error("Nie udało się usunąć posta");
+      toast.error(t("postDetail.deleteError"));
     }
   };
 
@@ -85,9 +90,9 @@ export default function PostDetailPage() {
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto animate-pulse">
-          <div className="h-4 bg-slate-200 rounded w-1/4 mb-4"></div>
-          <div className="h-8 bg-slate-200 rounded w-3/4 mb-4"></div>
-          <div className="h-32 bg-slate-200 rounded"></div>
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/4 mb-4"></div>
+          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-4"></div>
+          <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
         </div>
       </AppShell>
     );
@@ -101,61 +106,62 @@ export default function PostDetailPage() {
 
         <Link
           to={`/groups/${groupId}/forum`}
-          className="text-sm text-slate-400 hover:text-slate-600 transition"
+          className="text-sm text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition"
         >
-          ← Forum grupy
+          {t("postDetail.backToList")}
         </Link>
 
-        <div className="bg-white rounded-2xl border-2 border-slate-100 p-6 mt-4">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-6 mt-4">
           <div className="flex items-start gap-3 mb-4">
             <Avatar name={post.display_name} size="md" />
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 {post.is_pinned && (
-                  <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
-                    📌 Przypięty
+                  <span className="text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 font-semibold px-2 py-0.5 rounded-full">
+                    {t("postDetail.pinned")}
                   </span>
                 )}
                 {post.is_locked && (
-                  <span className="text-xs bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded-full">
-                    🔒 Zamknięty
+                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-semibold px-2 py-0.5 rounded-full">
+                    {t("postDetail.locked")}
                   </span>
                 )}
               </div>
-              <h1 className="text-xl font-bold text-slate-800">{post.title}</h1>
-              <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{post.title}</h1>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1.5">
                 <span>{post.display_name}</span>
                 {!isAuthor && (
                   <button
                     type="button"
                     onClick={() => setShowDm(true)}
-                    className="text-slate-400 hover:text-zebra-600 p-0.5 rounded
-                               hover:bg-zebra-50 transition"
-                    title={`Napisz do ${post.display_name}`}
+                    className="text-slate-400 dark:text-slate-500 hover:text-zebra-600 dark:hover:text-teal-400 p-0.5 rounded
+                               hover:bg-zebra-50 dark:hover:bg-teal-900/30 transition"
+                    title={t("postDetail.writeTo", { name: post.display_name })}
                   >
                     ✉️
                   </button>
                 )}
-                <span>· {new Date(post.created_at).toLocaleDateString("pl-PL")}</span>
+                <span>· {new Date(post.created_at).toLocaleDateString(locale)}</span>
               </p>
             </div>
             {(isAuthor || isAdmin) && (
               <button
                 onClick={handleDeletePost}
-                className="text-xs text-red-400 hover:text-red-600"
+                className="text-xs text-red-400 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
               >
-                Usuń post
+                {t("postDetail.deletePost")}
               </button>
             )}
           </div>
 
-          <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap mb-6">
+          <div className="prose prose-sm max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-wrap mb-6">
             {post.content}
           </div>
 
-          <div className="flex items-center justify-between py-4 border-t border-slate-100">
-            <div className="text-xs text-slate-400">
-              💬 {post.comment_count} komentarzy · 👁 {post.views} wyświetleń
+          <div className="flex items-center justify-between py-4 border-t border-slate-100 dark:border-slate-700">
+            <div className="text-xs text-slate-400 dark:text-slate-500">
+              {t("postDetail.comments", { count: post.comment_count })} ·{" "}
+              {t("postDetail.views", { count: post.views })}
             </div>
             <ReactionBar
               groupId={groupId}
@@ -181,22 +187,24 @@ export default function PostDetailPage() {
         )}
 
         <div className="mt-6">
-          <h2 className="font-semibold text-slate-800 mb-4">Komentarze</h2>
+          <h2 className="font-semibold text-slate-900 dark:text-slate-100 mb-4">
+            {t("postDetail.commentsSection")}
+          </h2>
 
           {!post.is_locked && (
-            <div className="bg-white rounded-2xl border-2 border-slate-100 p-4 mb-6">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 p-4 mb-6">
               <textarea
                 value={newComment}
                 onChange={e => setNewComment(e.target.value)}
-                placeholder="Napisz komentarz..."
+                placeholder={t("postDetail.writeComment")}
                 rows={3}
                 maxLength={3000}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2
-                           focus:outline-none focus:ring-2 focus:ring-zebra-500
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400
                            text-sm resize-none"
               />
               <div className="flex items-center justify-between mt-3">
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {newComment.length}/3000
                 </p>
                 <Button
@@ -205,16 +213,16 @@ export default function PostDetailPage() {
                   loading={submitting}
                   variant="primary"
                 >
-                  Dodaj komentarz
+                  {t("postDetail.addComment")}
                 </Button>
               </div>
             </div>
           )}
 
           {post.is_locked && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-center">
-              <p className="text-amber-700 text-sm">
-                🔒 Ten post jest zamknięty — komentowanie wyłączone
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 text-center">
+              <p className="text-amber-700 dark:text-amber-300 text-sm">
+                {t("postDetail.lockedNotice")}
               </p>
             </div>
           )}
@@ -235,8 +243,8 @@ export default function PostDetailPage() {
           {(!post.comments || post.comments.length === 0) && (
             <div className="text-center py-12">
               <div className="text-4xl mb-2">💬</div>
-              <p className="text-slate-500 text-sm">
-                Brak komentarzy. Bądź pierwszym który skomentuje!
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
+                {t("postDetail.noComments")}
               </p>
             </div>
           )}

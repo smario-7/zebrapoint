@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useForm, useController } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,29 +10,30 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import NickInput from "../components/auth/NickInput";
 
-const schema = z
+const schema = (t) => z
   .object({
     display_name: z
       .string()
-      .min(3, "Min. 3 znaki")
-      .max(30, "Max. 30 znaków")
-      .regex(/^[a-zA-Z0-9_-]+$/, "Dozwolone: litery, cyfry, _ i -"),
-    email: z.string().email("Nieprawidłowy email"),
-    password: z.string().min(8, "Min. 8 znaków"),
+      .min(3, t("validation.minChars"))
+      .max(30, t("validation.maxChars"))
+      .regex(/^[a-zA-Z0-9_-]+$/, t("validation.allowedChars")),
+    email: z.string().email(t("validation.invalidEmail")),
+    password: z.string().min(8, t("validation.minPassword")),
     confirm: z.string(),
   })
   .refine((d) => d.password === d.confirm, {
-    message: "Hasła nie są identyczne",
+    message: t("validation.passwordsMismatch"),
     path: ["confirm"],
   });
 
 export default function RegisterPage() {
+  const { t } = useTranslation("auth");
   const { register: registerUser, isLoading, error, registerErrorDetail, clearError } = useAuthStore();
   const navigate = useNavigate();
   const [success, setSuccess] = useState(false);
 
   const { register, control, handleSubmit, setValue, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema(t)),
   });
 
   const { field: displayNameField } = useController({
@@ -54,12 +56,23 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <PublicLayout>
-        <div className="flex items-center justify-center px-4 py-16">
-          <div className="text-center bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
+      <PublicLayout
+        headerRight={
+          <Link
+            to="/login"
+            className="text-sm font-medium text-[var(--zp-accent-primary)] hover:opacity-80 transition"
+          >
+            {t("register.hasAccount")}
+          </Link>
+        }
+      >
+        <div className="flex-1 flex items-center justify-center px-5 py-6 md:px-6">
+          <div className="text-center w-full max-w-[540px] rounded-[20px] border border-[var(--zp-app-border)] bg-[var(--zp-app-card)] p-8">
             <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-2xl font-bold text-slate-800">Konto utworzone!</h2>
-            <p className="text-slate-500">Przekierowuję do logowania...</p>
+            <h2 className="text-[26px] font-bold tracking-tight text-[var(--zp-app-text-primary)]">
+              {t("register.successTitle")}
+            </h2>
+            <p className="text-[var(--zp-app-text-muted)]">{t("register.successRedirect")}</p>
           </div>
         </div>
       </PublicLayout>
@@ -67,28 +80,38 @@ export default function RegisterPage() {
   }
 
   return (
-    <PublicLayout>
-      <div className="flex items-center justify-center px-4 py-16">
-        <div className="bg-white rounded-2xl shadow-sm border p-8 w-full max-w-md">
-          <div className="text-center mb-8">
-            <img src="/logo_circle.svg" alt="" className="h-16 w-auto mx-auto mb-2" />
-            <h1 className="text-2xl font-bold text-slate-800">Utwórz konto</h1>
-            <p className="text-slate-500 text-sm mt-1">Bezpłatnie i anonimowo</p>
+    <PublicLayout
+      headerRight={
+        <Link
+          to="/login"
+          className="text-sm font-medium text-[var(--zp-accent-primary)] hover:opacity-80 transition"
+        >
+          {t("register.hasAccount")}
+        </Link>
+      }
+    >
+      <div className="flex-1 flex items-center justify-center px-5 py-6 md:px-6">
+        <div className="w-full max-w-[540px] rounded-[20px] border border-[var(--zp-app-border)] bg-[var(--zp-app-card)] p-7 md:p-10 flex flex-col gap-4 md:gap-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <div className="flex flex-col gap-1.5">
+            <h1 className="text-[26px] font-bold tracking-tight text-[var(--zp-app-text-primary)]">
+              {t("register.title")}
+            </h1>
+            <p className="text-sm text-[var(--zp-app-text-muted)]">{t("register.subtitle")}</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm">
+            <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-4 py-3 text-sm">
               <p>{error}</p>
               {registerErrorDetail?.field === "display_name" && registerErrorDetail?.suggestions?.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-slate-600 text-xs mb-1">Dostępne alternatywy:</p>
+                  <p className="text-[var(--zp-app-text-primary)] text-xs mb-1">{t("register.alternativesLabel")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {registerErrorDetail.suggestions.map((s, i) => (
                       <button
                         key={i}
                         type="button"
                         onClick={() => setValue("display_name", s)}
-                        className="text-xs bg-white border border-red-200 hover:bg-red-50 text-red-700 px-2.5 py-1 rounded-full transition"
+                        className="text-xs bg-[var(--zp-app-card)] border border-red-200 dark:border-red-800 hover:opacity-90 text-red-700 dark:text-red-300 px-2.5 py-1 rounded-full transition"
                       >
                         {s}
                       </button>
@@ -99,43 +122,48 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 md:gap-5">
             <NickInput
               value={displayNameField.value}
               onChange={displayNameField.onChange}
               error={errors.display_name?.message}
             />
             <Input
-              label="Email"
+              label={t("login.email")}
               type="email"
-              placeholder="twoj@email.com"
+              placeholder={t("login.placeholderEmail")}
               error={errors.email?.message}
               {...register("email")}
             />
-            <Input
-              label="Hasło"
-              type="password"
-              placeholder="Min. 8 znaków"
-              hint="Min. 8 znaków"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-            <Input
-              label="Potwierdź hasło"
-              type="password"
-              placeholder="Powtórz hasło"
-              error={errors.confirm?.message}
-              {...register("confirm")}
-            />
-            <Button type="submit" fullWidth loading={isLoading}>
-              {isLoading ? "Tworzę konto..." : "Utwórz konto"}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-[12px]">
+              <Input
+                label={t("login.password")}
+                type="password"
+                placeholder={t("validation.minPassword")}
+                hint={t("validation.minPassword")}
+                error={errors.password?.message}
+                {...register("password")}
+              />
+              <Input
+                label={t("register.repeatPassword")}
+                type="password"
+                placeholder={t("register.repeatPasswordPlaceholder")}
+                error={errors.confirm?.message}
+                {...register("confirm")}
+              />
+            </div>
+            <Button type="submit" fullWidth loading={isLoading} size="md">
+              {isLoading ? t("register.loading") : t("register.submit")}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-slate-500 mt-6">
-            Masz już konto?{" "}
-            <Link to="/login" className="text-zebra-600 font-medium hover:underline">
-              Zaloguj się
+          <p className="text-center text-[13px] text-[var(--zp-app-text-muted)] flex items-center justify-center gap-1 flex-wrap">
+            {t("register.hasAccountShort")}{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-[var(--zp-accent-primary)] hover:underline"
+            >
+              {t("login.title")}
             </Link>
           </p>
         </div>

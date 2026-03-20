@@ -41,13 +41,21 @@ export function useDM(conversationId) {
   const [status, setStatus] = useState(DM_STATUS.DISCONNECTED);
 
   const wsRef = useRef(null);
+  const activeConversationRef = useRef(null);
+  const connectRef = useRef(null);
   const reconnectCount = useRef(0);
+  const reconnectTimeoutRef = useRef(null);
   const pingTimer = useRef(null);
   const isMounted = useRef(true);
 
   const addMessage = useCallback((msg) => {
     const normalized = normalizeMessage(msg);
-    setMessages((prev) => [...prev, normalized].slice(-MAX_MESSAGES));
+    setMessages((prev) => {
+      if (normalized.id && prev.some((m) => m.id === normalized.id)) {
+        return prev;
+      }
+      return [...prev, normalized].slice(-MAX_MESSAGES);
+    });
   }, []);
 
   const handleMessage = useCallback(
@@ -66,6 +74,15 @@ export function useDM(conversationId) {
             wsRef.current.send(JSON.stringify({ type: "read" }));
           }
           break;
+        case "error":
+          if (data.code === "UNAUTHORIZED") {
+            try {
+              useAuthStore.getState().logout();
+            } finally {
+              window.location.href = "/login";
+            }
+          }
+          break;
         case "pong":
           break;
         default:
@@ -77,15 +94,42 @@ export function useDM(conversationId) {
 
   const connect = useCallback(() => {
     if (!conversationId || !token || !isMounted.current) return;
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+    const cidStr = String(conversationId);
+    const existingWs = wsRef.current;
+
+    // Jeśli mamy już połączenie dla tej samej rozmowy (albo w trakcie łączenia),
+    // nie tworzymy kolejnego WebSocketu.
+    if (
+      activeConversationRef.current === cidStr &&
+      existingWs &&
+      (existingWs.readyState === WebSocket.OPEN ||
+        existingWs.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
+
+    // Jeśli użytkownik zmienił rozmowę, zamykamy poprzedni socket (jeśli jeszcze żyje).
+    if (existingWs && existingWs.readyState !== WebSocket.CLOSED) {
+      try {
+        existingWs.close(1000, "Conversation changed");
+      } catch {
+        // Ignorujemy błąd zamykania, bo i tak socket jest w złym stanie.
+      }
+    }
+
+    activeConversationRef.current = cidStr;
 
     setStatus(DM_STATUS.CONNECTING);
+    const cid = encodeURIComponent(cidStr);
+    const t = encodeURIComponent(String(token));
     const ws = new WebSocket(
-      `${WS_BASE}/ws/dm/${conversationId}?token=${token}`
+      `${WS_BASE}/ws/dm/${cid}?token=${t}`
     );
     wsRef.current = ws;
 
     ws.onopen = () => {
+      if (wsRef.current !== ws) return;
       if (!isMounted.current) return;
       setStatus(DM_STATUS.CONNECTED);
       reconnectCount.current = 0;
@@ -96,9 +140,13 @@ export function useDM(conversationId) {
       }, PING_INTERVAL);
     };
 
-    ws.onmessage = handleMessage;
+    ws.onmessage = (event) => {
+      if (wsRef.current !== ws) return;
+      handleMessage(event);
+    };
 
     ws.onclose = (e) => {
+      if (wsRef.current !== ws) return;
       if (!isMounted.current) return;
       clearInterval(pingTimer.current);
       pingTimer.current = null;
@@ -109,15 +157,19 @@ export function useDM(conversationId) {
       if (reconnectCount.current < 5) {
         reconnectCount.current++;
         setStatus(DM_STATUS.RECONNECTING);
-        setTimeout(
-          connect,
-          2000 * Math.pow(2, reconnectCount.current - 1)
-        );
+        const delay = 2000 * Math.pow(2, reconnectCount.current - 1);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connectRef.current?.();
+        }, delay);
       } else {
         setStatus(DM_STATUS.FAILED);
       }
     };
   }, [conversationId, token, handleMessage]);
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const sendMessage = useCallback((content) => {
     if (!content?.trim()) return;
@@ -127,9 +179,15 @@ export function useDM(conversationId) {
 
   useEffect(() => {
     isMounted.current = true;
+    connectRef.current = connect;
     connect();
     return () => {
       isMounted.current = false;
+      activeConversationRef.current = null;
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
       clearInterval(pingTimer.current);
       pingTimer.current = null;
       if (wsRef.current) {

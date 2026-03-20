@@ -1,0 +1,104 @@
+{
+  "layout": {
+    "panelTitle": "Admin panel",
+    "navDashboard": "📊 Dashboard",
+    "navReports": "🚩 Reports",
+    "navUsers": "👥 Users",
+    "navGroups": "🦓 Groups",
+    "backToDashboard": "← Back to Dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "loading": "Loading...",
+    "pendingReports": "Pending reports",
+    "reviewed": "Reviewed",
+    "totalReports": "Total reports",
+    "lastRetrain": "Last ML retrain",
+    "noData": "No data",
+    "groupsCount": "{{count}} groups",
+    "lastPipeline": "Last ML Pipeline",
+    "status": "Status",
+    "profiles": "Profiles",
+    "clusters": "Clusters",
+    "noise": "Noise",
+    "reassigned": "Reassigned",
+    "requiresAttention": "Requires attention →"
+  },
+  "users": {
+    "title": "👥 Users",
+    "searchPlaceholder": "Search by name or email...",
+    "search": "Search",
+    "loading": "Loading...",
+    "loadError": "Failed to load users",
+    "headers": {
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "warnings": "Warnings",
+      "reports": "Reports",
+      "actions": "Actions"
+    },
+    "banned": "Banned",
+    "active": "Active",
+    "until": "until",
+    "unban": "Unban",
+    "unbanConfirm": "Unban user {{name}}?",
+    "unbanSuccess": "{{name}} unbanned",
+    "unbanError": "Failed to unban"
+  },
+  "groups": {
+    "title": "🦓 Groups",
+    "loading": "Loading...",
+    "loadError": "Failed to load groups",
+    "headers": {
+      "name": "Name",
+      "participants": "Participants",
+      "category": "Category",
+      "keywords": "Keywords"
+    }
+  },
+  "reports": {
+    "title": "🚩 Reports",
+    "loading": "Loading...",
+    "loadError": "Failed to load reports",
+    "statusPending": "Pending",
+    "statusReviewed": "Reviewed",
+    "statusDismissed": "Dismissed",
+    "statusAll": "All",
+    "noReports": "No reports",
+    "queueEmpty": "Report queue is empty",
+    "noInStatus": "No reports in this status",
+    "reportedBy": "Reported by:",
+    "timesReported": "🔥 {{count}}× reported",
+    "review": "Review",
+    "cancel": "Cancel",
+    "actions": {
+      "dismiss": "Dismiss report",
+      "warn": "Send warning",
+      "delete_content": "Delete content",
+      "ban_temp": "Temporary ban",
+      "ban_permanent": "Permanent ban"
+    },
+    "banHours": "Ban duration (hours):",
+    "warningPlaceholder": "Warning message for user...",
+    "reasonPlaceholder": "Internal note (optional)...",
+    "executeAction": "Execute action",
+    "selectAction": "Select action",
+    "actionDone": "Action completed",
+    "actionError": "Action error"
+  },
+  "reportModal": {
+    "thanks": "Thank you for reporting",
+    "thanksDesc": "Our team will review the {{target}} and take appropriate action per community guidelines.",
+    "report": "Report {{target}}",
+    "close": "Close",
+    "reasonLabel": "Reason for report:",
+    "additionalInfo": "Additional information",
+    "optional": "(optional)",
+    "placeholder": "Briefly describe the issue...",
+    "submit": "Submit report",
+    "submitting": "Sending...",
+    "cancel": "Cancel",
+    "falseWarning": "False reports may result in an account warning"
+  }
+}

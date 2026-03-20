@@ -1,31 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
+import useBootstrapStore from "../store/bootstrapStore";
 
 /**
- * Hook do listy konwersacji DM i łącznej liczby nieprzeczytanych.
- * Pobiera GET /dm/conversations oraz GET /dm/conversations/unread-count.
- * Używany na MessagesPage i do badge w navbar.
+ * Hook do listy konwersacji DM.
+ * Zliczanie nieprzeczytanych jest globalnie w `bootstrapStore` (cache/polling).
  */
 export function useConversations() {
   const [conversations, setConversations] = useState([]);
-  const [totalUnread, setTotalUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const totalUnread = useBootstrapStore((s) => s.unreadCount);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [convRes, unreadRes] = await Promise.all([
-        api.get("/dm/conversations"),
-        api.get("/dm/conversations/unread-count"),
-      ]);
+      const convRes = await api.get("/dm/conversations");
       setConversations(convRes.data ?? []);
-      setTotalUnread(unreadRes.data?.unread_count ?? 0);
     } catch {
       setError("Nie udało się pobrać konwersacji");
       setConversations([]);
-      setTotalUnread(0);
     } finally {
       setLoading(false);
     }

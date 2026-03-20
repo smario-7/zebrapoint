@@ -1,6 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import useAuthStore from "./store/authStore";
+import useThemeStore from "./store/themeStore";
 
 import LandingPage  from "./pages/LandingPage";
 import LoginPage    from "./pages/LoginPage";
@@ -8,6 +9,7 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard    from "./pages/Dashboard";
 import SymptomsForm from "./pages/SymptomsForm";
 import GroupPage    from "./pages/GroupPage";
+import GroupsPage   from "./pages/GroupsPage";
 import ProfilePage  from "./pages/ProfilePage";
 import ForumPage    from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
@@ -21,9 +23,16 @@ import AdminGroups    from "./pages/admin/AdminGroups";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminGuard     from "./components/AdminGuard";
+import AnimatedRoutes from "./components/motion/AnimatedRoutes";
+import RouteTransition from "./components/motion/RouteTransition";
+
+function withTransition(element) {
+  return <RouteTransition>{element}</RouteTransition>;
+}
 
 export default function App() {
   const { token, fetchMe } = useAuthStore();
+  const dark = useThemeStore((s) => s.dark);
 
   useEffect(() => {
     if (token) {
@@ -31,26 +40,37 @@ export default function App() {
     }
   }, [token, fetchMe]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("transition-colors", "duration-300");
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [dark]);
+
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/"         element={<LandingPage />} />
+      <AnimatedRoutes>
+        <Route path="/"         element={withTransition(<LandingPage />)} />
         <Route path="/login"    element={
-          token ? <Navigate to="/dashboard" replace /> : <LoginPage />
+          token ? <Navigate to="/dashboard" replace /> : withTransition(<LoginPage />)
         } />
         <Route path="/register" element={
-          token ? <Navigate to="/dashboard" replace /> : <RegisterPage />
+          token ? <Navigate to="/dashboard" replace /> : withTransition(<RegisterPage />)
         } />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard"    element={<Dashboard />} />
-          <Route path="/profile"     element={<ProfilePage />} />
-          <Route path="/symptoms/new" element={<SymptomsForm />} />
-          <Route path="/groups/:groupId" element={<GroupPage />} />
-          <Route path="/groups/:groupId/forum" element={<ForumPage />} />
-          <Route path="/groups/:groupId/posts/:postId" element={<PostDetailPage />} />
-          <Route path="/messages" element={<MessagesPage />} />
-          <Route path="/messages/:conversationId" element={<ConversationPage />} />
+          <Route path="/dashboard"    element={withTransition(<Dashboard />)} />
+          <Route path="/groups"       element={withTransition(<GroupsPage />)} />
+          <Route path="/profile"     element={withTransition(<ProfilePage />)} />
+          <Route path="/symptoms/new" element={withTransition(<SymptomsForm />)} />
+          <Route path="/groups/:groupId" element={withTransition(<GroupPage />)} />
+          <Route path="/groups/:groupId/forum" element={withTransition(<ForumPage />)} />
+          <Route path="/groups/:groupId/posts/:postId" element={withTransition(<PostDetailPage />)} />
+          <Route path="/messages" element={withTransition(<MessagesPage />)} />
+          <Route path="/messages/:conversationId" element={withTransition(<ConversationPage />)} />
         </Route>
 
         <Route path="/admin" element={<AdminGuard />}>
@@ -63,7 +83,7 @@ export default function App() {
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </AnimatedRoutes>
     </BrowserRouter>
   );
 }

@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "signIn": "Zaloguj się",
+    "joinFree": "Dołącz bezpłatnie",
+    "themeLight": "☀️ Jasny",
+    "themeDark": "🌙 Ciemny",
+    "enableLight": "Włącz tryb jasny",
+    "enableDark": "Włącz tryb ciemny"
+  },
+  "hero": {
+    "badge": "Platforma dla opiekunów osób z rzadkimi chorobami",
+    "title": "Nie jesteś",
+    "titleHighlight": "sam.",
+    "subtitle": "Opisz objawy własnymi słowami. System połączy Cię z rodzicami i opiekunami, którzy przechodzą przez podobne doświadczenia. Razem łatwiej.",
+    "quote": "\"When you hear hoofbeats, think horses, not zebras.\"",
+    "ctaPrimary": "Znajdź swoją grupę",
+    "ctaSecondary": "Jak to działa?",
+    "footerNote": "Bezpłatne · Anonimowe · Bez reklam"
+  },
+  "heroMockup": {
+    "yourGroup": "— Twoja Grupa",
+    "writeMessage": "Napisz wiadomość..."
+  },
+  "howItWorks": {
+    "sectionLabel": "Jak to działa",
+    "title": "Trzy kroki do grupy wsparcia",
+    "subtitle": "Od opisu do pierwszej rozmowy — cały proces zajmuje mniej niż 5 minut.",
+    "step1Title": "Opisz objawy",
+    "step1Desc": "Napisz własnymi słowami — bez medycznego żargonu. Opisz co widzisz, kiedy się zaczęło i co już sprawdzono.",
+    "step2Title": "System Cię dopasuje",
+    "step2Desc": "Nasz algorytm przeszukuje bazę opisów i łączy Cię z osobami, których doświadczenia są najbliższe Twoim.",
+    "step3Title": "Rozmawiaj z grupą",
+    "step3Desc": "Dołącz do prywatnej grupy wsparcia. Wymieniaj doświadczenia, zadawaj pytania i wspieraj innych."
+  },
+  "forWhom": {
+    "sectionLabel": "Dla kogo",
+    "title": "ZebraPoint jest dla Ciebie, jeśli...",
+    "parentsTitle": "Rodzice",
+    "parentsSubtitle": "Szukasz innych rodziców dzieci z podobnymi objawami",
+    "parents1": "Podziel się doświadczeniami z drogi do diagnozy",
+    "parents2": "Dowiedz się, jakich specjalistów warto odwiedzić",
+    "parents3": "Znajdź wsparcie emocjonalne od osób, które rozumieją",
+    "caregiversTitle": "Opiekunowie",
+    "caregiversSubtitle": "Opiekujesz się dorosłą osobą z niezdiagnozowaną chorobą",
+    "caregivers1": "Skontaktuj się z innymi opiekunami w podobnej sytuacji",
+    "caregivers2": "Wymień się wiedzą o dostępnych formach pomocy",
+    "caregivers3": "Uniknij wypalenia — rozmawiaj z tymi, co rozumieją",
+    "patientsTitle": "Dorośli pacjenci",
+    "patientsSubtitle": "Sam zmagasz się z niezdiagnozowaną lub rzadką chorobą",
+    "patients1": "Znajdź osoby z identycznymi lub podobnymi objawami",
+    "patients2": "Dziel się tym, co pomogło — i co nie pomogło",
+    "patients3": "Buduj sieć wsparcia na własnych warunkach",
+    "cta": "Dołącz bezpłatnie →"
+  },
+  "privacy": {
+    "sectionLabel": "Prywatność i bezpieczeństwo",
+    "title": "Twoje dane są Twoje",
+    "subtitle": "Wiemy, że piszesz o rzeczach osobistych. Traktujemy to poważnie.",
+    "anonTitle": "Pełna anonimowość",
+    "anonDesc": "Używasz pseudonimu. Nikt nie widzi Twojego imienia, nazwiska ani emaila.",
+    "encryptedTitle": "Szyfrowane dane",
+    "encryptedDesc": "Wszystkie dane przechowywane są w zaszyfrowanej bazie danych na europejskich serwerach.",
+    "noAdsTitle": "Zero reklam",
+    "noAdsDesc": "Nie sprzedajemy danych. Nie wyświetlamy reklam. Nigdy.",
+    "deletionTitle": "Prawo do usunięcia",
+    "deletionDesc": "Możesz usunąć swoje konto i wszystkie dane w dowolnym momencie, jednym kliknięciem."
+  },
+  "stats": {
+    "freeLabel": "Bezpłatny dostęp",
+    "gdprLabel": "Zgodność z przepisami UE",
+    "availabilityLabel": "Dostęp o każdej porze",
+    "firstGroupLabel": "Do pierwszej grupy"
+  },
+  "ctaFooter": {
+    "title": "Gotowy, żeby znaleźć swoją grupę?",
+    "subtitle": "Dołącz do ZebraPoint bezpłatnie. Opisz objawy i znajdź osoby, które naprawdę rozumieją.",
+    "button": "Zacznij teraz — to bezpłatne",
+    "copyright": "© {{year}} ZebraPoint · Wsparcie dla opiekunów osób z rzadkimi chorobami",
+    "terms": "Regulamin",
+    "about": "O nas",
+    "contact": "Kontakt",
+    "privacyPolicy": "Polityka prywatności (RODO)"
+  },
+  "faq": {
+    "sectionLabel": "FAQ",
+    "title": "Najczęstsze pytania",
+    "intro1": "Masz pytania o zasady działania ZebraPoint, prywatność danych albo warunki korzystania z platformy? Wszystkie szczegóły znajdziesz w regulaminie, polityce prywatności oraz sekcji „O nas”, do których linki umieściliśmy w stopce strony.",
+    "intro2": "Jeśli coś jest dla Ciebie niejasne lub chcesz zgłosić uwagę, skorzystaj z formularza kontaktowego, który udostępnimy razem z pełną wersją serwisu. Na tym etapie skupiamy się na tym, żeby jak najszybciej pomóc Ci znaleźć grupę wsparcia."
+  }
+}

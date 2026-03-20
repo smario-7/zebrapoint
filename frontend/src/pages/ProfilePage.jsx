@@ -13,6 +13,7 @@ import NickInput from "../components/auth/NickInput";
 import api from "../services/api";
 import { useProfile } from "../hooks/useProfile";
 import { SkeletonCard } from "../components/ui/Skeleton";
+import { useTranslation } from "react-i18next";
 
 const nameSchema = z.object({
   display_name: z
@@ -35,6 +36,8 @@ const passwordSchema = z
   });
 
 export default function ProfilePage() {
+  const { t, i18n } = useTranslation(["app", "auth"]);
+  const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const { user, fetchMe } = useAuthStore();
   const { group, loading } = useProfile();
   const [editingName, setEditingName] = useState(false);
@@ -79,13 +82,13 @@ export default function ProfilePage() {
       setEditingName(false);
       setNickValue(user?.display_name ?? "");
       setNickStatus(null);
-      toast.success("Nazwa zaktualizowana!");
+      toast.success(t("profile.saveNameSuccess"));
     } catch (err) {
       const detail = err.response?.data?.detail;
       const msg =
         typeof detail === "object" && detail?.message
           ? detail.message
-          : detail || "Nie udało się zapisać nazwy.";
+          : detail || t("profile.saveNameError");
       toast.error(msg);
     } finally {
       setNameSaving(false);
@@ -100,179 +103,204 @@ export default function ProfilePage() {
       });
       resetPwd();
       setEditingPassword(false);
-      toast.success("Hasło zostało zmienione!");
+      toast.success(t("profile.passwordSuccess"));
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Nie udało się zmienić hasła.");
+      toast.error(err.response?.data?.detail || t("profile.passwordError"));
     }
   };
 
   return (
     <AppShell>
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-slate-800 mb-8">Twój profil</h1>
+      <div className="w-full max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+          {t("profile.title")}
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">
+          {t("profile.subtitle")}
+        </p>
 
-        <section className="bg-white rounded-2xl border p-6 mb-4">
-          <div className="flex items-center gap-4 mb-6">
-            <Avatar name={user?.display_name} size="lg" />
-            <div>
-              <p className="font-semibold text-slate-800 text-lg">
-                {user?.display_name}
-              </p>
-              <p className="text-sm text-slate-400">{user?.email}</p>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Konto od:{" "}
-                {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString("pl-PL")
-                  : "—"}
-              </p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
+          {/* Lewa kolumna: dane użytkownika i grupa */}
+          <div className="space-y-4">
+            <section className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6">
+              <div className="flex flex-col items-center text-center mb-6">
+                <Avatar name={user?.display_name} size="lg" className="mb-4" />
+                <p className="font-semibold text-slate-800 dark:text-slate-100 text-lg">
+                  {user?.display_name}
+                </p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">{user?.email}</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  {t("profile.memberSince")}{" "}
+                  {user?.created_at
+                    ? new Date(user.created_at).toLocaleDateString(locale, {
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "—"}
+                </p>
+              </div>
+              <h2 className="font-semibold text-slate-700 dark:text-slate-300 mb-3 text-sm">
+                {t("profile.myGroup")}
+              </h2>
+              {loading ? (
+                <SkeletonCard />
+              ) : group ? (
+                <div>
+                  <Link
+                    to={`/groups/${group.id}`}
+                    className="text-zebra-600 dark:text-teal-400 font-medium hover:underline"
+                  >
+                    {group.name}
+                  </Link>
+                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
+                    {t(
+                      group.member_count === 1 ? "profile.member" : "profile.members",
+                      { count: group.member_count }
+                    )}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mb-3">
+                    {t("profile.noGroup")}
+                  </p>
+                  <Link to="/symptoms/new">
+                    <Button variant="secondary" size="sm">
+                      {t("profile.describeToJoin")}
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </section>
           </div>
 
-          {editingName ? (
-            <form onSubmit={onSaveName} className="space-y-3">
-              <NickInput
-                label="Nowa nazwa (pseudonim)"
-                value={nickValue}
-                onChange={setNickValue}
-                currentNick={user?.display_name}
-                onStatusChange={setNickStatus}
-                error={nameError}
-              />
-              <div className="flex gap-2">
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={nameSubmitDisabled}
-                  loading={nameSaving}
-                >
-                  Zapisz
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  type="button"
-                  onClick={() => {
-                    setEditingName(false);
-                    setNickValue(user?.display_name ?? "");
-                    setNickStatus(null);
-                  }}
-                >
-                  Anuluj
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setEditingName(true)}
-            >
-              ✏️ Zmień nazwę
-            </Button>
-          )}
-        </section>
-
-        <section className="bg-white rounded-2xl border p-6 mb-4">
-          <h2 className="font-semibold text-slate-700 mb-4">Twoja grupa</h2>
-          {loading ? (
-            <SkeletonCard />
-          ) : group ? (
-            <div>
-              <p className="text-slate-800 font-medium">{group.name}</p>
-              <p className="text-sm text-slate-400 mt-1">
-                {group.member_count}{" "}
-                {group.member_count === 1 ? "osoba" : "osób"} w grupie
+          {/* Prawa kolumna: bezpieczeństwo i strefa niebezpieczna */}
+          <div className="space-y-6">
+            <section className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6">
+              <h2 className="font-semibold text-slate-700 dark:text-slate-300 mb-4">
+                {t("profile.security")}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                {t("profile.account")}
               </p>
-              <Link
-                to={`/groups/${group.id}`}
-                className="inline-block mt-3 text-sm text-zebra-600 font-medium hover:underline"
-              >
-                Przejdź do czatu grupy →
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <p className="text-slate-400 text-sm mb-3">
-                Nie należysz jeszcze do żadnej grupy.
+              {editingName ? (
+                <form onSubmit={onSaveName} className="space-y-3">
+                  <NickInput
+                    label={t("profile.nickLabel")}
+                    value={nickValue}
+                    onChange={setNickValue}
+                    currentNick={user?.display_name}
+                    onStatusChange={setNickStatus}
+                    error={nameError}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={nameSubmitDisabled}
+                      loading={nameSaving}
+                    >
+                      {t("profile.save")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      type="button"
+                      onClick={() => {
+                        setEditingName(false);
+                        setNickValue(user?.display_name ?? "");
+                        setNickStatus(null);
+                      }}
+                    >
+                      {t("profile.cancel")}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-800 dark:text-slate-100 font-medium">
+                    {user?.display_name}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setEditingName(true)}
+                  >
+                    {t("profile.change")}
+                  </Button>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-6 mb-3">
+                {t("profile.changePassword")}
+              </p>
+              {editingPassword ? (
+                <form onSubmit={submitPwd(onChangePassword)} className="space-y-3">
+                  <Input
+                    label={t("profile.currentPassword")}
+                    type="password"
+                    error={pwdErrors.current_password?.message}
+                    {...regPwd("current_password")}
+                  />
+                  <Input
+                    label={t("profile.newPassword")}
+                    type="password"
+                    hint={t("register.passwordHint")}
+                    error={pwdErrors.new_password?.message}
+                    {...regPwd("new_password")}
+                  />
+                  <Input
+                    label={t("profile.confirmPassword")}
+                    type="password"
+                    error={pwdErrors.confirm_password?.message}
+                    {...regPwd("confirm_password")}
+                  />
+                  <div className="flex gap-2">
+                    <Button type="submit" size="sm" loading={pwdSaving}>
+                      {t("profile.changePasswordAction")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditingPassword(false);
+                        resetPwd();
+                      }}
+                    >
+                      {t("profile.cancel")}
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setEditingPassword(true)}
+                >
+                  {t("profile.changePasswordAction")}
+                </Button>
+              )}
+            </section>
+
+            <section className="bg-white dark:bg-slate-800 rounded-2xl border border-red-200 dark:border-red-800 p-6">
+              <h2 className="font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                {t("profile.dangerZone")}
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                {t("profile.dangerZoneDesc")}
               </p>
               <Button
-                variant="secondary"
+                variant="danger"
                 size="sm"
-                onClick={() => (window.location.href = "/symptoms/new")}
+                onClick={() =>
+                  toast.error(t("profile.deactivateSoon"))
+                }
               >
-                Opisz objawy, żeby dołączyć
+                {t("profile.deactivateAccount")}
               </Button>
-            </div>
-          )}
-        </section>
-
-        <section className="bg-white rounded-2xl border p-6 mb-4">
-          <h2 className="font-semibold text-slate-700 mb-4">Bezpieczeństwo</h2>
-
-          {editingPassword ? (
-            <form onSubmit={submitPwd(onChangePassword)} className="space-y-3">
-              <Input
-                label="Aktualne hasło"
-                type="password"
-                error={pwdErrors.current_password?.message}
-                {...regPwd("current_password")}
-              />
-              <Input
-                label="Nowe hasło"
-                type="password"
-                hint="Min. 8 znaków"
-                error={pwdErrors.new_password?.message}
-                {...regPwd("new_password")}
-              />
-              <Input
-                label="Powtórz nowe hasło"
-                type="password"
-                error={pwdErrors.confirm_password?.message}
-                {...regPwd("confirm_password")}
-              />
-              <div className="flex gap-2">
-                <Button type="submit" size="sm" loading={pwdSaving}>
-                  Zmień hasło
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setEditingPassword(false);
-                    resetPwd();
-                  }}
-                >
-                  Anuluj
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setEditingPassword(true)}
-            >
-              🔒 Zmień hasło
-            </Button>
-          )}
-        </section>
-
-        <section className="bg-white rounded-2xl border border-red-100 p-6">
-          <h2 className="font-semibold text-slate-700 mb-2">Strefa niebezpieczna</h2>
-          <p className="text-sm text-slate-400 mb-4">
-            Usunięcie konta jest nieodwracalne. Wszystkie Twoje dane zostaną
-            usunięte.
-          </p>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() =>
-              toast.error("Funkcja usunięcia konta będzie dostępna wkrótce.")
-            }
-          >
-            Usuń konto
-          </Button>
-        </section>
+            </section>
+          </div>
+        </div>
       </div>
     </AppShell>
   );

@@ -1,0 +1,35 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "groups": "Grupy",
+    "groupChat": "Czat grupy",
+    "forum": "Forum",
+    "messages": "Wiadomości",
+    "messagesShort": "Wiad.",
+    "profile": "Profil",
+    "adminPanel": "Panel admin",
+    "home": "Home",
+    "chat": "Czat"
+  },
+  "theme": {
+    "lightMode": "Tryb jasny",
+    "darkMode": "Tryb ciemny",
+    "enableLight": "Włącz tryb jasny",
+    "enableDark": "Włącz tryb ciemny"
+  },
+  "logout": "Wyloguj",
+  "logoutSuccess": "Wylogowano pomyślnie",
+  "unreadCount": "{{count}} nieprzeczytanych wiadomości",
+  "aria": {
+    "mainNav": "Nawigacja główna",
+    "mobileNav": "Nawigacja mobilna",
+    "close": "Zamknij",
+    "changeLanguage": "Zmień język",
+    "menu": "Menu",
+    "openMenu": "Otwórz menu",
+    "closeMenu": "Zamknij menu"
+  },
+  "retry": "Spróbuj ponownie",
+  "signIn": "Zaloguj się",
+  "join": "Dołącz"
+}

@@ -1,0 +1,104 @@
+{
+  "layout": {
+    "panelTitle": "Panel administracyjny",
+    "navDashboard": "📊 Dashboard",
+    "navReports": "🚩 Zgłoszenia",
+    "navUsers": "👥 Użytkownicy",
+    "navGroups": "🦓 Grupy",
+    "backToDashboard": "← Wyjście do Tablicy"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "loading": "Ładowanie...",
+    "pendingReports": "Oczekujące zgłoszenia",
+    "reviewed": "Rozpatrzone",
+    "totalReports": "Łącznie zgłoszeń",
+    "lastRetrain": "Ostatni retrain ML",
+    "noData": "Brak danych",
+    "groupsCount": "{{count}} grup",
+    "lastPipeline": "Ostatni ML Pipeline",
+    "status": "Status",
+    "profiles": "Profiley",
+    "clusters": "Klastry",
+    "noise": "Szum",
+    "reassigned": "Przeniesieni",
+    "requiresAttention": "Wymaga uwagi →"
+  },
+  "users": {
+    "title": "👥 Użytkownicy",
+    "searchPlaceholder": "Szukaj po nazwie lub emailu...",
+    "search": "Szukaj",
+    "loading": "Ładowanie...",
+    "loadError": "Nie udało się pobrać użytkowników",
+    "headers": {
+      "user": "Użytkownik",
+      "role": "Rola",
+      "status": "Status",
+      "warnings": "Ostrzeżenia",
+      "reports": "Zgłoszenia",
+      "actions": "Akcje"
+    },
+    "banned": "Zbanowany",
+    "active": "Aktywny",
+    "until": "do",
+    "unban": "Odbanuj",
+    "unbanConfirm": "Odbanować użytkownika {{name}}?",
+    "unbanSuccess": "{{name}} odbanowany",
+    "unbanError": "Nie udało się odbanować"
+  },
+  "groups": {
+    "title": "🦓 Grupy",
+    "loading": "Ładowanie...",
+    "loadError": "Nie udało się pobrać grup",
+    "headers": {
+      "name": "Nazwa",
+      "participants": "Uczestnicy",
+      "category": "Kategoria",
+      "keywords": "Słowa kluczowe"
+    }
+  },
+  "reports": {
+    "title": "🚩 Zgłoszenia",
+    "loading": "Ładowanie...",
+    "loadError": "Nie udało się pobrać zgłoszeń",
+    "statusPending": "Oczekujące",
+    "statusReviewed": "Rozpatrzone",
+    "statusDismissed": "Odrzucone",
+    "statusAll": "Wszystkie",
+    "noReports": "Brak zgłoszeń",
+    "queueEmpty": "Kolejka zgłoszeń jest pusta",
+    "noInStatus": "Brak zgłoszeń w tym statusie",
+    "reportedBy": "Zgłosił:",
+    "timesReported": "🔥 {{count}}× zgłoszono",
+    "review": "Rozpatrz",
+    "cancel": "Anuluj",
+    "actions": {
+      "dismiss": "Odrzuć zgłoszenie",
+      "warn": "Wyślij ostrzeżenie",
+      "delete_content": "Usuń treść",
+      "ban_temp": "Ban czasowy",
+      "ban_permanent": "Ban stały"
+    },
+    "banHours": "Czas bana (godziny):",
+    "warningPlaceholder": "Treść ostrzeżenia dla użytkownika...",
+    "reasonPlaceholder": "Notatka wewnętrzna (opcjonalnie)...",
+    "executeAction": "Wykonaj akcję",
+    "selectAction": "Wybierz akcję",
+    "actionDone": "Akcja wykonana",
+    "actionError": "Błąd akcji"
+  },
+  "reportModal": {
+    "thanks": "Dziękujemy za zgłoszenie",
+    "thanksDesc": "Nasz zespół przejrzy {{target}} i podejmie odpowiednie działania zgodnie z zasadami społeczności.",
+    "report": "Zgłoś {{target}}",
+    "close": "Zamknij",
+    "reasonLabel": "Powód zgłoszenia:",
+    "additionalInfo": "Dodatkowe informacje",
+    "optional": "(opcjonalnie)",
+    "placeholder": "Opisz problem krótko...",
+    "submit": "Wyślij zgłoszenie",
+    "submitting": "Wysyłanie...",
+    "cancel": "Anuluj",
+    "falseWarning": "Fałszywe zgłoszenia mogą skutkować ostrzeżeniem konta"
+  }
+}

@@ -4,7 +4,7 @@ export function Skeleton({ className = "" }) {
   return (
     <div
       className={clsx(
-        "animate-pulse bg-slate-200 rounded-lg",
+        "animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg",
         className
       )}
     />
@@ -13,7 +13,7 @@ export function Skeleton({ className = "" }) {
 
 export function SkeletonCard() {
   return (
-    <div className="bg-white rounded-2xl border p-6 space-y-3">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-3">
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-6 w-48" />
       <Skeleton className="h-4 w-32" />

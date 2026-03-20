@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Button from "../components/ui/Button";
 import PostCard from "../components/forum/PostCard";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 export default function ForumPage() {
   const { groupId } = useParams();
+  const { t } = useTranslation("app");
 
   const [posts, setPosts]         = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -32,7 +34,7 @@ export default function ForumPage() {
       setHasMore(data.length === 20);
       setPage(p);
     } catch {
-      toast.error("Nie udało się pobrać postów");
+      toast.error(t("forum.loadError"));
     } finally {
       setLoading(false);
     }
@@ -48,9 +50,9 @@ export default function ForumPage() {
       setPosts(prev => [data, ...prev]);
       setNewPost({ title: "", content: "" });
       setShowForm(false);
-      toast.success("Post opublikowany!");
+      toast.success(t("forum.createSuccess"));
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Błąd tworzenia posta");
+      toast.error(err.response?.data?.detail || t("forum.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -58,72 +60,80 @@ export default function ForumPage() {
 
   return (
     <AppShell>
-      <div className="max-w-3xl mx-auto">
-
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <Link
-              to={`/groups/${groupId}`}
-              className="text-sm text-slate-400 hover:text-slate-600 transition"
-            >
-              ← Czat grupy
-            </Link>
-            <h1 className="text-2xl font-bold text-slate-800 mt-1">
-              📋 Forum grupy
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+              {t("forum.title")}
             </h1>
-            <p className="text-slate-500 text-sm mt-0.5">
-              Trwała wiedza i doświadczenia członków
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+              {t("forum.subtitle")}
             </p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)} variant="primary">
-            {showForm ? "Anuluj" : "+ Nowy post"}
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            variant="primary"
+            size="sm"
+          >
+            {showForm ? (
+              t("forum.cancel")
+            ) : (
+              <>
+                <span className="hidden sm:inline">
+                  {t("forum.newPost")}
+                </span>
+                <span className="sm:hidden">+ Post</span>
+              </>
+            )}
           </Button>
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-2xl border-2 border-zebra-200 p-6 mb-6 space-y-4">
-            <h2 className="font-semibold text-slate-800">Nowy post</h2>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-zebra-200 dark:border-teal-700 p-6 mb-6 space-y-4">
+            <h2 className="font-semibold text-slate-800 dark:text-slate-100">
+              {t("forum.postTitle")}
+            </h2>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Tytuł
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t("forum.titleLabel")}
               </label>
               <input
                 value={newPost.title}
                 onChange={e => setNewPost(p => ({ ...p, title: e.target.value }))}
-                placeholder="Np. Lista sprawdzonych neurologów dziecięcych..."
+                placeholder={t("forum.titlePlaceholder")}
                 maxLength={200}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5
-                           focus:outline-none focus:ring-2 focus:ring-zebra-500
-                           text-sm"
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500
+                           focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400 text-sm"
               />
-              <p className="text-xs text-slate-400 mt-1 text-right">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 text-right">
                 {newPost.title.length}/200
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Treść
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t("forum.contentLabel")}
               </label>
               <textarea
                 value={newPost.content}
                 onChange={e => setNewPost(p => ({ ...p, content: e.target.value }))}
-                placeholder="Opisz swoje doświadczenia, podziel się wiedzą, zadaj pytanie..."
+                placeholder={t("forum.contentPlaceholder")}
                 rows={6}
                 maxLength={10000}
-                className="w-full border border-slate-200 rounded-xl px-4 py-2.5
+                className="w-full border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500
                            resize-none focus:outline-none focus:ring-2
-                           focus:ring-zebra-500 text-sm leading-relaxed"
+                           focus:ring-zebra-500 dark:focus:ring-teal-400 text-sm leading-relaxed"
               />
-              <p className="text-xs text-slate-400 mt-1 text-right">
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 text-right">
                 {newPost.content.length}/10 000
               </p>
             </div>
 
             <div className="flex items-center justify-between">
-              <p className="text-xs text-slate-400">
-                Post będzie widoczny dla wszystkich członków grupy
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                {t("forum.visibleToMembers")}
               </p>
               <Button
                 onClick={handleCreate}
@@ -134,7 +144,7 @@ export default function ForumPage() {
                 }
                 loading={submitting}
               >
-                Opublikuj
+                {t("forum.publish")}
               </Button>
             </div>
           </div>
@@ -147,18 +157,17 @@ export default function ForumPage() {
         ) : posts.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">📝</div>
-            <p className="text-slate-600 font-semibold text-lg">
-              Brak postów
+            <p className="text-slate-600 dark:text-slate-300 font-semibold text-lg">
+              {t("forum.noPosts")}
             </p>
-            <p className="text-slate-400 text-sm mt-2 max-w-sm mx-auto">
-              Bądź pierwszą osobą która podzieli się wiedzą lub doświadczeniem
-              z grupą.
+            <p className="text-slate-400 dark:text-slate-500 text-sm mt-2 max-w-sm mx-auto">
+              {t("forum.noPostsHint")}
             </p>
             <button
               onClick={() => setShowForm(true)}
-              className="mt-6 text-zebra-600 font-semibold hover:underline text-sm"
+              className="mt-6 text-zebra-600 dark:text-teal-400 font-semibold hover:underline text-sm"
             >
-              Napisz pierwszy post →
+              {t("forum.writeFirst")}
             </button>
           </div>
         ) : (
@@ -174,15 +183,16 @@ export default function ForumPage() {
                 <button
                   onClick={() => loadPosts(page + 1)}
                   disabled={loading}
-                  className="text-zebra-600 font-medium hover:underline
+                  className="text-zebra-600 dark:text-teal-400 font-medium hover:underline
                              text-sm disabled:opacity-50"
                 >
-                  {loading ? "Ładowanie..." : "Pokaż starsze posty"}
+                  {loading ? t("forum.loading") : t("forum.loadMore")}
                 </button>
               </div>
             )}
           </>
         )}
+        </div>
       </div>
     </AppShell>
   );

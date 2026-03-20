@@ -6,9 +6,12 @@ import DmModal from "../dm/DmModal";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../../store/authStore";
+import { useTranslation } from "react-i18next";
 
 export default function CommentItem({ comment, groupId, postId, postTitle, onDelete }) {
   const { user } = useAuthStore();
+  const { t, i18n } = useTranslation("app");
+  const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(comment.content);
   const [saving, setSaving] = useState(false);
@@ -29,23 +32,23 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
       );
       comment.content = editValue;
       setEditing(false);
-      toast.success("Komentarz zaktualizowany");
+      toast.success(t("comment.saveSuccess"));
     } catch {
-      toast.error("Nie udało się zapisać");
+      toast.error(t("comment.saveError"));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!window.confirm("Usunąć komentarz?")) return;
+    if (!window.confirm(t("comment.deleteConfirm"))) return;
     try {
       await api.delete(
         `/groups/${groupId}/posts/${postId}/comments/${comment.id}`
       );
       onDelete(comment.id);
     } catch {
-      toast.error("Nie udało się usunąć");
+      toast.error(t("comment.deleteError"));
     }
   };
 
@@ -54,26 +57,26 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
       <Avatar name={comment.display_name} size="sm"
               className="flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <div className="bg-slate-50 rounded-2xl rounded-tl-sm px-4 py-3">
+        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl rounded-tl-sm px-4 py-3">
           <div className="flex items-center justify-between mb-1">
             <span className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold text-zebra-700">
+              <span className="text-sm font-semibold text-zebra-700 dark:text-teal-400">
                 {comment.display_name}
               </span>
               {!isOwn && (
                 <button
                   type="button"
                   onClick={() => setShowDm(true)}
-                  className="text-xs text-slate-400 hover:text-zebra-600
-                             p-1 rounded-lg hover:bg-zebra-50 transition"
-                  title={`Napisz do ${comment.display_name}`}
+                  className="text-xs text-slate-400 dark:text-slate-500 hover:text-zebra-600 dark:hover:text-teal-400
+                             p-1 rounded-lg hover:bg-zebra-50 dark:hover:bg-teal-900/30 transition"
+                  title={t("dm.writeTo", { name: comment.display_name })}
                 >
                   ✉️
                 </button>
               )}
             </span>
-            <span className="text-xs text-slate-400">
-              {new Date(comment.created_at).toLocaleDateString("pl-PL")}
+            <span className="text-xs text-slate-400 dark:text-slate-500">
+              {new Date(comment.created_at).toLocaleDateString(locale)}
             </span>
           </div>
 
@@ -83,28 +86,28 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 rows={3}
-                className="w-full text-sm border rounded-xl px-3 py-2
-                           focus:outline-none focus:ring-2 focus:ring-zebra-500 resize-none"
+                className="w-full text-sm border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100
+                           focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400 resize-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="text-xs bg-zebra-600 text-white px-3 py-1.5
-                             rounded-lg hover:bg-zebra-700 transition disabled:opacity-50"
+                  className="text-xs bg-zebra-600 dark:bg-teal-500 text-white dark:text-slate-900 px-3 py-1.5
+                             rounded-lg hover:bg-zebra-700 dark:hover:bg-teal-400 transition disabled:opacity-50"
                 >
-                  {saving ? "Zapisuję..." : "Zapisz"}
+                  {saving ? t("comment.saving") : t("comment.save")}
                 </button>
                 <button
                   onClick={() => { setEditing(false); setEditValue(comment.content); }}
-                  className="text-xs text-slate-500 hover:text-slate-700"
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 >
-                  Anuluj
+                  {t("comment.cancel")}
                 </button>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
               {comment.content}
             </p>
           )}
@@ -125,16 +128,16 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="text-xs text-slate-400 hover:text-slate-600"
+                  className="text-xs text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                 >
-                  Edytuj
+                  {t("comment.edit")}
                 </button>
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="text-xs text-red-400 hover:text-red-600"
+                  className="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300"
                 >
-                  Usuń
+                  {t("comment.delete")}
                 </button>
               </>
             )}

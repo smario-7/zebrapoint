@@ -5,11 +5,10 @@ import toast from "react-hot-toast";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
- * Hook zarządzający stanem panelu zarządzania grupą (drawer).
- * Odpowiada za: otwieranie/zamykanie, ładowanie TOP 3, aktualizację opisu, zmianę grupy.
+ * Hook zarządzający stanem widoku zarządzania grupą.
+ * Odpowiada za: ładowanie TOP 3, aktualizację opisu, zmianę grupy.
  */
 export function useGroupManagement({ onGroupChanged } = {}) {
-  const [isOpen, setIsOpen] = useState(false);
   const [matches, setMatches] = useState([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
   const [changingGroup, setChangingGroup] = useState(false);
@@ -17,8 +16,7 @@ export function useGroupManagement({ onGroupChanged } = {}) {
   const matchesCacheRef = useRef(null);
   const cacheTimeRef = useRef(null);
 
-  const openDrawer = useCallback(async () => {
-    setIsOpen(true);
+  const loadMatches = useCallback(async () => {
     const now = Date.now();
     if (
       matchesCacheRef.current &&
@@ -45,14 +43,10 @@ export function useGroupManagement({ onGroupChanged } = {}) {
     }
   }, []);
 
-  const closeDrawer = useCallback(() => {
-    setIsOpen(false);
-    setMatches([]);
-  }, []);
-
   const updateDescription = useCallback(async (newDescription) => {
     setUpdatingDesc(true);
     matchesCacheRef.current = null;
+    cacheTimeRef.current = null;
     try {
       const { data } = await api.patch("/symptoms/me", {
         description: newDescription,
@@ -81,10 +75,13 @@ export function useGroupManagement({ onGroupChanged } = {}) {
           score: match.score_pct / 100,
         });
         toast.success(`Przeniesiono do grupy „${data.group_name}"! 🎉`);
-        setIsOpen(false);
+        matchesCacheRef.current = null;
+        cacheTimeRef.current = null;
+        setMatches([]);
         if (onGroupChanged) {
-          onGroupChanged(data);
+          await onGroupChanged(data);
         }
+        await loadMatches();
       } catch (err) {
         const msg = err.response?.data?.detail || "Błąd zmiany grupy";
         toast.error(Array.isArray(msg) ? msg[0]?.msg ?? msg : msg);
@@ -92,17 +89,15 @@ export function useGroupManagement({ onGroupChanged } = {}) {
         setChangingGroup(false);
       }
     },
-    [changingGroup, onGroupChanged]
+    [changingGroup, onGroupChanged, loadMatches]
   );
 
   return {
-    isOpen,
     matches,
     loadingMatches,
     changingGroup,
     updatingDesc,
-    openDrawer,
-    closeDrawer,
+    loadMatches,
     updateDescription,
     changeGroup,
   };

@@ -6,8 +6,10 @@ import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
 import StatusBar from "./StatusBar";
 import { SkeletonText } from "../ui/Skeleton";
+import { useTranslation } from "react-i18next";
 
 export default function ChatWindow({ groupId, groupName }) {
+  const { t } = useTranslation("app");
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const bottomRef = useRef(null);
@@ -52,7 +54,7 @@ export default function ChatWindow({ groupId, groupName }) {
   const isOwn = (msg) => msg.user_id === user?.id;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-2xl border overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
       <StatusBar
         status={status}
         onlineCount={onlineCount}
@@ -62,7 +64,7 @@ export default function ChatWindow({ groupId, groupName }) {
 
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50"
+        className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50"
       >
         {status === WS_STATUS.CONNECTING && (
           <div className="space-y-4 p-2">
@@ -75,11 +77,11 @@ export default function ChatWindow({ groupId, groupName }) {
         {isConnected && messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center py-16">
             <span className="text-4xl mb-3">💬</span>
-            <p className="text-slate-500 font-medium">
-              Brak wiadomości
+            <p className="text-slate-500 dark:text-slate-400 font-medium">
+              {t("chat.noMessages")}
             </p>
-            <p className="text-slate-400 text-sm mt-1">
-              Bądź pierwszy — napisz coś do grupy!
+            <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
+              {t("chat.beFirst")}
             </p>
           </div>
         )}
