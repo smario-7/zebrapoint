@@ -40,6 +40,7 @@ jobs:
       # Cookie JWT bez Secure — inaczej TestClient (HTTP) nie wysyła sesji po /auth/login
       ENVIRONMENT: development
       COOKIE_SECURE: "false"
+      OPENAI_API_KEY: ""
       PYTHONUTF8: 1
     steps:
       - uses: actions/checkout@v4

@@ -5,6 +5,8 @@ os.environ.setdefault("ZP_DISABLE_RATE_LIMIT", "1")
 # Bez tego logowanie zwraca Set-Cookie, ale kolejne żądania idą bez sesji (401 w CI i lokalnie przy ENVIRONMENT=production).
 os.environ["ENVIRONMENT"] = "development"
 os.environ["COOKIE_SECURE"] = "false"
+# Bez tego przy OPENAI_API_KEY w .env lecą prawdziwe requesty (BackgroundTasks, update_group_characteristics).
+os.environ["OPENAI_API_KEY"] = ""
 
 import pytest
 from unittest.mock import MagicMock, patch
@@ -28,6 +30,16 @@ TestingSessionLocal = sessionmaker(
     autoflush=False,
     bind=engine_test
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_group_ai_description():
+    """Blokuje wywołania OpenAI przy przeliczaniu charakterystyk grupy (także w tle po /symptoms/)."""
+    with patch(
+        "app.services.group_characteristics.generate_group_ai_description",
+        return_value=(None, None),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
