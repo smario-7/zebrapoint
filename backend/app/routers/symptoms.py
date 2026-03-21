@@ -233,6 +233,7 @@ def update_symptoms_patch(
         embedding=embedding_list,
         exclude_user_id=str(current_user.id)
     )
+    matches = merge_current_group_into_matches(db, profile, matches)
 
     return SymptomUpdateResponse(
         profile_id=str(profile.id),

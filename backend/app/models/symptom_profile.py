@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Text, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Text, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -13,7 +13,7 @@ class SymptomProfile(Base):
     id          = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id     = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     description = Column(Text, nullable=False)
-    embedding   = Column(Vector(384), nullable=True)
+    embedding   = Column(Vector(384).with_variant(JSON(), "sqlite"), nullable=True)
     group_id    = Column(UUID(as_uuid=True), ForeignKey("groups.id", ondelete="SET NULL"), nullable=True)
     match_score = Column(Float, default=0.0)
     created_at  = Column(DateTime(timezone=True), server_default=func.now())
