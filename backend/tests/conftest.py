@@ -1,6 +1,10 @@
 import os
 
 os.environ.setdefault("ZP_DISABLE_RATE_LIMIT", "1")
+# TestClient używa http://testserver — przeglądarka/httpx nie zachowuje ciasteczek Secure=True przez HTTP.
+# Bez tego logowanie zwraca Set-Cookie, ale kolejne żądania idą bez sesji (401 w CI i lokalnie przy ENVIRONMENT=production).
+os.environ["ENVIRONMENT"] = "development"
+os.environ["COOKIE_SECURE"] = "false"
 
 import pytest
 from unittest.mock import MagicMock, patch

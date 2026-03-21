@@ -97,6 +97,7 @@ class TestGetMe:
     assert resp.status_code == 401
 
   def test_get_me_invalid_token(self, client):
-    resp = client.get("/auth/me", cookies={"access_token": "invalid-token"})
+    client.cookies.set("access_token", "invalid-token", path="/")
+    resp = client.get("/auth/me")
     assert resp.status_code == 401
 

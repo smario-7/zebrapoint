@@ -37,6 +37,9 @@ jobs:
     env:
       DATABASE_URL: sqlite:///./test.db
       SECRET_KEY: test-secret-key-ci-minimum-32-characters-required
+      # Cookie JWT bez Secure — inaczej TestClient (HTTP) nie wysyła sesji po /auth/login
+      ENVIRONMENT: development
+      COOKIE_SECURE: "false"
       PYTHONUTF8: 1
     steps:
       - uses: actions/checkout@v4
