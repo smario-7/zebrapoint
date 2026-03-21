@@ -55,9 +55,10 @@ class TestLogin:
     })
     assert resp.status_code == 200
     data = resp.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert "user" in data
+    assert "access_token" not in data
     assert data["user"]["email"] == "test@zebrapoint.pl"
+    assert resp.cookies.get("access_token")
 
   def test_login_wrong_password(self, client, registered_user):
     resp = client.post("/auth/login", json={
@@ -93,9 +94,9 @@ class TestGetMe:
 
   def test_get_me_unauthenticated(self, client):
     resp = client.get("/auth/me")
-    assert resp.status_code == 403
+    assert resp.status_code == 401
 
   def test_get_me_invalid_token(self, client):
-    resp = client.get("/auth/me", headers={"Authorization": "Bearer invalid-token"})
+    resp = client.get("/auth/me", cookies={"access_token": "invalid-token"})
     assert resp.status_code == 401
 

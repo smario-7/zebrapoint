@@ -29,15 +29,14 @@ class ChatManager:
         # websocket → metadane: user_id, display_name, group_id
         self.metadata: Dict[WebSocket, Dict] = {}
 
-    async def connect(
+    def register_accepted(
         self,
         websocket: WebSocket,
         group_id: str,
         user_id: str,
         display_name: str,
     ) -> None:
-        """Akceptuje połączenie WebSocket i rejestruje je w pamięci."""
-        await websocket.accept()
+        """Rejestruje już zaakceptowane połączenie WebSocket."""
         self.connections[group_id].append(websocket)
         self.metadata[websocket] = {
             "user_id": user_id,
@@ -50,6 +49,17 @@ class ChatManager:
             group_id,
             len(self.connections[group_id]),
         )
+
+    async def connect(
+        self,
+        websocket: WebSocket,
+        group_id: str,
+        user_id: str,
+        display_name: str,
+    ) -> None:
+        """Akceptuje połączenie WebSocket i rejestruje je w pamięci."""
+        await websocket.accept()
+        self.register_accepted(websocket, group_id, user_id, display_name)
 
     def disconnect(self, websocket: WebSocket) -> Optional[Dict]:
         """

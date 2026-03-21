@@ -16,6 +16,14 @@ class DmManager:
         self.connections = defaultdict(list)
         self.metadata = {}
 
+    def register_accepted(self, websocket: WebSocket, conversation_id: str, user_id: str):
+        """Rejestruje WebSocket już po accept()."""
+        self.connections[conversation_id].append(websocket)
+        self.metadata[websocket] = {
+            "user_id": user_id,
+            "conversation_id": conversation_id,
+        }
+
     async def connect(
         self,
         websocket: WebSocket,
@@ -23,11 +31,7 @@ class DmManager:
         user_id: str,
     ):
         await websocket.accept()
-        self.connections[conversation_id].append(websocket)
-        self.metadata[websocket] = {
-            "user_id": user_id,
-            "conversation_id": conversation_id,
-        }
+        self.register_accepted(websocket, conversation_id, user_id)
 
     def disconnect(self, websocket: WebSocket):
         meta = self.metadata.pop(websocket, None)

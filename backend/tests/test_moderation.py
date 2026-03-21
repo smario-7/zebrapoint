@@ -24,13 +24,13 @@ def admin_user(client, db):
 
 @pytest.fixture
 def admin_headers(client, admin_user):
-    """Nagłówki auth dla użytkownika z rolą admin."""
+    """Sesja ciasteczkowa po zalogowaniu jako admin."""
     resp = client.post("/auth/login", json={
         "email": admin_user["email"],
         "password": admin_user["password"]
     })
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    assert resp.status_code == 200
+    return {}
 
 
 @pytest.fixture
@@ -60,8 +60,8 @@ def banned_auth_headers(client, db, registered_user):
         "email": "test@zebrapoint.pl",
         "password": "haslo1234"
     })
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+    assert resp.status_code == 200
+    return {}
 
 
 class TestReports:

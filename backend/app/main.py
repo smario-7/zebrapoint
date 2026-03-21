@@ -4,19 +4,35 @@ import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
 from app.logging_config import setup_logging
 
 setup_logging()
 
 from app.config import settings
+from app.rate_limit import limiter
 from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm, dm_ws, bootstrap
 from app.services.embedding_service import get_model
 
 logger = logging.getLogger(__name__)
 APP_VERSION = "0.2.0"
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Podstawowe nagłówki zmniejszające ryzyko clickjacking i MIME sniffing."""
+
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 
 
 @asynccontextmanager
@@ -45,8 +61,14 @@ app = FastAPI(
     version=APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.add_middleware(SlowAPIMiddleware)
+
 
 class DevCorsFallbackMiddleware(BaseHTTPMiddleware):
     """W development dopina Access-Control-Allow-Origin, gdy odpowiedź go nie ma (np. niektóre ścieżki błędów)."""
@@ -72,36 +94,40 @@ class DevCorsFallbackMiddleware(BaseHTTPMiddleware):
             return response
         if origin in self._exact or self._pattern.match(origin):
             response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
         return response
 
 
+_cors_origins = (
+    [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+    ]
+    if settings.environment.lower() == "development"
+    else [
+        o.strip()
+        for o in (settings.frontend_origins or "").split(",")
+        if o.strip()
+    ]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        [
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:3000",
-        ]
-        if settings.environment.lower() == "development"
-        else [
-            o.strip()
-            for o in (settings.frontend_origins or "").split(",")
-            if o.strip()
-        ]
-    ),
+    allow_origins=_cors_origins,
     allow_origin_regex=(
         r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
         if settings.environment.lower() == "development"
         else None
     ),
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Accept", "Authorization", "X-Requested-With"],
 )
 
 app.add_middleware(DevCorsFallbackMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(auth.router)
 app.include_router(symptoms.router)

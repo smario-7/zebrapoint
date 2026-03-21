@@ -36,14 +36,12 @@ function withTransition(element) {
 
 function AppRoutes() {
   const navigate = useNavigate();
-  const { token, fetchMe, logout } = useAuthStore();
+  const { isAuthenticated, fetchMe, logout } = useAuthStore();
   const dark = useThemeStore((s) => s.dark);
 
   useEffect(() => {
-    if (token) {
-      fetchMe();
-    }
-  }, [token, fetchMe]);
+    fetchMe();
+  }, [fetchMe]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -68,10 +66,10 @@ function AppRoutes() {
     <AnimatedRoutes>
       <Route path="/"         element={withTransition(<LandingPage />)} />
       <Route path="/login"    element={
-        token ? <Navigate to="/dashboard" replace /> : withTransition(<LoginPage />)
+        isAuthenticated ? <Navigate to="/dashboard" replace /> : withTransition(<LoginPage />)
       } />
       <Route path="/register" element={
-        token ? <Navigate to="/dashboard" replace /> : withTransition(<RegisterPage />)
+        isAuthenticated ? <Navigate to="/dashboard" replace /> : withTransition(<RegisterPage />)
       } />
 
       <Route element={<ProtectedRoute />}>

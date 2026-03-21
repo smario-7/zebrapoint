@@ -36,7 +36,7 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     env:
       DATABASE_URL: sqlite:///./test.db
-      SECRET_KEY: test-secret-key-ci
+      SECRET_KEY: test-secret-key-ci-minimum-32-characters-required
       PYTHONUTF8: 1
     steps:
       - uses: actions/checkout@v4

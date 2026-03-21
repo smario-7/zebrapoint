@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -16,13 +17,22 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     refresh_token_expire_days: int = 7
-    environment: str = "development"
-    debug: bool = True
+    environment: str = "production"
+    debug: bool = False
     redis_url: str = "redis://redis:6379/0"
     frontend_origins: str = ""
     load_embeddings_on_startup: bool = False
     openai_api_key: str = ""
     log_dir: str = ""
+    access_token_cookie_name: str = "access_token"
+    cookie_secure: bool = False
+
+    @field_validator("secret_key")
+    @classmethod
+    def secret_key_min_length(cls, v: str) -> str:
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY musi mieć co najmniej 32 znaki")
+        return v
 
     def resolved_log_dir(self) -> Path:
         fallback = _BACKEND_DIR.parent / "logs"
@@ -39,6 +49,12 @@ class Settings(BaseSettings):
                 f"Uwaga: LOG_DIR={self.log_dir!r} niedostępny (brak uprawnień) — używam {fallback}\n"
             )
             return fallback
+
+    def cookie_secure_flag(self) -> bool:
+        """Secure=True wymaga HTTPS; w development zwykle False."""
+        if self.cookie_secure:
+            return True
+        return self.environment.lower() == "production"
 
 
 settings = Settings()
