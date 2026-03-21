@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,9 +25,20 @@ class Settings(BaseSettings):
     log_dir: str = ""
 
     def resolved_log_dir(self) -> Path:
-        if self.log_dir.strip():
-            return Path(self.log_dir).expanduser().resolve()
-        return _BACKEND_DIR.parent / "logs"
+        fallback = _BACKEND_DIR.parent / "logs"
+        if not self.log_dir.strip():
+            fallback.mkdir(parents=True, exist_ok=True)
+            return fallback
+        primary = Path(self.log_dir).expanduser().resolve()
+        try:
+            primary.mkdir(parents=True, exist_ok=True)
+            return primary
+        except PermissionError:
+            fallback.mkdir(parents=True, exist_ok=True)
+            sys.stderr.write(
+                f"Uwaga: LOG_DIR={self.log_dir!r} niedostępny (brak uprawnień) — używam {fallback}\n"
+            )
+            return fallback
 
 
 settings = Settings()

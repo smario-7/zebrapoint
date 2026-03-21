@@ -10,7 +10,6 @@ _DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def setup_logging() -> None:
     log_dir = settings.resolved_log_dir()
-    log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / "backend.log"
 
     root = logging.getLogger()
