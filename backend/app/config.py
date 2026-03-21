@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     frontend_origins: str = ""
     load_embeddings_on_startup: bool = False
     openai_api_key: str = ""
+    log_dir: str = ""
+
+    def resolved_log_dir(self) -> Path:
+        if self.log_dir.strip():
+            return Path(self.log_dir).expanduser().resolve()
+        return _BACKEND_DIR.parent / "logs"
 
 
 settings = Settings()

@@ -10,7 +10,8 @@ celery_app = Celery(
     # Moduły z zadaniami — Celery auto-importuje przy starcie
     include=[
         "app.tasks.ml_tasks",
-        "app.tasks.notification_tasks"
+        "app.tasks.notification_tasks",
+        "app.tasks.system_tasks",
     ]
 )
 
@@ -78,6 +79,11 @@ celery_app.conf.update(
             "task":     "app.tasks.notification_tasks.send_weekly_digest",
             "schedule": crontab(hour=8, minute=0, day_of_week=1),
             "options":  {"queue": "notifications"}
+        },
+        "save-system-snapshot-hourly": {
+            "task":     "app.tasks.system_tasks.save_system_snapshot",
+            "schedule": 3600.0,
+            "options":  {"queue": "default"},
         },
     },
 

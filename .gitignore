@@ -20,6 +20,8 @@ dist/
 # System
 .DS_Store
 *.log
+logs/
+data/
 
 # IDE
 .vscode/

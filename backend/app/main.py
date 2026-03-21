@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+from app.logging_config import setup_logging
+
+setup_logging()
+
 from app.config import settings
 from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm, dm_ws, bootstrap
 from app.services.embedding_service import get_model

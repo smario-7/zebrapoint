@@ -1,5 +1,13 @@
-
 services:
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - ./data/redis:/data
+      - ./logs:/logs
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -8,9 +16,56 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      LOG_DIR: /logs
     volumes:
       - ./backend:/app
+      - ./logs:/logs
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    environment:
+      LOG_DIR: /logs
+    volumes:
+      - ./backend:/app
+      - ./logs:/logs
+    working_dir: /app
+    command: >
+      celery -A app.tasks.celery_app worker
+      --loglevel=INFO
+      --logfile=/logs/celery.log
+      -Q ml,notifications,default
+    depends_on:
+      - redis
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+    environment:
+      LOG_DIR: /logs
+    volumes:
+      - ./backend:/app
+      - ./logs:/logs
+    working_dir: /app
+    command: celery -A app.tasks.celery_app beat --loglevel=INFO
+    depends_on:
+      - redis
+    healthcheck:
+      disable: true
     restart: unless-stopped
 
   frontend:

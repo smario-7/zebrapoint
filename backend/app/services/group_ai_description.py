@@ -3,6 +3,7 @@ import logging
 import re
 
 from app.config import settings
+from app.services.ai_token_metrics import record_openai_usage
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,13 @@ Zwróć WYŁĄCZNIE obiekt JSON o kluczach:
     except Exception as exc:
         logger.warning("OpenAI — błąd wywołania: %s", exc)
         return None, None
+
+    usage = getattr(completion, "usage", None)
+    if usage is not None:
+        record_openai_usage(
+            getattr(usage, "prompt_tokens", None),
+            getattr(usage, "completion_tokens", None),
+        )
 
     raw = completion.choices[0].message.content
     if not raw:

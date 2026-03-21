@@ -6,6 +6,10 @@ const NAV_ITEMS = [
   { to: "/admin/reports", end: false, labelKey: "layout.navReports" },
   { to: "/admin/users", end: false, labelKey: "layout.navUsers" },
   { to: "/admin/groups", end: false, labelKey: "layout.navGroups" },
+  { to: "/admin/ml", end: false, labelKey: "layout.navML" },
+  { to: "/admin/ai", end: false, labelKey: "layout.navAI" },
+  { to: "/admin/logs", end: false, labelKey: "layout.navLogs" },
+  { to: "/admin/system", end: false, labelKey: "layout.navSystem" },
 ];
 
 export default function AdminLayout() {

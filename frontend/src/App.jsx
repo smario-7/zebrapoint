@@ -20,6 +20,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReports   from "./pages/admin/AdminReports";
 import AdminUsers     from "./pages/admin/AdminUsers";
 import AdminGroups    from "./pages/admin/AdminGroups";
+import AdminML        from "./pages/admin/AdminML";
+import AdminAI        from "./pages/admin/AdminAI";
+import AdminSystem    from "./pages/admin/AdminSystem";
+import AdminLogs      from "./pages/admin/AdminLogs";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminGuard     from "./components/AdminGuard";
@@ -88,6 +92,10 @@ function AppRoutes() {
           <Route path="reports" element={<AdminReports />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="groups" element={<AdminGroups />} />
+          <Route path="ml" element={<AdminML />} />
+          <Route path="ai" element={<AdminAI />} />
+          <Route path="logs" element={<AdminLogs />} />
+          <Route path="system" element={<AdminSystem />} />
         </Route>
       </Route>
 
