@@ -36,7 +36,7 @@ function normalizeMessage(msg) {
  * nowe wiadomości z WS są dopisywane. Przy odebraniu wiadomości wysyła "read".
  */
 export function useDM(conversationId) {
-  const { token } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState(DM_STATUS.DISCONNECTED);
 
@@ -93,7 +93,7 @@ export function useDM(conversationId) {
   );
 
   const connect = useCallback(() => {
-    if (!conversationId || !token || !isMounted.current) return;
+    if (!conversationId || !isAuthenticated || !isMounted.current) return;
 
     const cidStr = String(conversationId);
     const existingWs = wsRef.current;
@@ -122,10 +122,7 @@ export function useDM(conversationId) {
 
     setStatus(DM_STATUS.CONNECTING);
     const cid = encodeURIComponent(cidStr);
-    const t = encodeURIComponent(String(token));
-    const ws = new WebSocket(
-      `${WS_BASE}/ws/dm/${cid}?token=${t}`
-    );
+    const ws = new WebSocket(`${WS_BASE}/ws/dm/${cid}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -166,7 +163,7 @@ export function useDM(conversationId) {
         setStatus(DM_STATUS.FAILED);
       }
     };
-  }, [conversationId, token, handleMessage]);
+  }, [conversationId, isAuthenticated, handleMessage]);
   useEffect(() => {
     connectRef.current = connect;
   }, [connect]);

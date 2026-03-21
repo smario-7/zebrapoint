@@ -22,7 +22,7 @@ const MAX_MESSAGES    = 200;
  * @param {string} groupId - UUID grupy
  */
 export function useChat(groupId) {
-  const { token } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   const [messages, setMessages]       = useState([]);
   const [status, setStatus]           = useState(WS_STATUS.DISCONNECTED);
@@ -126,7 +126,7 @@ export function useChat(groupId) {
   }
 
   const connect = useCallback(() => {
-    if (!groupId || !token || !isMounted.current) return;
+    if (!groupId || !isAuthenticated || !isMounted.current) return;
 
     if (
       wsRef.current?.readyState === WebSocket.OPEN ||
@@ -137,7 +137,7 @@ export function useChat(groupId) {
 
     setStatus(WS_STATUS.CONNECTING);
 
-    const url = `${WS_BASE_URL}/ws/chat/${groupId}?token=${token}`;
+    const url = `${WS_BASE_URL}/ws/chat/${groupId}`;
     const ws  = new WebSocket(url);
     wsRef.current = ws;
 
@@ -171,7 +171,7 @@ export function useChat(groupId) {
 
       scheduleReconnect();
     };
-  }, [groupId, token, handleServerMessage, startPing, stopPing]);
+  }, [groupId, isAuthenticated, handleServerMessage, startPing, stopPing]);
 
   useEffect(() => {
     connectRef.current = connect;

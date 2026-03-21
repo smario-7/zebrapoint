@@ -4,19 +4,9 @@ import toast from "react-hot-toast";
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
   headers: { "Content-Type": "application/json" },
-  timeout: 30000
+  timeout: 30000,
+  withCredentials: true,
 });
-
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("zp_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 api.interceptors.response.use(
   (response) => response,
@@ -32,9 +22,12 @@ api.interceptors.response.use(
     }
 
     const status = error.response?.status;
+    const reqUrl = error.config?.url || "";
 
     if (status === 401) {
-      window.dispatchEvent(new CustomEvent("zp:unauthorized"));
+      if (!reqUrl.includes("/auth/me") && !reqUrl.includes("/auth/login")) {
+        window.dispatchEvent(new CustomEvent("zp:unauthorized"));
+      }
       return Promise.reject(error);
     }
 

@@ -182,8 +182,8 @@ def update_group_characteristics(db: Session, group_id: str) -> None:
         round(sum(scores) / len(scores), 3) if scores else None
     )
 
-    # Od 1 członka — w dev i małych grupach też generujemy opis AI (wymaga OPENAI_API_KEY).
-    if len(profiles) >= 1 and settings.openai_api_key:
+    # Opis AI generujemy tylko raz — gdy grupa go jeszcze nie ma (wymaga OPENAI_API_KEY).
+    if len(profiles) >= 1 and settings.openai_api_key and not group.ai_description:
         ai_desc, ai_category = generate_group_ai_description(
             group.keywords,
             texts[:10],

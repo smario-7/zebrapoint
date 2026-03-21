@@ -14,7 +14,9 @@ from fastapi import (
 from sqlalchemy.orm import Session, joinedload
 from uuid import UUID
 
-from app.auth.dependencies import get_current_user, get_current_user_ws
+from app.auth.dependencies import get_current_user
+from app.auth.session import user_from_access_token
+from app.config import settings
 from app.database import get_db
 from app.models.group_member import GroupMember
 from app.models.message import Message
@@ -96,23 +98,19 @@ def _load_history_models(
 async def websocket_chat(
     websocket: WebSocket,
     group_id: str,
-    token: str = Query(...),
     db: Session = Depends(get_db),
 ) -> None:
     """
     Endpoint WebSocket dla czatu grupowego.
 
-    Flow:
-    1. Weryfikacja tokenu JWT.
-    2. Sprawdzenie, czy użytkownik należy do grupy.
-    3. Rejestracja połączenia w ChatManagerze.
-    4. Wysłanie historii ostatnich wiadomości.
-    5. Główna pętla: odbiór, walidacja, zapis, broadcast.
+    Autoryzacja: JWT w ciasteczku HttpOnly (jak REST), bez tokenu w URL.
+    Flow: accept → weryfikacja cookie → członkostwo → rejestracja → historia → pętla wiadomości.
     """
 
-    user = await get_current_user_ws(websocket, token, db)
+    await websocket.accept()
+    token = websocket.cookies.get(settings.access_token_cookie_name)
+    user = user_from_access_token(token, db)
     if not user:
-        await websocket.accept()
         await websocket.send_json(
             {
                 "type": "error",
@@ -124,7 +122,6 @@ async def websocket_chat(
         return
 
     if not _is_group_member(db, user.id, group_id):
-        await websocket.accept()
         await websocket.send_json(
             {
                 "type": "error",
@@ -135,7 +132,7 @@ async def websocket_chat(
         await websocket.close(code=4003)
         return
 
-    await manager.connect(
+    manager.register_accepted(
         websocket,
         group_id=group_id,
         user_id=str(user.id),

@@ -1,7 +1,7 @@
 import random
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -11,7 +11,7 @@ from app.schemas.user import (
     UserCreate,
     UserLogin,
     UserOut,
-    TokenResponse,
+    LoginResponse,
     UpdateProfile,
     UpdatePassword,
     NICK_PATTERN,
@@ -19,6 +19,8 @@ from app.schemas.user import (
 )
 from app.auth.jwt import create_access_token
 from app.auth.dependencies import get_current_user
+from app.config import settings
+from app.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -63,9 +65,10 @@ def _generate_nick_suggestions(nick: str, db: Session) -> list[str]:
 @router.post(
     "/register",
     response_model=UserOut,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """Rejestracja nowego użytkownika."""
 
     existing = db.query(User).filter(User.email == user_data.email).first()
@@ -143,30 +146,56 @@ def check_nick_availability(nick: str, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/login", response_model=TokenResponse)
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """Logowanie — zwraca JWT token."""
+@router.post("/login", response_model=LoginResponse)
+@limiter.limit("5/minute")
+def login(
+    request: Request,
+    credentials: UserLogin,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """Logowanie — JWT w ciasteczku HttpOnly (nie w treści JSON)."""
 
     user = db.query(User).filter(User.email == credentials.email).first()
 
     if not user or not _verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Nieprawidłowy email lub hasło"
+            detail="Nieprawidłowy email lub hasło",
         )
 
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Konto zostało dezaktywowane"
+            detail="Konto zostało dezaktywowane",
         )
 
     token = create_access_token({"sub": str(user.id)})
-
-    return TokenResponse(
-        access_token=token,
-        user=UserOut.model_validate(user)
+    max_age_sec = settings.access_token_expire_minutes * 60
+    response.set_cookie(
+        key=settings.access_token_cookie_name,
+        value=token,
+        max_age=max_age_sec,
+        httponly=True,
+        secure=settings.cookie_secure_flag(),
+        samesite="lax",
+        path="/",
     )
+
+    return LoginResponse(user=UserOut.model_validate(user))
+
+
+@router.post("/logout")
+def logout(response: Response):
+    """Kasuje ciasteczko sesji (wylogowanie)."""
+    response.delete_cookie(
+        key=settings.access_token_cookie_name,
+        path="/",
+        httponly=True,
+        secure=settings.cookie_secure_flag(),
+        samesite="lax",
+    )
+    return {"message": "Wylogowano"}
 
 
 @router.get("/me", response_model=UserOut)

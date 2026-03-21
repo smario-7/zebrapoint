@@ -1,3 +1,13 @@
+import os
+
+os.environ.setdefault("ZP_DISABLE_RATE_LIMIT", "1")
+# TestClient używa http://testserver — przeglądarka/httpx nie zachowuje ciasteczek Secure=True przez HTTP.
+# Bez tego logowanie zwraca Set-Cookie, ale kolejne żądania idą bez sesji (401 w CI i lokalnie przy ENVIRONMENT=production).
+os.environ["ENVIRONMENT"] = "development"
+os.environ["COOKIE_SECURE"] = "false"
+# Bez tego przy OPENAI_API_KEY w .env lecą prawdziwe requesty (BackgroundTasks, update_group_characteristics).
+os.environ["OPENAI_API_KEY"] = ""
+
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
@@ -20,6 +30,16 @@ TestingSessionLocal = sessionmaker(
     autoflush=False,
     bind=engine_test
 )
+
+
+@pytest.fixture(autouse=True)
+def _mock_group_ai_description():
+    """Blokuje wywołania OpenAI przy przeliczaniu charakterystyk grupy (także w tle po /symptoms/)."""
+    with patch(
+        "app.services.group_characteristics.generate_group_ai_description",
+        return_value=(None, None),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -83,8 +103,8 @@ def auth_headers(client, registered_user):
     "email": "test@zebrapoint.pl",
     "password": "haslo1234"
   })
-  token = resp.json()["access_token"]
-  return {"Authorization": f"Bearer {token}"}
+  assert resp.status_code == 200
+  return {}
 
 
 @pytest.fixture
@@ -123,21 +143,26 @@ def conversation(client, auth_headers, other_user):
 
 
 @pytest.fixture
-def other_conversation(client, other_user, third_user):
+def other_conversation(client, registered_user, other_user, third_user):
   """
   Konwersacja między other_user a third_user.
   registered_user nie jest jej uczestnikiem — używane w test_cannot_access_other_conversation.
+  Po utworzeniu konwersacji przywraca ciasteczko sesji registered_user (TestClient jest współdzielony).
   """
   login_resp = client.post("/auth/login", json={
     "email": "other@zebrapoint.pl",
     "password": "haslo1234",
   })
-  token = login_resp.json()["access_token"]
-  headers = {"Authorization": f"Bearer {token}"}
+  assert login_resp.status_code == 200
   resp = client.post(
     f"/dm/start?other_user_id={third_user['id']}",
-    headers=headers,
   )
   assert resp.status_code == 200
-  return str(resp.json()["id"])
+  conv_id = str(resp.json()["id"])
+  restore = client.post("/auth/login", json={
+    "email": registered_user["email"],
+    "password": "haslo1234",
+  })
+  assert restore.status_code == 200
+  return conv_id
 

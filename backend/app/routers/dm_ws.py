@@ -2,11 +2,12 @@ import json
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
-from app.auth.dependencies import get_current_user_ws
+from app.auth.session import user_from_access_token
+from app.config import settings
 from app.database import SessionLocal, get_db
 from app.models.dm_conversation import DmConversation, DmMessage
 from app.websocket.dm_manager import dm_manager
@@ -22,16 +23,16 @@ MAX_MESSAGE_LENGTH = 2000
 async def dm_websocket(
     websocket: WebSocket,
     conversation_id: str,
-    token: str = Query(...),
     db: Session = Depends(get_db),
 ):
     """
-    WebSocket dla DM. Token JWT w query: ?token=...
+    WebSocket dla DM. JWT z ciasteczka HttpOnly (bez tokenu w URL).
     Obsługuje typy: ping (pong), message (zapis do bazy + broadcast), read (oznaczenie jako przeczytane).
     """
-    user = await get_current_user_ws(websocket, token, db)
+    await websocket.accept()
+    token = websocket.cookies.get(settings.access_token_cookie_name)
+    user = user_from_access_token(token, db)
     if not user:
-        await websocket.accept()
         await websocket.send_json({"type": "error", "code": "UNAUTHORIZED"})
         await websocket.close(code=4001)
         return
@@ -39,7 +40,6 @@ async def dm_websocket(
     try:
         conv_uuid = UUID(conversation_id)
     except (ValueError, TypeError):
-        await websocket.accept()
         await websocket.send_json({"type": "error", "code": "NOT_FOUND"})
         await websocket.close(code=4004)
         return
@@ -57,12 +57,11 @@ async def dm_websocket(
     )
 
     if not conv:
-        await websocket.accept()
         await websocket.send_json({"type": "error", "code": "FORBIDDEN"})
         await websocket.close(code=4003)
         return
 
-    await dm_manager.connect(websocket, conversation_id, str(user.id))
+    dm_manager.register_accepted(websocket, conversation_id, str(user.id))
 
     await dm_manager.send_personal(
         {
