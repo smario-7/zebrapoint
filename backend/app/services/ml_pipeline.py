@@ -20,6 +20,27 @@ RETRAIN_EVERY_N = 10
 MIN_PROFILES_START = 6
 NOISE_SIMILARITY_THRESHOLD = 0.60
 
+HDBSCAN_MIN_SAMPLES = 2
+HDBSCAN_METRIC = "euclidean"
+HDBSCAN_CLUSTER_SELECTION = "eom"
+
+
+def get_ml_pipeline_public_config() -> dict:
+    """Parametry pipeline i HDBSCAN do panelu admina (bez uruchamiania klasteryzacji)."""
+    return {
+        "retrain_trigger_new_profiles": RETRAIN_EVERY_N,
+        "min_profiles_before_first_retrain": MIN_PROFILES_START,
+        "noise_similarity_threshold": NOISE_SIMILARITY_THRESHOLD,
+        "hdbscan": {
+            "min_cluster_size": "2 gdy liczba profili < 20, w przeciwnym razie 3",
+            "min_samples": HDBSCAN_MIN_SAMPLES,
+            "metric": HDBSCAN_METRIC,
+            "cluster_selection_method": HDBSCAN_CLUSTER_SELECTION,
+            "prediction_data": True,
+            "core_dist_n_jobs": 1,
+        },
+    }
+
 
 def should_retrain(db: Session) -> bool:
     """
@@ -174,9 +195,9 @@ def _run_hdbscan(embeddings: np.ndarray) -> np.ndarray:
 
     clusterer = hdbscan.HDBSCAN(
         min_cluster_size=min_cluster_size,
-        min_samples=2,
-        metric="euclidean",
-        cluster_selection_method="eom",
+        min_samples=HDBSCAN_MIN_SAMPLES,
+        metric=HDBSCAN_METRIC,
+        cluster_selection_method=HDBSCAN_CLUSTER_SELECTION,
         prediction_data=True,
         core_dist_n_jobs=1
     )

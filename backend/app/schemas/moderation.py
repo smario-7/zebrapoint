@@ -104,3 +104,12 @@ class UserModerationStatus(BaseModel):
     ban_reason: str | None
     warning_count: int = 0
     report_count: int = 0
+
+
+class GroupNoteUpdate(BaseModel):
+    admin_note: str | None
+
+
+class PostModerationUpdate(BaseModel):
+    is_pinned: bool | None = None
+    is_locked: bool | None = None

@@ -8,6 +8,7 @@ import { useProfile } from "../hooks/useProfile";
 import { useGroupManagement } from "../hooks/useGroupManagement";
 import SymptomEditor from "../components/group/SymptomEditor";
 import GroupMatchMini from "../components/group/GroupMatchMini";
+import GroupDescriptionPopover from "../components/group/GroupDescriptionPopover";
 
 export default function GroupsPage() {
   const { t } = useTranslation("app");
@@ -58,13 +59,13 @@ export default function GroupsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="rounded-2xl border border-[var(--zp-app-border)] bg-[var(--zp-app-card)] overflow-hidden">
+            <div className="rounded-2xl border border-[var(--zp-app-border)] bg-[var(--zp-app-card)]">
               <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
                 <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
                   {t("groupDrawer.currentGroup")}
                 </p>
                 {group ? (
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex-shrink-0"
@@ -79,9 +80,16 @@ export default function GroupsPage() {
                         />
                       </div>
                       <div>
-                        <p className="font-bold text-slate-800 dark:text-slate-100">
-                          {group.name}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="font-bold text-slate-800 dark:text-slate-100">
+                            {group.name}
+                          </p>
+                          {group.ai_description && (
+                            <GroupDescriptionPopover
+                              description={group.ai_description}
+                            />
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400 dark:text-slate-500">
                           {group.symptom_category || t("groupDrawer.general")} ·{" "}
                           {t("groupDrawer.members", {
@@ -90,12 +98,6 @@ export default function GroupsPage() {
                         </p>
                       </div>
                     </div>
-                    <Link
-                      to={`/groups/${group.id}`}
-                      className="text-sm font-semibold text-zebra-600 dark:text-teal-400 hover:text-zebra-700 dark:hover:text-teal-300 transition flex-shrink-0 flex items-center gap-1"
-                    >
-                      {t("groupDrawer.chatLink")}
-                    </Link>
                   </div>
                 ) : (
                   <p className="text-sm text-slate-400 dark:text-slate-500 italic">

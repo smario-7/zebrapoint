@@ -1,8 +1,10 @@
 import logging
 from dataclasses import dataclass
+import uuid as uuid_module
 from uuid import UUID
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.models.group import Group
 from app.models.group_member import GroupMember
@@ -11,6 +13,11 @@ from app.services.group_naming import generate_group_name, generate_group_color
 from app.services.group_characteristics import update_group_characteristics
 
 logger = logging.getLogger(__name__)
+
+
+class GroupAssignConflict(ValueError):
+    """Konflikt integralności przy zapisie group_members (np. duplikat klucza)."""
+
 
 SIMILARITY_THRESHOLD = 0.72
 TOP_K = 5
@@ -30,6 +37,7 @@ class GroupMatch:
     keywords: list[str]
     age_range: str | None
     symptom_category: str | None
+    ai_description: str | None
     admin_note: str | None
     is_new_group: bool
 
@@ -60,7 +68,8 @@ def find_matching_group(
 
     if not similar_profiles:
         logger.info(f"Brak podobnych profili w bazie — tworzę nową grupę dla user {user_id}")
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     best = similar_profiles[0]
     best_score = float(best.similarity)
@@ -69,19 +78,16 @@ def find_matching_group(
 
     if best_score < SIMILARITY_THRESHOLD:
         logger.info(f"Score {best_score:.4f} < threshold {SIMILARITY_THRESHOLD} — nowa grupa")
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     group = db.query(Group).filter(Group.id == best.group_id).first()
     if not group or not group.is_active:
-        return _create_new_group(db)
+        new_group = _create_new_group(db)
+        return _build_match_response(new_group, 0.0, True)
 
     logger.info(f"Dopasowano do grupy '{group.name}' (score={best_score:.4f})")
-    return {
-        "group_id": str(group.id),
-        "score": best_score,
-        "is_new": False,
-        "group_name": group.name
-    }
+    return _build_match_response(group, best_score, False)
 
 
 def add_user_to_group(
@@ -116,18 +122,6 @@ def add_user_to_group(
     )
 
     logger.info("Dodano user %s do grupy %s", user_id, group_id)
-
-    try:
-        from app.tasks.ml_tasks import update_group_characteristics_task
-        update_group_characteristics_task.apply_async(
-            args=[str(group_id)],
-            queue="ml",
-            countdown=5
-        )
-    except Exception as e:
-        logger.warning(
-            "Nie można zakolejkować update_group_characteristics: %s", e
-        )
 
 
 def _format_embedding(embedding: list[float]) -> str:
@@ -167,9 +161,8 @@ def _query_similar_profiles(
     return result.fetchall()
 
 
-def _create_new_group(db: Session) -> dict:
+def _create_new_group(db: Session) -> Group:
     """Tworzy nową grupę z deterministyczną nazwą i kolorem."""
-    import uuid as uuid_module
     group_id = uuid_module.uuid4()
     group = Group(
         id=group_id,
@@ -183,11 +176,15 @@ def _create_new_group(db: Session) -> dict:
     db.flush()
 
     logger.info("Utworzono nową grupę: %s", group.id)
+    return group
+
+
+def _build_match_response(group: Group, score: float, is_new: bool) -> dict:
     return {
         "group_id": str(group.id),
-        "score": 0.0,
-        "is_new": True,
-        "group_name": group.name
+        "score": score,
+        "is_new": is_new,
+        "group_name": group.name,
     }
 
 
@@ -202,22 +199,28 @@ def find_top_matches(
     Używane w drawerze zarządzania grupą i po aktualizacji opisu.
     """
     embedding_str = _format_embedding(embedding)
-    exclude_clause = "AND sp.user_id != :exclude_user_id" if exclude_user_id else ""
-
-    rows = db.execute(text(f"""
+    base_query = """
         SELECT
             sp.group_id,
             1 - (sp.embedding <=> CAST(:emb AS vector)) AS similarity
         FROM symptom_profiles sp
         WHERE sp.embedding IS NOT NULL
           AND sp.group_id IS NOT NULL
-          {exclude_clause}
         ORDER BY sp.embedding <=> CAST(:emb AS vector)
         LIMIT 50
-    """), {
-        "emb": embedding_str,
-        "exclude_user_id": exclude_user_id or ""
-    }).fetchall()
+    """
+    if exclude_user_id:
+        rows = db.execute(
+            text(
+                base_query.replace(
+                    "ORDER BY",
+                    "AND sp.user_id != :exclude_user_id\n        ORDER BY",
+                )
+            ),
+            {"emb": embedding_str, "exclude_user_id": exclude_user_id},
+        ).fetchall()
+    else:
+        rows = db.execute(text(base_query), {"emb": embedding_str}).fetchall()
 
     best_per_group: dict[str, float] = {}
     for row in rows:
@@ -228,9 +231,12 @@ def find_top_matches(
 
     top_groups = sorted(best_per_group.items(), key=lambda x: -x[1])[:top_k]
     results: list[GroupMatch] = []
+    group_ids = [group_id for group_id, _ in top_groups]
+    groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+    groups_by_id = {str(group.id): group for group in groups}
 
     for group_id, score in top_groups:
-        group = db.query(Group).filter(Group.id == group_id).first()
+        group = groups_by_id.get(group_id)
         if not group or not group.is_active:
             continue
         results.append(GroupMatch(
@@ -244,11 +250,52 @@ def find_top_matches(
             keywords=group.keywords or [],
             age_range=group.age_range,
             symptom_category=group.symptom_category,
+            ai_description=group.ai_description,
             admin_note=group.admin_note,
             is_new_group=False
         ))
 
     return results
+
+
+def merge_current_group_into_matches(
+    db: Session,
+    profile: SymptomProfile,
+    matches: list[GroupMatch],
+) -> list[GroupMatch]:
+    """
+    Wstawia bieżącą grupę użytkownika na początek listy, jeśli find_top_matches jej nie zwrócił
+    (w zapytaniu pomijany jest własny wiersz symptom_profiles — przy jednym członku grupa znika z TOP).
+    Gdy grupa już jest w wynikach, przenosi ją na początek.
+    """
+    if not profile or not profile.group_id:
+        return matches
+    gid = str(profile.group_id)
+    same = [m for m in matches if m.group_id == gid]
+    rest = [m for m in matches if m.group_id != gid]
+    if same:
+        return same + rest
+    group = db.query(Group).filter(Group.id == profile.group_id).first()
+    if not group or not group.is_active:
+        return matches
+    score_raw = float(profile.match_score) if profile.match_score is not None else 0.0
+    score_pct = min(100, max(0, int(round(score_raw * 100))))
+    current = GroupMatch(
+        group_id=gid,
+        name=group.name,
+        accent_color=group.accent_color or "#0d9488",
+        score=round(score_raw, 3),
+        score_pct=score_pct,
+        member_count=group.member_count or 0,
+        avg_match_score=group.avg_match_score,
+        keywords=group.keywords or [],
+        age_range=group.age_range,
+        symptom_category=group.symptom_category,
+        ai_description=group.ai_description,
+        admin_note=group.admin_note,
+        is_new_group=False,
+    )
+    return [current] + matches
 
 
 def _build_new_group_match() -> GroupMatch:
@@ -266,6 +313,7 @@ def _build_new_group_match() -> GroupMatch:
         keywords=[],
         age_range=None,
         symptom_category=None,
+        ai_description=None,
         admin_note=None,
         is_new_group=True
     )
@@ -284,62 +332,64 @@ def assign_user_to_group(
     """
     uid = UUID(user_id) if isinstance(user_id, str) else user_id
 
+    try:
+        profile_uuid = UUID(str(profile_id))
+    except ValueError as exc:
+        raise ValueError("Nieprawidłowy identyfikator profilu") from exc
+
     if group_id == "__new__":
-        group = _create_new_group_entity(db)
+        group = _create_new_group(db)
         group_id = str(group.id)
     else:
-        group = db.query(Group).filter(Group.id == group_id).first()
+        try:
+            target_gid = UUID(str(group_id))
+        except ValueError as exc:
+            raise ValueError(f"Nieprawidłowy identyfikator grupy: {group_id}") from exc
+        group = db.query(Group).filter(Group.id == target_gid).first()
         if not group:
             raise ValueError(f"Grupa {group_id} nie istnieje")
 
-    old_membership = db.query(GroupMember).filter(
-        GroupMember.user_id == uid
-    ).first()
-    if old_membership:
-        old_gid = old_membership.group_id
-        db.query(GroupMember).filter(
-            GroupMember.user_id == uid,
-            GroupMember.group_id == old_gid
-        ).delete()
-        old_group = db.query(Group).filter(Group.id == old_gid).first()
-        if old_group and (old_group.member_count or 0) > 0:
-            db.query(Group).filter(Group.id == old_gid).update(
+    old_memberships = (
+        db.query(GroupMember).filter(GroupMember.user_id == uid).all()
+    )
+    for om in old_memberships:
+        og = db.query(Group).filter(Group.id == om.group_id).first()
+        if og and (og.member_count or 0) > 0:
+            db.query(Group).filter(Group.id == om.group_id).update(
                 {Group.member_count: Group.member_count - 1}
             )
+    db.query(GroupMember).filter(GroupMember.user_id == uid).delete()
 
-    gid_uuid = UUID(group_id) if isinstance(group_id, str) else group_id
+    gid_uuid = UUID(str(group_id)) if isinstance(group_id, str) else group_id
     db.add(GroupMember(user_id=uid, group_id=gid_uuid))
     db.query(Group).filter(Group.id == gid_uuid).update(
         {Group.member_count: Group.member_count + 1}
     )
 
     profile = db.query(SymptomProfile).filter(
-        SymptomProfile.id == profile_id,
+        SymptomProfile.id == profile_uuid,
         SymptomProfile.user_id == uid
     ).first()
     if profile:
         profile.group_id = gid_uuid
         profile.match_score = match_score
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        logger.warning("IntegrityError przy zmianie grupy user=%s: %s", uid, exc)
+        raise GroupAssignConflict(
+            "Nie udało się zapisać członkostwa w grupie. Odśwież stronę i spróbuj ponownie."
+        ) from exc
+
     db.refresh(group)
 
-    update_group_characteristics(db, str(group.id))
-    return group
+    try:
+        update_group_characteristics(db, str(group.id))
+    except Exception:
+        logger.exception(
+            "update_group_characteristics po zmianie grupy — pomijam, przypisanie zapisane"
+        )
 
-
-def _create_new_group_entity(db: Session) -> Group:
-    """Tworzy nową grupę i zwraca obiekt Group (dla assign_user_to_group)."""
-    import uuid as uuid_module
-    group_id = uuid_module.uuid4()
-    group = Group(
-        id=group_id,
-        name=generate_group_name(str(group_id)),
-        accent_color=generate_group_color(str(group_id)),
-        description="Grupa tymczasowa. Zostanie uzupełniona przy retrain.",
-        is_active=True,
-        member_count=0
-    )
-    db.add(group)
-    db.flush()
     return group

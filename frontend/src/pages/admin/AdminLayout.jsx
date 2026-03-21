@@ -6,14 +6,18 @@ const NAV_ITEMS = [
   { to: "/admin/reports", end: false, labelKey: "layout.navReports" },
   { to: "/admin/users", end: false, labelKey: "layout.navUsers" },
   { to: "/admin/groups", end: false, labelKey: "layout.navGroups" },
+  { to: "/admin/ml", end: false, labelKey: "layout.navML" },
+  { to: "/admin/ai", end: false, labelKey: "layout.navAI" },
+  { to: "/admin/logs", end: false, labelKey: "layout.navLogs" },
+  { to: "/admin/system", end: false, labelKey: "layout.navSystem" },
 ];
 
 export default function AdminLayout() {
   const { t } = useTranslation("admin");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      <aside className="w-56 bg-slate-900 flex-shrink-0 flex flex-col min-h-screen">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex">
+      <aside className="w-56 bg-slate-900 dark:bg-slate-950 flex-shrink-0 flex flex-col min-h-screen border-r border-slate-800 dark:border-slate-800">
         <div className="p-4 border-b border-slate-700">
           <Link
             to="/admin"
@@ -55,7 +59,7 @@ export default function AdminLayout() {
           </Link>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto p-6">
+      <main className="flex-1 overflow-auto p-6 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
         <Outlet />
       </main>
     </div>

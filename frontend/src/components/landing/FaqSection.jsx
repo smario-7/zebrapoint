@@ -1,28 +1,22 @@
+import { useTranslation } from "react-i18next";
+
 export default function FaqSection() {
+  const { t } = useTranslation("landing");
+
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24 bg-white dark:bg-slate-900">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12">
-          <p className="text-zebra-600 font-semibold text-sm uppercase tracking-widest mb-3">
-            FAQ
+          <p className="text-zebra-600 dark:text-teal-400 font-semibold text-sm uppercase tracking-widest mb-3">
+            {t("faq.sectionLabel")}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-800">
-            Najczęstsze pytania
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-800 dark:text-slate-100">
+            {t("faq.title")}
           </h2>
         </div>
-        <div className="space-y-4 text-slate-600 text-sm leading-relaxed">
-          <p>
-            Masz pytania o zasady działania ZebraPoint, prywatność danych
-            albo warunki korzystania z platformy? Wszystkie szczegóły
-            znajdziesz w regulaminie, polityce prywatności oraz sekcji
-            „O nas”, do których linki umieściliśmy w stopce strony.
-          </p>
-          <p>
-            Jeśli coś jest dla Ciebie niejasne lub chcesz zgłosić uwagę,
-            skorzystaj z formularza kontaktowego, który udostępnimy razem
-            z pełną wersją serwisu. Na tym etapie skupiamy się na tym,
-            żeby jak najszybciej pomóc Ci znaleźć grupę wsparcia.
-          </p>
+        <div className="space-y-4 text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <p>{t("faq.intro1")}</p>
+          <p>{t("faq.intro2")}</p>
         </div>
       </div>
     </section>

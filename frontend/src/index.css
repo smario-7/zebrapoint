@@ -57,7 +57,7 @@
 @keyframes slide-in-left {
   from {
     opacity: 0;
-    transform: translateX(-32px);
+    transform: translateX(-16px);
   }
   to {
     opacity: 1;
@@ -98,16 +98,48 @@
   }
 }
 
-/* płynne przejście kolorów przy zmianie motywu */
-html {
+/* płynne przejście kolorów przy zmianie motywu (bez selektora na każdy element DOM) */
+html,
+body {
   transition: background-color 0.3s ease, color 0.2s ease;
-}
-html * {
-  transition: background-color 0.3s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 body {
   background: var(--zp-app-bg);
+}
+
+/* Firefox — cienki pasek, kolory z tokenów */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--zp-scrollbar-thumb) var(--zp-scrollbar-track);
+}
+
+/* WebKit — domyślnie węższy (mobile / touch) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--zp-scrollbar-track);
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--zp-scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid var(--zp-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--zp-scrollbar-thumb-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
 }
 
 .safe-area-pb {

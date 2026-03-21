@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import api from "../services/api";
+import useBootstrapStore from "../store/bootstrapStore";
 import AppShell from "../components/layout/AppShell";
 import { useTranslation } from "react-i18next";
+
+function createSymptomsSchema(t) {
+  return z.object({
+    description: z
+      .string()
+      .min(100, t("symptoms.validationMin"))
+      .max(1000, t("symptoms.validationMax")),
+  });
+}
 
 export default function SymptomsForm() {
   const { t } = useTranslation("app");
@@ -14,12 +24,7 @@ export default function SymptomsForm() {
   const [matchResult, setMatchResult] = useState(null);
   const navigate = useNavigate();
 
-  const schema = z.object({
-    description: z
-      .string()
-      .min(100, t("symptoms.validationMin"))
-      .max(1000, t("symptoms.validationMax")),
-  });
+  const schema = useMemo(() => createSymptomsSchema(t), [t]);
 
   const {
     register,
@@ -37,6 +42,11 @@ export default function SymptomsForm() {
     setApiError(null);
     try {
       const { data } = await api.post("/symptoms/", formData);
+      try {
+        await useBootstrapStore.getState().refresh();
+      } catch {
+        // Brak aktualizacji store nie blokuje dalszego kroku.
+      }
       setMatchResult(data.match);
       setTimeout(() => {
         navigate(`/groups/${data.match.group_id}`);

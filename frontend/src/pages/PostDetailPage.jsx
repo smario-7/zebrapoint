@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/ui/Avatar";
@@ -10,12 +10,13 @@ import api from "../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../store/authStore";
 import { useTranslation } from "react-i18next";
+import ConfirmModal from "../components/ui/ConfirmModal";
 
 export default function PostDetailPage() {
   const { groupId, postId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { t, i18n } = useTranslation("app");
+  const { t, i18n } = useTranslation(["app", "common"]);
   const locale = i18n.language === "en" ? "en-US" : "pl-PL";
 
   const [post, setPost]         = useState(null);
@@ -23,12 +24,10 @@ export default function PostDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [showDm, setShowDm] = useState(false);
+  const [deletePostOpen, setDeletePostOpen] = useState(false);
+  const [deletingPost, setDeletingPost] = useState(false);
 
-  useEffect(() => {
-    loadPost();
-  }, [groupId, postId]);
-
-  const loadPost = async () => {
+  const loadPost = useCallback(async () => {
     try {
       const { data } = await api.get(`/groups/${groupId}/posts/${postId}`);
       setPost(data);
@@ -38,7 +37,11 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, postId, t, navigate]);
+
+  useEffect(() => {
+    loadPost();
+  }, [loadPost]);
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -65,13 +68,16 @@ export default function PostDetailPage() {
   };
 
   const handleDeletePost = async () => {
-    if (!window.confirm(t("postDetail.deleteConfirm"))) return;
+    setDeletingPost(true);
     try {
       await api.delete(`/groups/${groupId}/posts/${postId}`);
       toast.success(t("postDetail.deleteSuccess"));
+      setDeletePostOpen(false);
       navigate(`/groups/${groupId}/forum`);
     } catch {
       toast.error(t("postDetail.deleteError"));
+    } finally {
+      setDeletingPost(false);
     }
   };
 
@@ -80,6 +86,15 @@ export default function PostDetailPage() {
       ...prev,
       comments: prev.comments.filter(c => c.id !== commentId),
       comment_count: prev.comment_count - 1
+    }));
+  };
+
+  const handleCommentUpdate = (commentId, content) => {
+    setPost(prev => ({
+      ...prev,
+      comments: prev.comments.map(c =>
+        c.id === commentId ? { ...c, content } : c
+      ),
     }));
   };
 
@@ -102,6 +117,16 @@ export default function PostDetailPage() {
 
   return (
     <AppShell>
+      <ConfirmModal
+        open={deletePostOpen}
+        title={t("postDetail.deletePost")}
+        message={t("postDetail.deleteConfirm")}
+        confirmLabel={t("common:confirm")}
+        cancelLabel={t("common:cancel")}
+        onConfirm={handleDeletePost}
+        onCancel={() => setDeletePostOpen(false)}
+        loading={deletingPost}
+      />
       <div className="max-w-3xl mx-auto">
 
         <Link
@@ -146,7 +171,8 @@ export default function PostDetailPage() {
             </div>
             {(isAuthor || isAdmin) && (
               <button
-                onClick={handleDeletePost}
+                type="button"
+                onClick={() => setDeletePostOpen(true)}
                 className="text-xs text-red-400 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
               >
                 {t("postDetail.deletePost")}
@@ -236,6 +262,7 @@ export default function PostDetailPage() {
                 postId={post.id}
                 postTitle={post.title}
                 onDelete={handleDeleteComment}
+                onCommentUpdate={handleCommentUpdate}
               />
             ))}
           </div>

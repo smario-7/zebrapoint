@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,25 +15,31 @@ import { useProfile } from "../hooks/useProfile";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 
-const nameSchema = z.object({
-  display_name: z
-    .string()
-    .min(3, "Min. 3 znaki")
-    .max(30, "Max. 30 znaków")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Dozwolone: litery, cyfry, _ i -")
-    .transform((v) => v.trim()),
-});
-
-const passwordSchema = z
-  .object({
-    current_password: z.string().min(1, "Podaj aktualne hasło"),
-    new_password: z.string().min(8, "Min. 8 znaków"),
-    confirm_password: z.string(),
-  })
-  .refine((d) => d.new_password === d.confirm_password, {
-    message: "Hasła nie są identyczne",
-    path: ["confirm_password"],
+function createNameSchema(t) {
+  return z.object({
+    display_name: z
+      .string()
+      .min(3, t("validation.minChars", { ns: "auth" }))
+      .max(30, t("validation.maxChars", { ns: "auth" }))
+      .regex(/^[a-zA-Z0-9_-]+$/, t("validation.allowedChars", { ns: "auth" }))
+      .transform((v) => v.trim()),
   });
+}
+
+function createPasswordSchema(t) {
+  return z
+    .object({
+      current_password: z.string().min(1, t("profile.currentPasswordRequired")),
+      new_password: z
+        .string()
+        .min(8, t("validation.minPassword", { ns: "auth" })),
+      confirm_password: z.string(),
+    })
+    .refine((d) => d.new_password === d.confirm_password, {
+      message: t("validation.passwordsMismatch", { ns: "auth" }),
+      path: ["confirm_password"],
+    });
+}
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation(["app", "auth"]);
@@ -52,6 +58,9 @@ export default function ProfilePage() {
       setNickStatus(null);
     }
   }, [editingName, user?.display_name]);
+
+  const nameSchema = useMemo(() => createNameSchema(t), [t]);
+  const passwordSchema = useMemo(() => createPasswordSchema(t), [t]);
 
   const nameSchemaParsed = nameSchema.safeParse({ display_name: nickValue.trim() });
   const nameValid = nameSchemaParsed.success;
@@ -147,7 +156,7 @@ export default function ProfilePage() {
               ) : group ? (
                 <div>
                   <Link
-                    to={`/groups/${group.id}`}
+                    to="/groups"
                     className="text-zebra-600 dark:text-teal-400 font-medium hover:underline"
                   >
                     {group.name}
@@ -245,7 +254,7 @@ export default function ProfilePage() {
                   <Input
                     label={t("profile.newPassword")}
                     type="password"
-                    hint={t("register.passwordHint")}
+                    hint={t("register.passwordHint", { ns: "auth" })}
                     error={pwdErrors.new_password?.message}
                     {...regPwd("new_password")}
                   />

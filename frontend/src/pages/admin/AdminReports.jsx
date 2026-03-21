@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -32,7 +32,7 @@ export default function AdminReports() {
     warning_message: "",
   });
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get(
@@ -44,11 +44,11 @@ export default function AdminReports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, t]);
 
   useEffect(() => {
     loadReports();
-  }, [statusFilter]);
+  }, [loadReports]);
 
   const handleAction = async (reportId) => {
     if (!actionForm.action_type) {
@@ -77,8 +77,8 @@ export default function AdminReports() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">{t("reports.title")}</h1>
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{t("reports.title")}</h1>
+        <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
           {STATUS_OPTIONS.map((opt) => (
             <button
               key={opt.value}
@@ -97,12 +97,12 @@ export default function AdminReports() {
       </div>
 
       {loading ? (
-        <p className="text-slate-400 text-sm">{t("reports.loading")}</p>
+        <p className="text-slate-400 dark:text-slate-500 text-sm">{t("reports.loading")}</p>
       ) : reports.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border">
+        <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
           <p className="text-4xl mb-3">✅</p>
-          <p className="text-slate-600 font-medium">{t("reports.noReports")}</p>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="text-slate-600 dark:text-slate-300 font-medium">{t("reports.noReports")}</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">
             {statusFilter === "pending"
               ? t("reports.queueEmpty")
               : t("reports.noInStatus")}
@@ -119,7 +119,7 @@ export default function AdminReports() {
                       className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                         report.status === "pending"
                           ? "bg-red-100 text-red-700"
-                          : "bg-slate-100 text-slate-600"
+                          : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                       }`}
                     >
                       {report.status === "pending"
@@ -142,7 +142,7 @@ export default function AdminReports() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
                     {t("reports.reportedBy")}{" "}
                     <strong>{report.reporter_name}</strong> ·{" "}
                     {new Date(report.created_at).toLocaleString(locale)}
@@ -167,7 +167,7 @@ export default function AdminReports() {
                 </div>
               )}
               {report.description && (
-                <p className="text-sm text-slate-500 italic mb-3">
+                <p className="text-sm text-slate-500 dark:text-slate-400 italic mb-3">
                   „{report.description}"
                 </p>
               )}
@@ -197,7 +197,7 @@ export default function AdminReports() {
                   </div>
                   {actionForm.action_type === "ban_temp" && (
                     <div className="flex items-center gap-2">
-                      <label className="text-sm text-slate-600 flex-shrink-0">
+                      <label className="text-sm text-slate-600 dark:text-slate-300 flex-shrink-0">
                         {t("reports.banHours")}
                       </label>
                       <input
@@ -211,7 +211,7 @@ export default function AdminReports() {
                             ban_hours: parseInt(e.target.value, 10) || 24,
                           }))
                         }
-                        className="w-24 border border-slate-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-zebra-500"
+                        className="w-24 border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-lg px-2 py-1 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-zebra-500"
                       />
                     </div>
                   )}
@@ -226,7 +226,7 @@ export default function AdminReports() {
                       }
                       placeholder={t("reports.warningPlaceholder")}
                       rows={2}
-                      className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zebra-500"
+                      className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-zebra-500"
                     />
                   )}
                   <textarea
@@ -236,13 +236,13 @@ export default function AdminReports() {
                     }
                     placeholder={t("reports.reasonPlaceholder")}
                     rows={2}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-zebra-500"
+                    className="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-900 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-slate-100 resize-none focus:outline-none focus:ring-2 focus:ring-zebra-500"
                   />
                   <button
                     type="button"
                     onClick={() => handleAction(report.id)}
                     disabled={!actionForm.action_type}
-                    className="bg-slate-800 hover:bg-slate-900 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold text-sm px-5 py-2 rounded-xl transition"
+                    className="bg-slate-800 hover:bg-slate-900 dark:disabled:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold text-sm px-5 py-2 rounded-xl transition"
                   >
                     {t("reports.executeAction")}
                   </button>

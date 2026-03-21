@@ -20,6 +20,8 @@ dist/
 # System
 .DS_Store
 *.log
+logs/
+data/
 
 # IDE
 .vscode/
@@ -49,3 +51,5 @@ dev.sh
 test.db
 
 /pen
+
+/logs

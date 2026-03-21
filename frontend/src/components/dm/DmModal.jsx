@@ -5,7 +5,7 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
-const EMOJIS = ["😊", "😢", "😂", "❤️", "👍", "🙏", "💪", "🦓", "✨", "🌈", "💚", "🔥"];
+import { DM_QUICK_EMOJIS } from "../../constants/emojis";
 
 /**
  * Modal do wysłania DM.
@@ -139,7 +139,7 @@ export default function DmModal({
           {showEmoji && (
             <div className="flex flex-wrap gap-1 p-2 bg-slate-50
                             rounded-xl border border-slate-200">
-              {EMOJIS.map((e) => (
+              {DM_QUICK_EMOJIS.map((e) => (
                 <button
                   key={e}
                   type="button"

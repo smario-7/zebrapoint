@@ -3,9 +3,11 @@ import logging
 from collections import Counter
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models.group import Group
 from app.models.symptom_profile import SymptomProfile
 from app.models.group_member import GroupMember
+from app.services.group_ai_description import generate_group_ai_description
 
 logger = logging.getLogger(__name__)
 
@@ -180,11 +182,24 @@ def update_group_characteristics(db: Session, group_id: str) -> None:
         round(sum(scores) / len(scores), 3) if scores else None
     )
 
+    # Od 1 członka — w dev i małych grupach też generujemy opis AI (wymaga OPENAI_API_KEY).
+    if len(profiles) >= 1 and settings.openai_api_key:
+        ai_desc, ai_category = generate_group_ai_description(
+            group.keywords,
+            texts[:10],
+            group.symptom_category,
+        )
+        if ai_desc:
+            group.ai_description = ai_desc
+        if ai_category:
+            group.symptom_category = ai_category
+
     db.commit()
 
     logger.info(
         "Charakterystyki grupy %s zaktualizowane: keywords=%s, "
-        "category=%s, age_range=%s, avg_score=%s",
+        "category=%s, age_range=%s, avg_score=%s, ai_description=%s",
         group_id, group.keywords, group.symptom_category,
-        group.age_range, group.avg_match_score
+        group.age_range, group.avg_match_score,
+        "tak" if group.ai_description else "nie",
     )

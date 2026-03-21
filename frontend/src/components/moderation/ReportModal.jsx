@@ -36,10 +36,11 @@ export default function ReportModal({ targetType, targetId, onClose }) {
       });
       setSubmitted(true);
     } catch (err) {
-      if (err.response?.status !== 201) {
-        toast.error(t("report.sendError"));
+      const status = err.response?.status;
+      if (status === 409) {
+        toast.error(t("report.duplicateError"));
       } else {
-        setSubmitted(true);
+        toast.error(t("report.sendError"));
       }
     } finally {
       setLoading(false);

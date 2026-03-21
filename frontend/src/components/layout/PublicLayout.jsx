@@ -1,21 +1,23 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import LogoBrand from "../ui/LogoBrand";
 import useThemeStore from "../../store/themeStore";
 
 function DefaultHeaderLinks() {
+  const { t } = useTranslation("landing");
   return (
     <div className="flex items-center gap-3">
       <Link
         to="/login"
         className="text-sm font-medium text-[var(--zp-app-text-primary)] hover:text-[var(--zp-accent-primary)] transition"
       >
-        Zaloguj się
+        {t("nav.signIn")}
       </Link>
       <Link
         to="/register"
         className="text-sm font-medium text-white bg-[var(--zp-accent-primary)] hover:opacity-90 px-4 py-2 rounded-xl transition"
       >
-        Dołącz
+        {t("nav.joinFree")}
       </Link>
     </div>
   );

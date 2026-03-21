@@ -9,10 +9,7 @@ import useAuthStore from "../store/authStore";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-
-const EMOJIS = [
-  "😊", "😢", "😂", "❤️", "👍", "👏", "🙏", "💪", "🦓", "✨", "🌈", "💚",
-];
+import { DM_QUICK_EMOJIS } from "../constants/emojis";
 
 export default function ConversationPage() {
   const { conversationId } = useParams();
@@ -58,7 +55,7 @@ export default function ConversationPage() {
       }
     };
     load();
-  }, [conversationId, conversations, otherUser, setMessages]);
+  }, [conversationId, conversations, otherUser, setMessages, t]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -231,7 +228,7 @@ export default function ConversationPage() {
           <div className="bg-[var(--zp-app-bg)] border-t border-[var(--zp-app-border)] px-4 py-3 flex-shrink-0">
           {showEmoji && (
             <div className="flex flex-wrap gap-1 mb-2 p-2 bg-[var(--zp-app-card)] rounded-xl border border-[var(--zp-app-border)]">
-              {EMOJIS.map((emoji) => (
+              {DM_QUICK_EMOJIS.map((emoji) => (
                 <button
                   key={emoji}
                   type="button"

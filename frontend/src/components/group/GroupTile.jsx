@@ -5,6 +5,8 @@
  */
 import { useTranslation } from "react-i18next";
 
+import GroupDescriptionPopover from "./GroupDescriptionPopover";
+
 export default function GroupTile({ group, profile, onManage }) {
   const { t } = useTranslation("app");
 
@@ -15,7 +17,7 @@ export default function GroupTile({ group, profile, onManage }) {
         onKeyDown={(e) => e.key === "Enter" && onManage()}
         role="button"
         tabIndex={0}
-        className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 hover:border-zebra-300 dark:hover:border-teal-600 hover:shadow-sm transition-all cursor-pointer p-5 flex flex-col items-center justify-center text-center min-h-[160px] group"
+        className="bg-[var(--zp-app-card)] rounded-2xl border-2 border-dashed border-[var(--zp-app-border)] hover:border-zebra-300 dark:hover:border-teal-600 hover:shadow-sm transition-all cursor-pointer p-5 flex flex-col items-center justify-center text-center min-h-[160px] group"
       >
         <div className="text-4xl mb-3">🔍</div>
         <p className="font-semibold text-slate-600 dark:text-slate-300 group-hover:text-zebra-700 dark:group-hover:text-teal-400 transition">
@@ -43,7 +45,7 @@ export default function GroupTile({ group, profile, onManage }) {
         : "#94a3b8";
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all overflow-hidden">
+    <div className="bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-md transition-all">
       <div
         className="h-1.5 w-full"
         style={{ backgroundColor: accentColor }}
@@ -63,10 +65,17 @@ export default function GroupTile({ group, profile, onManage }) {
                 style={{ backgroundColor: accentColor }}
               />
             </div>
-            <div>
-              <p className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight">
-                {group.name}
-              </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <p className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight truncate">
+                  {group.name}
+                </p>
+                {group.ai_description && (
+                  <GroupDescriptionPopover
+                    description={group.ai_description}
+                  />
+                )}
+              </div>
               {group.symptom_category && (
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                   {group.symptom_category}

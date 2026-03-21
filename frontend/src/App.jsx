@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import useAuthStore from "./store/authStore";
 import useThemeStore from "./store/themeStore";
@@ -20,6 +20,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReports   from "./pages/admin/AdminReports";
 import AdminUsers     from "./pages/admin/AdminUsers";
 import AdminGroups    from "./pages/admin/AdminGroups";
+import AdminML        from "./pages/admin/AdminML";
+import AdminAI        from "./pages/admin/AdminAI";
+import AdminSystem    from "./pages/admin/AdminSystem";
+import AdminLogs      from "./pages/admin/AdminLogs";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminGuard     from "./components/AdminGuard";
@@ -30,8 +34,9 @@ function withTransition(element) {
   return <RouteTransition>{element}</RouteTransition>;
 }
 
-export default function App() {
-  const { token, fetchMe } = useAuthStore();
+function AppRoutes() {
+  const navigate = useNavigate();
+  const { token, fetchMe, logout } = useAuthStore();
   const dark = useThemeStore((s) => s.dark);
 
   useEffect(() => {
@@ -50,40 +55,59 @@ export default function App() {
     }
   }, [dark]);
 
+  useEffect(() => {
+    const onUnauthorized = () => {
+      logout();
+      navigate("/login", { replace: true });
+    };
+    window.addEventListener("zp:unauthorized", onUnauthorized);
+    return () => window.removeEventListener("zp:unauthorized", onUnauthorized);
+  }, [navigate, logout]);
+
+  return (
+    <AnimatedRoutes>
+      <Route path="/"         element={withTransition(<LandingPage />)} />
+      <Route path="/login"    element={
+        token ? <Navigate to="/dashboard" replace /> : withTransition(<LoginPage />)
+      } />
+      <Route path="/register" element={
+        token ? <Navigate to="/dashboard" replace /> : withTransition(<RegisterPage />)
+      } />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard"    element={withTransition(<Dashboard />)} />
+        <Route path="/groups"       element={withTransition(<GroupsPage />)} />
+        <Route path="/profile"     element={withTransition(<ProfilePage />)} />
+        <Route path="/symptoms/new" element={withTransition(<SymptomsForm />)} />
+        <Route path="/groups/:groupId" element={withTransition(<GroupPage />)} />
+        <Route path="/groups/:groupId/forum" element={withTransition(<ForumPage />)} />
+        <Route path="/groups/:groupId/posts/:postId" element={withTransition(<PostDetailPage />)} />
+        <Route path="/messages" element={withTransition(<MessagesPage />)} />
+        <Route path="/messages/:conversationId" element={withTransition(<ConversationPage />)} />
+      </Route>
+
+      <Route path="/admin" element={<AdminGuard />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="groups" element={<AdminGroups />} />
+          <Route path="ml" element={<AdminML />} />
+          <Route path="ai" element={<AdminAI />} />
+          <Route path="logs" element={<AdminLogs />} />
+          <Route path="system" element={<AdminSystem />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </AnimatedRoutes>
+  );
+}
+
+export default function App() {
   return (
     <BrowserRouter>
-      <AnimatedRoutes>
-        <Route path="/"         element={withTransition(<LandingPage />)} />
-        <Route path="/login"    element={
-          token ? <Navigate to="/dashboard" replace /> : withTransition(<LoginPage />)
-        } />
-        <Route path="/register" element={
-          token ? <Navigate to="/dashboard" replace /> : withTransition(<RegisterPage />)
-        } />
-
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard"    element={withTransition(<Dashboard />)} />
-          <Route path="/groups"       element={withTransition(<GroupsPage />)} />
-          <Route path="/profile"     element={withTransition(<ProfilePage />)} />
-          <Route path="/symptoms/new" element={withTransition(<SymptomsForm />)} />
-          <Route path="/groups/:groupId" element={withTransition(<GroupPage />)} />
-          <Route path="/groups/:groupId/forum" element={withTransition(<ForumPage />)} />
-          <Route path="/groups/:groupId/posts/:postId" element={withTransition(<PostDetailPage />)} />
-          <Route path="/messages" element={withTransition(<MessagesPage />)} />
-          <Route path="/messages/:conversationId" element={withTransition(<ConversationPage />)} />
-        </Route>
-
-        <Route path="/admin" element={<AdminGuard />}>
-          <Route element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="reports" element={<AdminReports />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="groups" element={<AdminGroups />} />
-          </Route>
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </AnimatedRoutes>
+      <AppRoutes />
     </BrowserRouter>
   );
 }

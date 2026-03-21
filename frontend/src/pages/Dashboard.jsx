@@ -7,14 +7,7 @@ import { SkeletonCard } from "../components/ui/Skeleton";
 import ErrorMessage from "../components/ui/ErrorMessage";
 import { useProfile } from "../hooks/useProfile";
 import { useTranslation } from "react-i18next";
-
-function StatusPill({ children }) {
-  return (
-    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-zebra-50 dark:bg-teal-900/30 text-zebra-700 dark:text-teal-300 border border-zebra-100/70 dark:border-teal-800/60">
-      {children}
-    </span>
-  );
-}
+import GroupTile from "../components/group/GroupTile";
 
 function TileCard({ to, icon, titleDesktop, titleMobile, subtitleDesktop, subtitleMobile }) {
   return (
@@ -39,7 +32,7 @@ export default function Dashboard() {
   const { t } = useTranslation("app");
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const { group, loading, error, hasProfile, refetch } = useProfile();
+  const { group, profile, loading, error, hasProfile, refetch } = useProfile();
 
   const firstName = user?.display_name?.split(" ")[0] || t("dashboard.userFallback");
 
@@ -91,44 +84,11 @@ export default function Dashboard() {
         {!loading && hasProfile && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div
-                role="group"
-                className="bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] p-5 hover:shadow-sm transition group"
-              >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <img
-                      src="/logo_circle.svg"
-                      alt=""
-                      aria-hidden="true"
-                      className="w-7 h-7 shrink-0"
-                    />
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                      {t("dashboard.myGroup")}
-                    </p>
-                  </div>
-                  <StatusPill>{t("dashboard.active")}</StatusPill>
-                </div>
-
-                <p className="text-sm font-semibold text-zebra-700 dark:text-teal-300 truncate">
-                  {group?.name || "—"}
-                </p>
-                <p className="text-xs text-[var(--zp-app-text-muted)] mt-1">
-                  {t("dashboard.peopleInGroup", {
-                    count: group?.member_count ?? 0,
-                  })}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate("/groups");
-                  }}
-                  className="mt-4 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-zebra-700 dark:hover:text-teal-300 transition"
-                >
-                  {t("dashboard.manage")}
-                </button>
-              </div>
+              <GroupTile
+                group={group}
+                profile={profile}
+                onManage={() => navigate("/groups")}
+              />
 
               {group?.id && (
                 <>

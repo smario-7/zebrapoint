@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Avatar from "../ui/Avatar";
 import ReactionBar from "./ReactionBar";
 import ReportButton from "../moderation/ReportButton";
@@ -7,17 +7,33 @@ import api from "../../services/api";
 import toast from "react-hot-toast";
 import useAuthStore from "../../store/authStore";
 import { useTranslation } from "react-i18next";
+import ConfirmModal from "../ui/ConfirmModal";
 
-export default function CommentItem({ comment, groupId, postId, postTitle, onDelete }) {
+export default function CommentItem({
+  comment,
+  groupId,
+  postId,
+  postTitle,
+  onDelete,
+  onCommentUpdate,
+}) {
   const { user } = useAuthStore();
-  const { t, i18n } = useTranslation("app");
+  const { t, i18n } = useTranslation(["app", "common"]);
   const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(comment.content);
   const [saving, setSaving] = useState(false);
   const [showDm, setShowDm] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const isOwn = user?.id === comment.user_id;
+
+  useEffect(() => {
+    if (!editing) {
+      setEditValue(comment.content);
+    }
+  }, [comment.content, comment.id, editing]);
 
   const handleSave = async () => {
     if (!editValue.trim() || editValue === comment.content) {
@@ -30,7 +46,7 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
         `/groups/${groupId}/posts/${postId}/comments/${comment.id}`,
         { content: editValue }
       );
-      comment.content = editValue;
+      onCommentUpdate?.(comment.id, editValue);
       setEditing(false);
       toast.success(t("comment.saveSuccess"));
     } catch {
@@ -40,20 +56,33 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(t("comment.deleteConfirm"))) return;
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
     try {
       await api.delete(
         `/groups/${groupId}/posts/${postId}/comments/${comment.id}`
       );
       onDelete(comment.id);
+      setDeleteOpen(false);
     } catch {
       toast.error(t("comment.deleteError"));
+    } finally {
+      setDeleting(false);
     }
   };
 
   return (
     <div className="flex gap-3 group">
+      <ConfirmModal
+        open={deleteOpen}
+        title={t("comment.delete")}
+        message={t("comment.deleteConfirm")}
+        confirmLabel={t("common:confirm")}
+        cancelLabel={t("common:cancel")}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteOpen(false)}
+        loading={deleting}
+      />
       <Avatar name={comment.display_name} size="sm"
               className="flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
@@ -134,7 +163,7 @@ export default function CommentItem({ comment, groupId, postId, postTitle, onDel
                 </button>
                 <button
                   type="button"
-                  onClick={handleDelete}
+                  onClick={() => setDeleteOpen(true)}
                   className="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300"
                 >
                   {t("comment.delete")}

@@ -15,6 +15,7 @@ class GroupOut(BaseModel):
     accent_color: str | None = None
     keywords: list[str] | None = None
     symptom_category: str | None = None
+    ai_description: str | None = None
 
 
 class GroupMemberOut(BaseModel):

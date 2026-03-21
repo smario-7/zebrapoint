@@ -34,8 +34,7 @@ api.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      localStorage.removeItem("zp_token");
-      window.location.href = "/login";
+      window.dispatchEvent(new CustomEvent("zp:unauthorized"));
       return Promise.reject(error);
     }
 

@@ -76,6 +76,7 @@ class GroupMatchOut(BaseModel):
     keywords: list[str]
     age_range: str | None
     symptom_category: str | None
+    ai_description: str | None = None
     admin_note: str | None
     is_new_group: bool
 

@@ -9,7 +9,7 @@ export default function AppShell({ children, fullHeight }) {
   const toggleTheme = useThemeStore((s) => s.toggle);
 
   return (
-    <div className="min-h-screen flex bg-[var(--zp-app-bg)]">
+    <div className="min-h-screen h-dvh flex overflow-hidden bg-[var(--zp-app-bg)]">
       <Sidebar />
       <button
         type="button"
@@ -20,11 +20,17 @@ export default function AppShell({ children, fullHeight }) {
         {dark ? <Sun className="w-5 h-5" aria-hidden /> : <Moon className="w-5 h-5" aria-hidden />}
       </button>
       <main
-        className={`flex-1 overflow-y-auto max-w-5xl mx-auto w-full px-4 sm:px-6 pb-20 md:pb-0 ${
-          fullHeight ? "min-h-0 flex flex-col py-0" : "py-8"
+        className={`min-h-0 flex-1 min-w-0 w-full overflow-y-auto ${
+          fullHeight ? "flex flex-col py-0" : ""
         }`}
       >
-        {children}
+        <div
+          className={`max-w-5xl mx-auto w-full px-4 sm:px-6 pb-20 md:pb-0 ${
+            fullHeight ? "flex min-h-0 flex-1 flex-col" : "py-8"
+          }`}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

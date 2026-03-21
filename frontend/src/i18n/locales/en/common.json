@@ -31,5 +31,7 @@
   },
   "retry": "Try again",
   "signIn": "Sign in",
-  "join": "Join"
+  "join": "Join",
+  "confirm": "Confirm",
+  "cancel": "Cancel"
 }
