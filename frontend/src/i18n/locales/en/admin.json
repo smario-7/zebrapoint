@@ -32,7 +32,21 @@
     "colNoise": "Noise",
     "colReassigned": "Reassigned",
     "colDuration": "Duration",
-    "errorHint": "Error details are in server logs and in the status column for runs with status error."
+    "colMessage": "Message",
+    "errorHint": "Full traceback is in server and Celery worker logs (e.g. logs/celery.log).",
+    "actionsTitle": "Controls",
+    "retrainThresholdEdit": "New profiles threshold (automatic retrain)",
+    "retrainThresholdHint": "Integer from 1 to 500. Celery Beat checks roughly every 30 minutes whether this many new profiles exist since the last successful run.",
+    "saveThreshold": "Save threshold",
+    "saving": "Saving…",
+    "thresholdSaved": "Threshold saved",
+    "thresholdInvalid": "Enter a number from 1 to 500",
+    "thresholdSaveError": "Could not save threshold",
+    "retrainNow": "Run retrain now",
+    "retrainSending": "Sending…",
+    "retrainNowHint": "Queues the full ML pipeline in Celery (ml queue). A running worker is required.",
+    "retrainQueued": "Retrain queued. Task ID: {{taskId}}",
+    "retrainError": "Could not queue retrain"
   },
   "ai": {
     "title": "AI — token usage",

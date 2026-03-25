@@ -48,6 +48,10 @@ redis==5.2.0
 flower==2.0.1
 kombu==5.3.4
 
+# ML retrain (HDBSCAN w workerze Celery). Jest też w requirements-heavy.txt — tutaj
+# zapewnia moduł przy instalacji samego requirements.txt (np. stary obraz / lokalny worker).
+hdbscan==0.8.41
+
 # Testy backendu (Sprint 5)
 pytest
 pytest-asyncio

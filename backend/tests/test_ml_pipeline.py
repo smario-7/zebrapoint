@@ -160,12 +160,14 @@ class TestGroupNaming:
 
 class TestShouldRetrain:
 
-    def test_false_when_less_than_min_profiles(self):
+    @patch("app.services.ml_pipeline.get_retrain_every_n", return_value=RETRAIN_EVERY_N)
+    def test_false_when_less_than_min_profiles(self, _mock_threshold):
         db = MagicMock()
         db.query.return_value.count.return_value = MIN_PROFILES_START - 1
         assert should_retrain(db) is False
 
-    def test_true_when_no_previous_run(self):
+    @patch("app.services.ml_pipeline.get_retrain_every_n", return_value=RETRAIN_EVERY_N)
+    def test_true_when_no_previous_run(self, _mock_threshold):
         db = MagicMock()
         q1 = MagicMock()
         q1.count.return_value = 10
@@ -174,7 +176,8 @@ class TestShouldRetrain:
         db.query.side_effect = [q1, q2]
         assert should_retrain(db) is True
 
-    def test_false_when_few_new_profiles(self):
+    @patch("app.services.ml_pipeline.get_retrain_every_n", return_value=RETRAIN_EVERY_N)
+    def test_false_when_few_new_profiles(self, _mock_threshold):
         db = MagicMock()
         last_run = MagicMock(run_at=MagicMock())
         q1 = MagicMock()
@@ -186,7 +189,8 @@ class TestShouldRetrain:
         db.query.side_effect = [q1, q2, q3]
         assert should_retrain(db) is False
 
-    def test_true_when_many_new_profiles(self):
+    @patch("app.services.ml_pipeline.get_retrain_every_n", return_value=RETRAIN_EVERY_N)
+    def test_true_when_many_new_profiles(self, _mock_threshold):
         db = MagicMock()
         last_run = MagicMock(run_at=MagicMock())
         q1 = MagicMock()

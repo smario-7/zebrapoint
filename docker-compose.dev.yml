@@ -37,14 +37,17 @@ services:
       - ./backend/.env
     environment:
       REDIS_URL: redis://redis:6379/0
+      LOG_DIR: /logs
     command: >
       celery -A app.tasks.celery_app worker
       --loglevel=info
+      --logfile=/logs/celery.log
       --concurrency=2
       --queues=ml,notifications,default
       --hostname=worker@dev
     volumes:
       - ./backend:/app
+      - ./logs:/logs
     networks:
       - zebrapoint_dev
     depends_on:
@@ -61,12 +64,14 @@ services:
       - ./backend/.env
     environment:
       REDIS_URL: redis://redis:6379/0
+      LOG_DIR: /logs
     command: >
       celery -A app.tasks.celery_app beat
       --loglevel=info
       --schedule /tmp/celerybeat-schedule-dev
     volumes:
       - ./backend:/app
+      - ./logs:/logs
     networks:
       - zebrapoint_dev
     depends_on:
