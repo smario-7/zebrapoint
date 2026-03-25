@@ -35,7 +35,7 @@ def monitoring_ml(
         .all()
     )
     return {
-        "parameters": get_ml_pipeline_public_config(),
+        "parameters": get_ml_pipeline_public_config(db),
         "openai_model_group_descriptions": OPENAI_GROUP_MODEL,
         "runs": [
             {

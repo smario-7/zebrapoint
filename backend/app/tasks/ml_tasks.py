@@ -1,4 +1,7 @@
 import logging
+
+from sqlalchemy.exc import ProgrammingError
+
 from app.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
@@ -25,8 +28,11 @@ def retrain_clusters(self):
         result = run_pipeline(db)
         logger.info("retrain_clusters OK: %s", result)
         return result
+    except ProgrammingError as exc:
+        logger.error("retrain_clusters BŁĄD (schemat SQL): %s", exc, exc_info=True)
+        raise
     except Exception as exc:
-        logger.error("retrain_clusters BŁĄD: %s", exc)
+        logger.error("retrain_clusters BŁĄD: %s", exc, exc_info=True)
         raise self.retry(exc=exc)
     finally:
         db.close()
@@ -72,7 +78,12 @@ def update_group_characteristics_task(group_id: str):
         update_group_characteristics(db, group_id)
         return {"status": "ok", "group_id": group_id}
     except Exception as exc:
-        logger.error("update_group_characteristics błąd dla %s: %s", group_id, exc)
+        logger.error(
+            "update_group_characteristics błąd dla %s: %s",
+            group_id,
+            exc,
+            exc_info=True,
+        )
         raise
     finally:
         db.close()

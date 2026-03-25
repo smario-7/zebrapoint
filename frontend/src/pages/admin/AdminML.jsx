@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
 import api from "../../services/api";
 
 function ParamRow({ label, value }) {
@@ -25,14 +26,58 @@ export default function AdminML() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retrainDraft, setRetrainDraft] = useState("");
+  const [savingThreshold, setSavingThreshold] = useState(false);
+  const [retrainLoading, setRetrainLoading] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     api
       .get("/admin/monitoring/ml")
       .then((res) => setData(res.data))
       .catch(() => setError(t("ml.loadError")))
       .finally(() => setLoading(false));
   }, [t]);
+
+  useEffect(() => {
+    if (data?.parameters?.retrain_trigger_new_profiles != null) {
+      setRetrainDraft(String(data.parameters.retrain_trigger_new_profiles));
+    }
+  }, [data]);
+
+  const handleSaveThreshold = async () => {
+    const n = parseInt(retrainDraft, 10);
+    if (Number.isNaN(n) || n < 1 || n > 500) {
+      toast.error(t("ml.thresholdInvalid"));
+      return;
+    }
+    setSavingThreshold(true);
+    try {
+      await api.patch("/admin/ml/settings", { retrain_trigger_new_profiles: n });
+      toast.success(t("ml.thresholdSaved"));
+      const res = await api.get("/admin/monitoring/ml");
+      setData(res.data);
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : t("ml.thresholdSaveError"));
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
+  const handleRetrain = async () => {
+    setRetrainLoading(true);
+    try {
+      const res = await api.post("/admin/retrain");
+      toast.success(t("ml.retrainQueued", { taskId: res.data.task_id ?? "—" }));
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      toast.error(typeof detail === "string" ? detail : t("ml.retrainError"));
+    } finally {
+      setRetrainLoading(false);
+    }
+  };
 
   const statusCounts = useMemo(() => {
     const runs = data?.runs ?? [];
@@ -58,6 +103,48 @@ export default function AdminML() {
     <div>
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">{t("ml.title")}</h1>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("ml.subtitle")}</p>
+
+      <section className="mb-8">
+        <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">{t("ml.actionsTitle")}</h2>
+        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1 min-w-0">
+              <label htmlFor="ml-retrain-threshold" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">
+                {t("ml.retrainThresholdEdit")}
+              </label>
+              <input
+                id="ml-retrain-threshold"
+                type="number"
+                min={1}
+                max={500}
+                value={retrainDraft}
+                onChange={(e) => setRetrainDraft(e.target.value)}
+                className="w-full max-w-xs rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-slate-800 dark:text-slate-100 text-sm"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("ml.retrainThresholdHint")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveThreshold}
+              disabled={savingThreshold}
+              className="shrink-0 rounded-xl bg-zebra-600 hover:bg-zebra-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2"
+            >
+              {savingThreshold ? t("ml.saving") : t("ml.saveThreshold")}
+            </button>
+          </div>
+          <div className="pt-2 border-t border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={handleRetrain}
+              disabled={retrainLoading}
+              className="rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900/80 text-slate-800 dark:text-slate-100 text-sm font-medium px-4 py-2 disabled:opacity-50"
+            >
+              {retrainLoading ? t("ml.retrainSending") : t("ml.retrainNow")}
+            </button>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{t("ml.retrainNowHint")}</p>
+          </div>
+        </div>
+      </section>
 
       <section className="mb-8">
         <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">{t("ml.paramsTitle")}</h2>
@@ -106,12 +193,13 @@ export default function AdminML() {
                 <th className="p-3 font-medium">{t("ml.colNoise")}</th>
                 <th className="p-3 font-medium">{t("ml.colReassigned")}</th>
                 <th className="p-3 font-medium">{t("ml.colDuration")}</th>
+                <th className="p-3 font-medium min-w-[12rem]">{t("ml.colMessage")}</th>
               </tr>
             </thead>
             <tbody>
               {runs.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-4 text-slate-500">
+                  <td colSpan={8} className="p-4 text-slate-500">
                     {t("ml.noRuns")}
                   </td>
                 </tr>
@@ -130,6 +218,9 @@ export default function AdminML() {
                     <td className="p-3">{run.noise_count}</td>
                     <td className="p-3">{run.reassigned}</td>
                     <td className="p-3">{run.duration_ms != null ? `${run.duration_ms} ms` : "—"}</td>
+                    <td className="p-3 text-xs text-slate-600 dark:text-slate-400 max-w-md break-words align-top">
+                      {run.error_message ? run.error_message : "—"}
+                    </td>
                   </tr>
                 ))
               )}

@@ -4,8 +4,10 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import require_admin
 from app.config import settings
 from app.database import get_db
+from app.models.ml_admin_settings import MlAdminSettings
 from app.models.ml_pipeline_run import MlPipelineRun
 from app.models.user import User
+from app.schemas.admin_ml import MlSettingsResponse, MlSettingsUpdate
 from app.tasks.celery_app import celery_app
 from app.tasks.ml_tasks import retrain_clusters
 
@@ -28,6 +30,27 @@ def redis_ping(admin: User = Depends(require_admin)):
         }
     except Exception as e:
         raise HTTPException(503, f"Redis niedostępny: {str(e)}")
+
+
+@router.patch("/ml/settings", response_model=MlSettingsResponse)
+def patch_ml_settings(
+    body: MlSettingsUpdate,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Zapis pragu nowych profili do automatycznego retrainu."""
+    row = db.get(MlAdminSettings, 1)
+    if row is None:
+        row = MlAdminSettings(id=1, retrain_every_n=body.retrain_trigger_new_profiles)
+        db.add(row)
+    else:
+        row.retrain_every_n = body.retrain_trigger_new_profiles
+    db.commit()
+    db.refresh(row)
+    return MlSettingsResponse(
+        retrain_trigger_new_profiles=row.retrain_every_n,
+        updated_at=row.updated_at,
+    )
 
 
 @router.post("/retrain")
