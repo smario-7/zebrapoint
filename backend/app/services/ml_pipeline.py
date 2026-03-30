@@ -10,6 +10,7 @@ from app.database import SessionLocal
 from app.models.group import Group
 from app.models.group_member import GroupMember
 from app.models.symptom_profile import SymptomProfile
+from app.models.ml_admin_settings import MlAdminSettings
 from app.models.ml_pipeline_run import MlPipelineRun
 from app.services.group_naming import generate_group_name, generate_group_color
 from app.services.group_characteristics import update_group_characteristics
@@ -25,10 +26,18 @@ HDBSCAN_METRIC = "euclidean"
 HDBSCAN_CLUSTER_SELECTION = "eom"
 
 
-def get_ml_pipeline_public_config() -> dict:
+def get_retrain_every_n(db: Session) -> int:
+    """Próg nowych profili do automatycznego retrainu; z bazy lub domyślna stała."""
+    row = db.get(MlAdminSettings, 1)
+    if row is None:
+        return RETRAIN_EVERY_N
+    return row.retrain_every_n
+
+
+def get_ml_pipeline_public_config(db: Session) -> dict:
     """Parametry pipeline i HDBSCAN do panelu admina (bez uruchamiania klasteryzacji)."""
     return {
-        "retrain_trigger_new_profiles": RETRAIN_EVERY_N,
+        "retrain_trigger_new_profiles": get_retrain_every_n(db),
         "min_profiles_before_first_retrain": MIN_PROFILES_START,
         "noise_similarity_threshold": NOISE_SIMILARITY_THRESHOLD,
         "hdbscan": {
@@ -45,8 +54,9 @@ def get_ml_pipeline_public_config() -> dict:
 def should_retrain(db: Session) -> bool:
     """
     Sprawdza czy retrain jest potrzebny.
-    Warunek: liczba nowych profili od ostatniego udanego run >= RETRAIN_EVERY_N.
+    Warunek: liczba nowych profili od ostatniego udanego run >= skonfigurowany próg.
     """
+    threshold = get_retrain_every_n(db)
     total = db.query(SymptomProfile).count()
 
     if total < MIN_PROFILES_START:
@@ -73,10 +83,10 @@ def should_retrain(db: Session) -> bool:
         .count()
     )
 
-    should = new_count >= RETRAIN_EVERY_N
+    should = new_count >= threshold
     logger.info(
         "should_retrain: %s/%s nowych profili od %s → %s",
-        new_count, RETRAIN_EVERY_N, last_run.run_at,
+        new_count, threshold, last_run.run_at,
         "TAK" if should else "NIE"
     )
     return should

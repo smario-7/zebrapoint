@@ -32,7 +32,21 @@
     "colNoise": "Szum",
     "colReassigned": "Przeniesieni",
     "colDuration": "Czas",
-    "errorHint": "Szczegóły błędów są w logach serwera i w kolumnie status dla runów ze statusem error."
+    "colMessage": "Komunikat",
+    "errorHint": "Pełny traceback jest w logach serwera i workera Celery (np. logs/celery.log).",
+    "actionsTitle": "Sterowanie",
+    "retrainThresholdEdit": "Próg nowych profili (automatyczny retrain)",
+    "retrainThresholdHint": "Liczba całkowita od 1 do 500. Celery Beat co ok. 30 min sprawdza, czy od ostatniego udanego runu przybyło tyle profili.",
+    "saveThreshold": "Zapisz próg",
+    "saving": "Zapisywanie…",
+    "thresholdSaved": "Zapisano próg retrainu",
+    "thresholdInvalid": "Podaj liczbę od 1 do 500",
+    "thresholdSaveError": "Nie udało się zapisać progu",
+    "retrainNow": "Uruchom retrain teraz",
+    "retrainSending": "Wysyłanie…",
+    "retrainNowHint": "Kolejkuje pełny pipeline ML w Celery (kolejka ml). Wymaga działającego workera.",
+    "retrainQueued": "Retrain zakolejkowany. ID zadania: {{taskId}}",
+    "retrainError": "Nie udało się zakolejkować retrainu"
   },
   "ai": {
     "title": "AI — zużycie tokenów",
