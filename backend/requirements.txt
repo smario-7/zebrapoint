@@ -1,14 +1,14 @@
-alembic==1.14.0
+alembic==1.18.4
 annotated-types==0.7.0
-anyio==4.12.1
+anyio==4.13.0
 bcrypt==5.0.0
 cffi==2.0.0
-click==8.3.1
-cryptography==46.0.5
+click==8.3.2
+cryptography==46.0.6
 dnspython==2.8.0
-ecdsa==0.19.1
-email_validator==2.2.0
-fastapi==0.115.0
+ecdsa==0.19.2
+email_validator==2.3.0
+fastapi==0.135.3
 slowapi==0.1.9
 greenlet==3.3.2
 h11==0.16.0
@@ -18,39 +18,39 @@ Mako==1.3.10
 MarkupSafe==3.0.3
 packaging>=24.0
 pgvector==0.4.2
-psycopg2-binary==2.9.10
-pyasn1==0.6.2
+psycopg2-binary==2.9.11
+pyasn1==0.6.3
 pycparser==3.0
 pydantic==2.12.5
-pydantic-settings==2.6.1
-pydantic_core==2.41.5
-python-dotenv==1.0.1
+pydantic-settings==2.13.1
+pydantic_core==2.45.0
+python-dotenv==1.2.2
 openai>=1.60.0
-python-jose==3.3.0
-python-multipart==0.0.12
+python-jose==3.5.0
+python-multipart==0.0.24
 PyYAML==6.0.3
 rsa==4.9.1
 setuptools==82.0.1
 six==1.17.0
-SQLAlchemy==2.0.36
-starlette==0.38.6
+SQLAlchemy==2.0.49
+starlette==1.0.0
 typing-inspection==0.4.2
 typing_extensions==4.15.0
-uvicorn==0.30.6
+uvicorn==0.43.0
 uvloop==0.22.1
 watchfiles==1.1.1
 websockets==16.0
 wheel==0.46.3
 
 # Celery + Redis (Sprint 6)
-celery==5.4.0
-redis==5.2.0
+celery==5.6.3
+redis==7.4.0
 flower==2.0.1
-kombu==5.3.4
+kombu==5.6.2
 
 # ML retrain (HDBSCAN w workerze Celery). Jest też w requirements-heavy.txt — tutaj
 # zapewnia moduł przy instalacji samego requirements.txt (np. stary obraz / lokalny worker).
-hdbscan==0.8.41
+hdbscan==0.8.42
 
 # Testy backendu (Sprint 5)
 pytest
