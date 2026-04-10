@@ -44,6 +44,10 @@ AGENTS.md
 .cursor/
 .opencode/
 .vscode/
+QWEN.md
+.claudeprompt
+CLAUDE.md
+.claude/
 
 .dev2-tab-scripts/
 dev.sh
@@ -53,5 +57,3 @@ test.db
 /pen
 
 /logs
-
-QWEN.md
