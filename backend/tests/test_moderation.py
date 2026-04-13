@@ -2,6 +2,10 @@ import uuid
 
 import pytest
 
+pytestmark = pytest.mark.skip(
+    reason="Endpointy v1 usunięte z main — backend v2 (zobacz tests/v2/)."
+)
+
 from app.models.report import Report
 from app.models.user import User
 from app.routers.auth import _hash_password

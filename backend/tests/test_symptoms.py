@@ -1,4 +1,9 @@
+import pytest
 from unittest.mock import patch
+
+pytestmark = pytest.mark.skip(
+    reason="Endpointy v1 usunięte z main — backend v2 (zobacz tests/v2/)."
+)
 
 from app.models.group import Group
 from app.services.matching_service import GroupMatch

@@ -1,4 +1,4 @@
--- Uruchom PO 002_hpo_orphanet.sql.
+-- Uruchom po 001_hpo_orphanet.sql (wymaga orpha_diseases i hpo_terms).
 
 CREATE TYPE user_role AS ENUM ('user', 'moderator', 'admin');
 CREATE TYPE user_status AS ENUM ('active', 'suspended', 'pending_onboarding');

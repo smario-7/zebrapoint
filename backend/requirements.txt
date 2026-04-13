@@ -1,12 +1,12 @@
 alembic==1.14.0
 annotated-types==0.7.0
 anyio==4.12.1
+argon2-cffi==23.1.0
 bcrypt==5.0.0
 cffi==2.0.0
 click==8.3.1
 cryptography==46.0.5
 dnspython==2.8.0
-ecdsa==0.19.1
 email_validator==2.2.0
 fastapi==0.115.0
 slowapi==0.1.9
@@ -19,17 +19,15 @@ MarkupSafe==3.0.3
 packaging>=24.0
 pgvector==0.4.2
 psycopg2-binary==2.9.10
-pyasn1==0.6.2
 pycparser==3.0
 pydantic==2.12.5
 pydantic-settings==2.6.1
 pydantic_core==2.41.5
+PyJWT==2.9.0
 python-dotenv==1.0.1
 openai>=1.60.0
-python-jose==3.3.0
 python-multipart==0.0.12
 PyYAML==6.0.3
-rsa==4.9.1
 setuptools==82.0.1
 six==1.17.0
 SQLAlchemy==2.0.36
@@ -45,13 +43,9 @@ wheel==0.46.3
 
 # Celery + Redis (Sprint 6)
 celery==5.4.0
-redis==5.2.0
+redis[hiredis]==5.2.0
 flower==2.0.1
 kombu==5.3.4
-
-# ML retrain (HDBSCAN w workerze Celery). Jest też w requirements-heavy.txt — tutaj
-# zapewnia moduł przy instalacji samego requirements.txt (np. stary obraz / lokalny worker).
-hdbscan==0.8.41
 
 # Testy backendu (Sprint 5)
 pytest

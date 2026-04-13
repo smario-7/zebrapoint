@@ -25,7 +25,16 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     log_dir: str = ""
     access_token_cookie_name: str = "access_token"
+    refresh_token_cookie_name: str = "refresh_token"
     cookie_secure: bool = False
+
+    anthropic_api_key: str = ""
+    hpo_extraction_enabled: bool = True
+    match_score_threshold: float = 0.40
+    max_lenses_per_post: int = 10
+
+    redis_cache_url: str = "redis://redis:6379/1"
+    redis_auth_url: str = "redis://redis:6379/2"
 
     @field_validator("secret_key")
     @classmethod

@@ -1,5 +1,11 @@
 # Testy DM (konwersacje 1:1) i walidacji nicku (check-nick, rejestracja)
 
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Endpointy v1 usunięte z main — backend v2 (zobacz tests/v2/)."
+)
+
 
 class TestDM:
 

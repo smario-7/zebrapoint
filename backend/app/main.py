@@ -15,9 +15,9 @@ from app.logging_config import setup_logging
 
 setup_logging()
 
+from app.api.v2 import auth as auth_v2
 from app.config import settings
 from app.rate_limit import limiter
-from app.routers import auth, chat, groups, symptoms, admin, forum, reports, dm, dm_ws, bootstrap
 from app.services.embedding_service import get_model
 
 logger = logging.getLogger(__name__)
@@ -129,17 +129,7 @@ app.add_middleware(
 app.add_middleware(DevCorsFallbackMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
-app.include_router(auth.router)
-app.include_router(symptoms.router)
-app.include_router(groups.router)
-app.include_router(chat.router)
-app.include_router(chat.rest_router)
-app.include_router(admin.router)
-app.include_router(forum.router)
-app.include_router(reports.router)
-app.include_router(dm.router)
-app.include_router(dm_ws.router)
-app.include_router(bootstrap.router)
+app.include_router(auth_v2.router)
 
 
 @app.get("/", tags=["Health"])

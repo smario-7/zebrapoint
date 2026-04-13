@@ -1,5 +1,4 @@
--- Uruchom PRZED 001_users.sql (users.orpha_id → orpha_diseases).
--- Tabela user_hpo_profile jest w 001_users.sql (wymaga users).
+-- Uruchom po 000_extensions.sql, przed 002_users.sql (users.orpha_id → orpha_diseases).
 
 CREATE TABLE hpo_terms (
     hpo_id          TEXT PRIMARY KEY,

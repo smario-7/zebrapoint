@@ -23,6 +23,12 @@ dist/
 logs/
 data/
 
+# backend/data/hpo — duży hp.obo poza repo; katalog zostaje (.gitkeep)
+!backend/data/
+!backend/data/hpo/
+backend/data/hpo/*.obo
+!backend/data/hpo/.gitkeep
+
 # IDE
 .vscode/
 .idea/
