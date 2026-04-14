@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <DisorderList count="3">
+    <Disorder id="900001">
+      <OrphaCode>900001</OrphaCode>
+      <Name lang="en">Common disease EN</Name>
+    </Disorder>
+    <Disorder id="900002">
+      <OrphaCode>900002</OrphaCode>
+      <Name lang="en">No class disease EN</Name>
+    </Disorder>
+    <Disorder id="900003">
+      <OrphaCode>900003</OrphaCode>
+      <Name lang="en">Two classes disease EN</Name>
+    </Disorder>
+  </DisorderList>
+</JDBOR>

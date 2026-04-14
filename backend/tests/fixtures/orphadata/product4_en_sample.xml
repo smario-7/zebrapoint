@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <HPODisorderSetStatusList count="3">
+    <HPODisorderSetStatus id="1">
+      <Disorder id="2">
+        <OrphaCode>58</OrphaCode>
+        <Name lang="en">Alexander disease</Name>
+        <HPODisorderAssociationList count="4">
+          <HPODisorderAssociation id="1">
+            <HPO id="4">
+              <HPOId>HP:0000256</HPOId>
+              <HPOTerm>Macrocephaly</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+          <HPODisorderAssociation id="2">
+            <HPO id="18">
+              <HPOId>HP:0001249</HPOId>
+              <HPOTerm>Intellectual disability</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+          <HPODisorderAssociation id="3">
+            <HPO id="19">
+              <HPOId>HP:0001250</HPOId>
+              <HPOTerm>Seizure</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+          <HPODisorderAssociation id="4">
+            <HPO id="4b">
+              <HPOId>HP:0000256</HPOId>
+              <HPOTerm>Macrocephaly dup</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+        </HPODisorderAssociationList>
+      </Disorder>
+    </HPODisorderSetStatus>
+    <HPODisorderSetStatus id="2">
+      <Disorder id="3">
+        <OrphaCode>999888</OrphaCode>
+        <Name lang="en">Merge test A</Name>
+        <HPODisorderAssociationList count="1">
+          <HPODisorderAssociation id="5">
+            <HPO id="1">
+              <HPOId>HP:0000001</HPOId>
+              <HPOTerm>A</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+        </HPODisorderAssociationList>
+      </Disorder>
+    </HPODisorderSetStatus>
+    <HPODisorderSetStatus id="3">
+      <Disorder id="4">
+        <OrphaCode>999888</OrphaCode>
+        <Name lang="en">Merge test B</Name>
+        <HPODisorderAssociationList count="1">
+          <HPODisorderAssociation id="6">
+            <HPO id="2">
+              <HPOId>HP:0000002</HPOId>
+              <HPOTerm>B</HPOTerm>
+            </HPO>
+          </HPODisorderAssociation>
+        </HPODisorderAssociationList>
+      </Disorder>
+    </HPODisorderSetStatus>
+  </HPODisorderSetStatusList>
+</JDBOR>

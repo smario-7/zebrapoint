@@ -2,91 +2,71 @@ from celery import Celery
 from celery.schedules import crontab
 from app.config import settings
 
-# ── Singleton instancji Celery ────────────────────────────────────
 celery_app = Celery(
     "zebrapoint",
     broker=settings.redis_url,
     backend=settings.redis_url,
-    # Moduły z zadaniami — Celery auto-importuje przy starcie
     include=[
-        "app.tasks.ml_tasks",
         "app.tasks.notification_tasks",
         "app.tasks.system_tasks",
-    ]
+        "app.workers.v2.sync_tasks",
+    ],
 )
 
-# ── Konfiguracja ──────────────────────────────────────────────────
 celery_app.conf.update(
-
-    # Serializacja — JSON (nie pickle, bezpieczniej)
     task_serializer="json",
     result_serializer="json",
     accept_content=["json"],
 
-    # Strefa czasowa
     timezone="Europe/Warsaw",
     enable_utc=True,
 
-    # Wyniki trzymaj w Redis 24h, potem auto-usuń
     result_expires=86400,
 
-    # Niezawodność:
-    # task_acks_late=True  → Worker potwierdza zadanie DOPIERO po wykonaniu
-    #                         (nie po pobraniu). Jeśli worker padnie w trakcie,
-    #                         zadanie wróci do kolejki.
     task_acks_late=True,
     task_reject_on_worker_lost=True,
 
-    # Kolejki
     task_default_queue="default",
     task_queues={
-        "ml": {
-            "exchange":      "ml",
-            "routing_key":   "ml",
+        "v2": {
+            "exchange": "v2",
+            "routing_key": "v2",
         },
         "notifications": {
-            "exchange":      "notifications",
-            "routing_key":   "notifications",
+            "exchange": "notifications",
+            "routing_key": "notifications",
         },
         "default": {
-            "exchange":      "default",
-            "routing_key":   "default",
+            "exchange": "default",
+            "routing_key": "default",
         },
     },
 
-    # Routing zadań do kolejek
     task_routes={
-        "app.tasks.ml_tasks.*":             {"queue": "ml"},
-        "app.tasks.notification_tasks.*":   {"queue": "notifications"},
+        "v2.*": {"queue": "v2"},
+        "app.tasks.notification_tasks.*": {"queue": "notifications"},
     },
 
-    # Worker — ogranicz do 1 zadania naraz na Pi
-    # (model ML jest zasobożerny, 2 naraz = OOM kill)
     worker_concurrency=1,
     worker_prefetch_multiplier=1,
 
-    # Harmonogram zadań cyklicznych (Celery Beat)
     beat_schedule={
-        # Co 30 minut sprawdź czy potrzebny retrain ML
-        "check-retrain-every-30min": {
-            "task":     "app.tasks.ml_tasks.check_and_retrain",
-            "schedule": 1800.0,    # sekundy
-            "options":  {"queue": "ml"}
-        },
-        # Co tydzień (poniedziałek 8:00) digest dla nieaktywnych userów
-        # (Sprint 9 — placeholder)
         "weekly-digest-monday": {
-            "task":     "app.tasks.notification_tasks.send_weekly_digest",
+            "task": "app.tasks.notification_tasks.send_weekly_digest",
             "schedule": crontab(hour=8, minute=0, day_of_week=1),
-            "options":  {"queue": "notifications"}
+            "options": {"queue": "notifications"},
         },
         "save-system-snapshot-hourly": {
-            "task":     "app.tasks.system_tasks.save_system_snapshot",
+            "task": "app.tasks.system_tasks.save_system_snapshot",
             "schedule": 3600.0,
-            "options":  {"queue": "default"},
+            "options": {"queue": "default"},
+        },
+        "sync-orphanet-weekly": {
+            "task": "v2.sync_orphanet_weekly",
+            "schedule": crontab(hour=3, minute=0, day_of_week=1),
+            "options": {"queue": "v2"},
         },
     },
 
-    # Logi — nie zaśmiecaj terminala zbędnymi INFO
     worker_redirect_stdouts_level="WARNING",
 )

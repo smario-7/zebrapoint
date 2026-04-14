@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     redis_cache_url: str = "redis://redis:6379/1"
     redis_auth_url: str = "redis://redis:6379/2"
 
+    orphanet_api_key: str = ""
+    orphadata_cache_dir: str = ""
+
     @field_validator("secret_key")
     @classmethod
     def secret_key_min_length(cls, v: str) -> str:
@@ -64,6 +67,15 @@ class Settings(BaseSettings):
         if self.cookie_secure:
             return True
         return self.environment.lower() == "production"
+
+    def resolved_orphadata_cache_dir(self) -> Path:
+        """Katalog na pliki XML Orphadata; domyślnie scripts/v2/cache/orphadata."""
+        if self.orphadata_cache_dir.strip():
+            path = Path(self.orphadata_cache_dir).expanduser().resolve()
+        else:
+            path = (_BACKEND_DIR / "scripts" / "v2" / "cache" / "orphadata").resolve()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
 
 settings = Settings()

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <DisorderList count="1">
+    <Disorder id="1">
+      <OrphaCode>910099</OrphaCode>
+      <Name lang="en">Unknown class EN</Name>
+    </Disorder>
+  </DisorderList>
+</JDBOR>

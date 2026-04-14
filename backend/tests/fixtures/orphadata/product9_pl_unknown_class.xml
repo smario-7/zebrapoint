@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <DisorderList count="1">
+    <Disorder id="1">
+      <OrphaCode>910099</OrphaCode>
+      <Name lang="pl">Nieznana klasa PL</Name>
+      <PrevalenceList count="1">
+        <Prevalence id="1">
+          <PrevalenceClass id="1">
+            <Name lang="pl">Całkowicie nowa etykieta testowa</Name>
+          </PrevalenceClass>
+        </Prevalence>
+      </PrevalenceList>
+    </Disorder>
+  </DisorderList>
+</JDBOR>

@@ -23,11 +23,16 @@ dist/
 logs/
 data/
 
+# Orphadata (product4/product9) — pobrane XML ~75 MB; katalog w repo przez .gitkeep
+backend/scripts/v2/cache/orphadata/*.xml
+
 # backend/data/hpo — duży hp.obo poza repo; katalog zostaje (.gitkeep)
 !backend/data/
 !backend/data/hpo/
 backend/data/hpo/*.obo
 !backend/data/hpo/.gitkeep
+backend/scripts/v2/input/
+backend/scripts/v2/output/
 
 # IDE
 .vscode/

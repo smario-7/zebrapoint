@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <DisorderList count="4">
+    <Disorder id="900001">
+      <OrphaCode>900001</OrphaCode>
+      <Name lang="pl">Choroba częsta PL</Name>
+      <PrevalenceList count="1">
+        <Prevalence id="1">
+          <PrevalenceClass id="1">
+            <Name lang="pl">&gt;1 / 1000</Name>
+          </PrevalenceClass>
+        </Prevalence>
+      </PrevalenceList>
+    </Disorder>
+    <Disorder id="900002">
+      <OrphaCode>900002</OrphaCode>
+      <Name lang="pl">Choroba bez klasy PL</Name>
+      <PrevalenceList count="1">
+        <Prevalence id="2">
+          <PrevalenceClass/>
+        </Prevalence>
+      </PrevalenceList>
+    </Disorder>
+    <Disorder id="900003">
+      <OrphaCode>900003</OrphaCode>
+      <Name lang="pl">Choroba dwie klasy PL</Name>
+      <PrevalenceList count="2">
+        <Prevalence id="3">
+          <PrevalenceClass id="2">
+            <Name lang="pl">1-9 / 100 000</Name>
+          </PrevalenceClass>
+        </Prevalence>
+        <Prevalence id="4">
+          <PrevalenceClass id="3">
+            <Name lang="pl">&gt;1 / 1000</Name>
+          </PrevalenceClass>
+        </Prevalence>
+      </PrevalenceList>
+    </Disorder>
+    <Disorder id="900004">
+      <OrphaCode>900004</OrphaCode>
+      <Name lang="pl">Tylko PL</Name>
+      <PrevalenceList count="0"/>
+    </Disorder>
+  </DisorderList>
+</JDBOR>
