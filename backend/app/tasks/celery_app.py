@@ -10,6 +10,7 @@ celery_app = Celery(
         "app.tasks.notification_tasks",
         "app.tasks.system_tasks",
         "app.workers.v2.sync_tasks",
+        "app.workers.v2.embedding_tasks",
     ],
 )
 
