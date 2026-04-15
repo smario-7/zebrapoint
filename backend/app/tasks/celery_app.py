@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.workers.v2.sync_tasks",
         "app.workers.v2.embedding_tasks",
         "app.workers.v2.post_tasks",
+        "app.workers.v2.scoring_tasks",
     ],
 )
 
@@ -66,6 +67,16 @@ celery_app.conf.update(
         "sync-orphanet-weekly": {
             "task": "v2.sync_orphanet_weekly",
             "schedule": crontab(hour=3, minute=0, day_of_week=1),
+            "options": {"queue": "v2"},
+        },
+        "update-lens-activity-levels-nightly": {
+            "task": "v2.update_lens_activity_levels",
+            "schedule": crontab(hour=1, minute=30),  # 01:30 — przed scoring o 02:00
+            "options": {"queue": "v2"},
+        },
+        "compute-all-users-scores-nightly": {
+            "task": "v2.compute_all_users_lens_scores",
+            "schedule": crontab(hour=2, minute=0),
             "options": {"queue": "v2"},
         },
     },

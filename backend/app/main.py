@@ -16,7 +16,10 @@ from app.logging_config import setup_logging
 setup_logging()
 
 from app.api.v2 import auth as auth_v2
+from app.api.v2 import comments as comments_v2
+from app.api.v2 import lenses as lenses_v2
 from app.api.v2 import posts as posts_v2
+from app.api.v2 import proposals as proposals_v2
 from app.config import settings
 from app.rate_limit import limiter
 from app.services.embedding_service import get_model
@@ -131,7 +134,10 @@ app.add_middleware(DevCorsFallbackMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(auth_v2.router)
+app.include_router(comments_v2.router)
+app.include_router(lenses_v2.router)
 app.include_router(posts_v2.router)
+app.include_router(proposals_v2.router)
 
 
 @app.get("/", tags=["Health"])

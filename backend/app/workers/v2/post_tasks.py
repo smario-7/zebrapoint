@@ -130,6 +130,11 @@ async def _process_post_async(post_id: str) -> None:
                     await session.execute(insert_stmt)
                 await session.commit()
 
+        # Trigger: po publikacji posta odśwież scoring autora względem soczewek.
+        from app.workers.v2.scoring_tasks import compute_user_lens_scores
+
+        compute_user_lens_scores.delay(str(post.author_id))
+
         logger.info("Post %s: pipeline zakończony.", post_id)
 
     finally:
