@@ -1,5 +1,13 @@
 import { create } from "zustand";
-import api from "../services/api";
+import api, { API_V2_AUTH_BASE } from "../services/api";
+
+function normalizeUser(user) {
+  if (!user) return null;
+  return {
+    ...user,
+    display_name: user.display_name ?? user.username ?? "",
+  };
+}
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -12,9 +20,9 @@ const useAuthStore = create((set) => ({
   login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await api.post("/auth/login", { email, password });
+      const { data } = await api.post(`${API_V2_AUTH_BASE}/login`, { email, password });
       set({
-        user: data.user,
+        user: normalizeUser(data.user),
         isAuthenticated: true,
         sessionChecked: true,
         isLoading: false,
@@ -30,10 +38,10 @@ const useAuthStore = create((set) => ({
   register: async (email, password, displayName) => {
     set({ isLoading: true, error: null, registerErrorDetail: null });
     try {
-      await api.post("/auth/register", {
+      await api.post(`${API_V2_AUTH_BASE}/register`, {
         email,
         password,
-        display_name: displayName,
+        username: displayName,
       });
       set({ isLoading: false });
       return { success: true };
@@ -52,7 +60,7 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      await api.post("/auth/logout");
+      await api.post(`${API_V2_AUTH_BASE}/logout`);
     } catch {
       /* sesja i tak zerowana po stronie klienta */
     }
@@ -66,8 +74,12 @@ const useAuthStore = create((set) => ({
 
   fetchMe: async () => {
     try {
-      const { data } = await api.get("/auth/me");
-      set({ user: data, isAuthenticated: true, sessionChecked: true });
+      const { data } = await api.get(`${API_V2_AUTH_BASE}/me`);
+      set({
+        user: normalizeUser(data),
+        isAuthenticated: true,
+        sessionChecked: true,
+      });
     } catch {
       set({ user: null, isAuthenticated: false, sessionChecked: true });
     }

@@ -119,3 +119,117 @@ async def test_get_hpo_associations_only_single_request_sorted(instant_orphanet_
     assert hpo == ["HP:0000001", "HP:0000002"]
     assert len(requests_log) == 1
     assert "HPODisorderAssociation" in requests_log[0]
+
+
+def _make_transport_search_approximation(requests_log: list[str]) -> httpx.MockTransport:
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests_log.append(str(request.url.path))
+        path = request.url.path
+
+        if "approximation" in path:
+            return httpx.Response(
+                200,
+                json={"ClinicalEntityList": [{"OrphaCode": _ORPHA}]},
+            )
+
+        if path.endswith(f"/orphacode/{_ORPHA}/HPODisorderAssociation"):
+            return httpx.Response(
+                200,
+                json={
+                    "ORPHAcode": _ORPHA,
+                    "HPODisorderAssociation": [
+                        {"HPO": {"HPOId": "HP:0000002"}},
+                    ],
+                },
+            )
+
+        if path == f"/EN/ClinicalEntity/orphacode/{_ORPHA}":
+            return httpx.Response(200, json={"Preferred term": "Fixture EN name"})
+
+        if path == f"/PL/ClinicalEntity/orphacode/{_ORPHA}":
+            return httpx.Response(200, json={"Preferred term": "Fixture PL name"})
+
+        return httpx.Response(404, json={})
+
+    return httpx.MockTransport(handler)
+
+
+@pytest.mark.asyncio
+async def test_search_by_name_uses_approximation_then_get_disease(instant_orphanet_sleep) -> None:
+    requests_log: list[str] = []
+    transport = _make_transport_search_approximation(requests_log)
+    real_client = httpx.AsyncClient
+
+    def client_with_mock_transport(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        kwargs["transport"] = transport
+        return real_client(*args, **kwargs)
+
+    with patch("app.services.v2.orphanet_client.httpx.AsyncClient", side_effect=client_with_mock_transport):
+        async with OrphanetClient(api_key="test-key") as client:
+            diseases = await client.search_by_name("dystrofia", limit=5)
+
+    assert len(diseases) == 1
+    assert diseases[0].orpha_id == _ORPHA
+    assert any("approximation" in p for p in requests_log)
+
+
+def _make_transport_search_pagination_fallback(requests_log: list[str]) -> httpx.MockTransport:
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests_log.append(str(request.url.path))
+        path = request.url.path
+
+        if "approximation" in path:
+            return httpx.Response(404, json={})
+
+        if path == "/PL/ClinicalEntity/page/1/100":
+            return httpx.Response(
+                200,
+                json={
+                    "ClinicalEntityList": [
+                        {
+                            "ORPHAcode": _ORPHA,
+                            "Preferred term": "Rzadka dystrofia testowa",
+                        }
+                    ]
+                },
+            )
+
+        if path.endswith(f"/orphacode/{_ORPHA}/HPODisorderAssociation"):
+            return httpx.Response(
+                200,
+                json={
+                    "ORPHAcode": _ORPHA,
+                    "HPODisorderAssociation": [
+                        {"HPO": {"HPOId": "HP:0000002"}},
+                    ],
+                },
+            )
+
+        if path == f"/EN/ClinicalEntity/orphacode/{_ORPHA}":
+            return httpx.Response(200, json={"Preferred term": "Fixture EN name"})
+
+        if path == f"/PL/ClinicalEntity/orphacode/{_ORPHA}":
+            return httpx.Response(200, json={"Preferred term": "Fixture PL name"})
+
+        return httpx.Response(404, json={})
+
+    return httpx.MockTransport(handler)
+
+
+@pytest.mark.asyncio
+async def test_search_by_name_fallback_pagination_filter(instant_orphanet_sleep) -> None:
+    requests_log: list[str] = []
+    transport = _make_transport_search_pagination_fallback(requests_log)
+    real_client = httpx.AsyncClient
+
+    def client_with_mock_transport(*args: object, **kwargs: object) -> httpx.AsyncClient:
+        kwargs["transport"] = transport
+        return real_client(*args, **kwargs)
+
+    with patch("app.services.v2.orphanet_client.httpx.AsyncClient", side_effect=client_with_mock_transport):
+        async with OrphanetClient(api_key="test-key") as client:
+            diseases = await client.search_by_name("dystrofia", limit=5)
+
+    assert len(diseases) >= 1
+    assert diseases[0].orpha_id == _ORPHA
+    assert any("/PL/ClinicalEntity/page/1/100" in p for p in requests_log)

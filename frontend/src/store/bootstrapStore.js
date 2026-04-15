@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-import api from "../services/api";
+import api, { API_V2_AUTH_BASE } from "../services/api";
 
 const CACHE_TTL_MS = 30_000;
 const UNREAD_POLL_MS = 30_000;
@@ -47,7 +47,7 @@ const useBootstrapStore = create((set, get) => ({
         if (err?.response?.status === 404) {
           try {
             const [meRes, profileRes, groupRes, unreadRes] = await Promise.allSettled([
-              api.get("/auth/me"),
+              api.get(`${API_V2_AUTH_BASE}/me`),
               api.get("/symptoms/me"),
               api.get("/groups/me"),
               api.get("/dm/conversations/unread-count"),

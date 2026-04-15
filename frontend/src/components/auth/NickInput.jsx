@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import api from "../../services/api";
+import api, { API_V2_AUTH_BASE } from "../../services/api";
 
 /**
- * Pole nicku z walidacją real-time: debounce 500ms, sprawdza API /auth/check-nick.
+ * Pole nicku z walidacją real-time: debounce 500ms, sprawdza API check-nick (v2 auth).
  * Pokazuje: dostępny / zajęty lub zły format + ewentualne podpowiedzi.
  */
 export default function NickInput({ value, onChange, error, currentNick, onStatusChange, label }) {
@@ -35,7 +35,7 @@ export default function NickInput({ value, onChange, error, currentNick, onStatu
     onStatusChange?.("checking");
     try {
       const { data } = await api.get(
-        `/auth/check-nick?nick=${encodeURIComponent(nick)}`
+        `${API_V2_AUTH_BASE}/check-nick?nick=${encodeURIComponent(nick)}`
       );
       const nextStatus = data.available ? "available" : data.reason === "taken" ? "taken" : "invalid";
       setStatus(nextStatus);

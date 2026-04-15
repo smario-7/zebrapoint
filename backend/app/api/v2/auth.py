@@ -23,7 +23,12 @@ from app.core.dependencies import get_current_active_user, get_db, get_redis_aut
 from app.core.security import hash_password, verify_password
 from app.models.v2.user import User
 from app.rate_limit import limiter
-from app.schemas.v2.auth import LoginRequest, LoginResponse, RegisterRequest
+from app.schemas.v2.auth import (
+    LoginRequest,
+    LoginResponse,
+    RegisterRequest,
+    UpdatePasswordRequest,
+)
 from app.schemas.v2.user import UpdateProfileRequest, UserOut
 
 logger = logging.getLogger(__name__)
@@ -225,6 +230,22 @@ async def logout(
 @router.get("/me", response_model=UserOut)
 async def get_me(current_user: User = Depends(get_current_active_user)):
     return UserOut.model_validate(current_user)
+
+
+@router.patch("/me/password")
+async def patch_me_password(
+    data: UpdatePasswordRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aktualne hasło jest nieprawidłowe",
+        )
+    current_user.password_hash = hash_password(data.new_password)
+    await db.commit()
+    return {"message": "Hasło zostało zmienione"}
 
 
 @router.patch("/me", response_model=UserOut)

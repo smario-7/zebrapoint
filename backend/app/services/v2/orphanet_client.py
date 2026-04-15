@@ -13,8 +13,11 @@ Rate limiting: ok. 1 żądanie na sekundę — pauza między kolejnymi requestam
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import re
 from dataclasses import dataclass
+from urllib.parse import quote
 
 import httpx
 
@@ -301,3 +304,162 @@ class OrphanetClient:
         except (httpx.HTTPError, KeyError, ValueError, TypeError) as e:
             logger.warning("Błąd HPO associations ORPHA:%d — %s", orpha_code, e)
             return []
+
+    async def search_by_name(
+        self,
+        query: str,
+        limit: int = 10,
+    ) -> list[OrphaDisease]:
+        """
+        Wyszukuje choroby po nazwie (PL lub EN) lub po numerze ORPHAcode.
+
+        Najpierw próbuje endpointu aproksymacji (ścieżka zależna od wersji API),
+        potem — jeśli zwróci 404 — paginacji nomenklatury z filtrem po tekście lokalnie.
+        """
+        assert self._client is not None
+        q = (query or "").strip()
+        if not q:
+            return []
+
+        if q.isdigit():
+            code = int(q)
+            d = await self.get_disease(code)
+            await asyncio.sleep(_RATE_LIMIT_DELAY)
+            return [d] if d else []
+
+        codes = await self._search_orpha_codes_by_name_http(q, limit=limit)
+        diseases: list[OrphaDisease] = []
+        for code in codes:
+            disease = await self.get_disease(code)
+            if disease:
+                diseases.append(disease)
+            if len(diseases) >= limit:
+                break
+            await asyncio.sleep(_RATE_LIMIT_DELAY)
+        return diseases[:limit]
+
+    async def _search_orpha_codes_by_name_http(self, query: str, *, limit: int) -> list[int]:
+        """Zwraca listę ORPHAcode (int) bez pełnego pobierania chorób."""
+        assert self._client is not None
+        codes = await self._approximation_orpha_codes(query, limit=limit)
+        if codes:
+            return codes
+
+        logger.info(
+            "Orphanet: brak wyników z aproksymacji dla %r — fallback paginacja + filtr lokalny",
+            query,
+        )
+        return await self._paginated_orpha_codes_filtered(query, limit=limit)
+
+    async def _approximation_orpha_codes(self, query: str, *, limit: int) -> list[int]:
+        assert self._client is not None
+        encoded = quote(query, safe="")
+        paths = (
+            f"/PL/ClinicalEntity/approximation/{encoded}",
+            f"/EN/ClinicalEntity/approximation/{encoded}",
+        )
+        for path in paths:
+            try:
+                resp = await self._client.get(path)
+                await asyncio.sleep(_RATE_LIMIT_DELAY)
+                if resp.status_code != 200:
+                    continue
+                data = resp.json()
+                raw_items = _clinical_entity_items_from_payload(data)
+                codes = _orpha_codes_from_clinical_entity_items(raw_items)
+                if codes:
+                    return codes[:limit]
+            except (httpx.HTTPError, ValueError, TypeError) as e:
+                logger.warning("Orphanet approximation %s — %s", path, e)
+        return []
+
+    async def _paginated_orpha_codes_filtered(self, query: str, *, limit: int) -> list[int]:
+        assert self._client is not None
+        q_lower = query.lower()
+        page_size = 100
+        max_pages = 40
+        seen: set[int] = set()
+        matches: list[int] = []
+
+        for lang in ("PL", "EN"):
+            for page in range(1, max_pages + 1):
+                path = f"/{lang}/ClinicalEntity/page/{page}/{page_size}"
+                try:
+                    resp = await self._client.get(path)
+                    await asyncio.sleep(_RATE_LIMIT_DELAY)
+                except httpx.HTTPError as e:
+                    logger.warning("Orphanet page %s — %s", path, e)
+                    break
+                if resp.status_code == 404:
+                    break
+                if resp.status_code != 200:
+                    continue
+                try:
+                    data = resp.json()
+                except ValueError:
+                    continue
+                items = _clinical_entity_items_from_payload(data)
+                if not items:
+                    break
+                for item in items:
+                    code = _orpha_code_from_dict(item)
+                    if code is None or code in seen:
+                        continue
+                    blob = json.dumps(item, ensure_ascii=False).lower()
+                    if q_lower in blob:
+                        matches.append(code)
+                        seen.add(code)
+                        if len(matches) >= limit:
+                            return matches
+        return matches
+
+
+def _clinical_entity_items_from_payload(data: object) -> list[dict]:
+    if isinstance(data, list):
+        return [x for x in data if isinstance(x, dict)]
+    if not isinstance(data, dict):
+        return []
+    for key in (
+        "ClinicalEntityList",
+        "clinicalEntityList",
+        "ClinicalEntities",
+        "clinicalEntities",
+        "data",
+        "results",
+    ):
+        val = data.get(key)
+        if isinstance(val, list) and val and isinstance(val[0], dict):
+            return [x for x in val if isinstance(x, dict)]
+    if "ORPHAcode" in data or "OrphaCode" in data:
+        return [data]
+    return []
+
+
+def _orpha_code_from_dict(item: dict) -> int | None:
+    raw = item.get("ORPHAcode")
+    if raw is None:
+        raw = item.get("OrphaCode")
+    if raw is None:
+        raw = item.get("orphaCode")
+    if isinstance(raw, int) and raw > 0:
+        return raw
+    if isinstance(raw, str):
+        s = raw.strip()
+        if s.isdigit():
+            return int(s)
+        m = re.search(r"(\d{3,7})", s)
+        if m:
+            return int(m.group(1))
+    return None
+
+
+def _orpha_codes_from_clinical_entity_items(items: list[dict]) -> list[int]:
+    out: list[int] = []
+    seen: set[int] = set()
+    for item in items:
+        code = _orpha_code_from_dict(item)
+        if code is None or code in seen:
+            continue
+        seen.add(code)
+        out.append(code)
+    return out
