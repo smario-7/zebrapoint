@@ -43,7 +43,7 @@ services:
       --loglevel=info
       --logfile=/logs/celery.log
       --concurrency=2
-      --queues=ml,notifications,default
+      --queues=ml,notifications,default,v2
       --hostname=worker@dev
     volumes:
       - ./backend:/app
@@ -53,6 +53,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      disable: true
 
   beat:
     build:
@@ -79,6 +81,8 @@ services:
         condition: service_healthy
       worker:
         condition: service_started
+    healthcheck:
+      disable: true
 
 networks:
   zebrapoint_dev:
