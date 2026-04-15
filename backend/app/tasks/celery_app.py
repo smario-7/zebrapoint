@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.workers.v2.embedding_tasks",
         "app.workers.v2.post_tasks",
         "app.workers.v2.scoring_tasks",
+        "app.workers.v2.chat_tasks",
     ],
 )
 

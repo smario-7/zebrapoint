@@ -15,6 +15,8 @@ import ForumPage    from "./pages/ForumPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import MessagesPage     from "./pages/MessagesPage";
 import ConversationPage from "./pages/ConversationPage";
+import TopicsPage from "./pages/TopicsPage";
+import TopicChatPage from "./pages/TopicChatPage";
 import AdminLayout    from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminReports   from "./pages/admin/AdminReports";
@@ -82,6 +84,8 @@ function AppRoutes() {
         <Route path="/groups/:groupId/posts/:postId" element={withTransition(<PostDetailPage />)} />
         <Route path="/messages" element={withTransition(<MessagesPage />)} />
         <Route path="/messages/:conversationId" element={withTransition(<ConversationPage />)} />
+        <Route path="/topics" element={withTransition(<TopicsPage />)} />
+        <Route path="/topics/:chatId" element={withTransition(<TopicChatPage />)} />
       </Route>
 
       <Route path="/admin" element={<AdminGuard />}>

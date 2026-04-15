@@ -84,6 +84,14 @@ export default function Dashboard() {
         {!loading && hasProfile && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <TileCard
+                to="/topics"
+                icon="🎯"
+                titleDesktop="Moje tematy"
+                titleMobile="Tematy"
+                subtitleDesktop="Dynamiczne czaty z innymi rodzicami"
+                subtitleMobile="Czaty tematyczne"
+              />
               <GroupTile
                 group={group}
                 profile={profile}
