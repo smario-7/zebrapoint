@@ -3,6 +3,7 @@ Celery tasks v2 — obliczanie scoringu User ↔ Lens.
 
 Tasky:
   - v2.compute_user_lens_scores: oblicza score dla jednego usera względem wszystkich aktywnych soczewek
+  - v2.compute_user_vectors: wektory HPO/diagnozy po onboardingu, potem wywołuje compute_user_lens_scores
   - v2.compute_all_users_lens_scores: batch scoring dla wszystkich aktywnych userów (Celery Beat)
 """
 
@@ -31,6 +32,25 @@ def compute_user_lens_scores(self, user_id: str):
         asyncio.run(_compute_for_user_async(user_id))
     except Exception as exc:
         logger.error("compute_user_lens_scores(%s) — błąd: %s", user_id, exc)
+        raise self.retry(exc=exc) from exc
+
+
+@celery_app.task(
+    name="v2.compute_user_vectors",
+    bind=True,
+    max_retries=3,
+    default_retry_delay=60,
+    acks_late=True,
+    queue="v2",
+)
+def compute_user_vectors(self, user_id: str):
+    """Po onboardingu: wektory HPO i diagnozy, potem scoring soczewek."""
+    import asyncio
+
+    try:
+        asyncio.run(_compute_user_vectors_async(user_id))
+    except Exception as exc:
+        logger.error("compute_user_vectors(%s) — błąd: %s", user_id, exc)
         raise self.retry(exc=exc) from exc
 
 
@@ -150,6 +170,76 @@ async def _compute_for_user_async(user_id: str) -> None:
             await session.commit()
 
         logger.info("Scoring zakończony dla usera %s: %d soczewek.", user_id, len(scores))
+
+    finally:
+        await engine.dispose()
+
+
+async def _compute_user_vectors_async(user_id: str) -> None:
+    from uuid import UUID
+
+    from sqlalchemy import select, update
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from sqlalchemy.orm import selectinload
+
+    from app.core.database import database_url
+    from app.models.v2.hpo import HpoTerm, OrphaDisease
+    from app.models.v2.user import User
+    from app.services.v2.embedding_service import encode
+
+    engine = create_async_engine(database_url, echo=False)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    try:
+        async with session_factory() as session:
+            result = await session.execute(
+                select(User)
+                .options(selectinload(User.hpo_profile))
+                .where(User.id == UUID(user_id))
+            )
+            user = result.scalar_one_or_none()
+            if not user:
+                logger.warning("compute_user_vectors: user %s nie istnieje.", user_id)
+                return
+
+            hpo_vec: list[float] | None = None
+            if user.hpo_profile:
+                ids = [p.hpo_id for p in user.hpo_profile]
+                tr = await session.execute(select(HpoTerm).where(HpoTerm.hpo_id.in_(ids)))
+                by_id = {t.hpo_id: t for t in tr.scalars().all()}
+                labels: list[str] = []
+                for hid in ids:
+                    t = by_id.get(hid)
+                    if t:
+                        labels.append((t.label_pl or t.label_en or "").strip())
+                joined = "\n".join(x for x in labels if x)
+                if joined:
+                    hpo_vec = encode(joined).tolist()
+
+            if hpo_vec is None and user.symptom_description and user.symptom_description.strip():
+                hpo_vec = encode(user.symptom_description.strip()).tolist()
+
+            diag_vec: list[float] | None = None
+            if user.diagnosis_confirmed and user.orpha_id is not None:
+                dr = await session.execute(
+                    select(OrphaDisease).where(OrphaDisease.orpha_id == user.orpha_id)
+                )
+                od = dr.scalar_one_or_none()
+                if od:
+                    diag_text = f"{od.name_pl or ''} {od.name_en}".strip()
+                    if diag_text:
+                        diag_vec = encode(diag_text).tolist()
+
+            await session.execute(
+                update(User)
+                .where(User.id == UUID(user_id))
+                .values(hpo_vector=hpo_vec, diagnosis_vector=diag_vec)
+            )
+            await session.commit()
+
+        logger.info("Wektory użytkownika %s zapisane (HPO: %s, diagnoza: %s).", user_id, bool(hpo_vec), bool(diag_vec))
+
+        compute_user_lens_scores.delay(user_id)
 
     finally:
         await engine.dispose()

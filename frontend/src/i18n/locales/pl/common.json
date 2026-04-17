@@ -1,6 +1,11 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "lenses": "Soczewki tematyczne",
+    "lensesShort": "Soczewki",
+    "myPosts": "Moje posty",
+    "myPostsShort": "Posty",
+    "topics": "Moje tematy",
     "groups": "Grupy",
     "groupChat": "Czat grupy",
     "forum": "Forum",

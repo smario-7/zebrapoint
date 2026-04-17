@@ -5,9 +5,9 @@ import logging
 import random
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from redis.asyncio import Redis
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.jwt import (
@@ -21,11 +21,14 @@ from app.auth.jwt import (
 from app.config import settings
 from app.core.dependencies import get_current_active_user, get_db, get_redis_auth
 from app.core.security import hash_password, verify_password
+from app.models.v2.hpo import HpoTerm, OrphaDisease, UserHpoProfile
 from app.models.v2.user import User
 from app.rate_limit import limiter
+from app.schemas.v2.admin import OrphaSearchResult
 from app.schemas.v2.auth import (
     LoginRequest,
     LoginResponse,
+    OnboardingRequest,
     RegisterRequest,
     UpdatePasswordRequest,
 )
@@ -285,6 +288,85 @@ async def patch_me(
     await db.commit()
     await db.refresh(current_user)
     return UserOut.model_validate(current_user)
+
+
+@router.post("/onboarding", response_model=UserOut)
+@limiter.limit("10/minute")
+async def complete_onboarding(
+    request: Request,
+    data: OnboardingRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if current_user.onboarding_completed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Onboarding został już ukończony",
+        )
+
+    if data.diagnosis_confirmed and data.orpha_id is not None:
+        r = await db.execute(select(OrphaDisease).where(OrphaDisease.orpha_id == data.orpha_id))
+        if r.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Wybrana choroba nie występuje jeszcze w katalogu aplikacji",
+            )
+
+    if data.hpo_ids:
+        r = await db.execute(select(HpoTerm.hpo_id).where(HpoTerm.hpo_id.in_(data.hpo_ids)))
+        found = {row[0] for row in r.all()}
+        missing = [h for h in data.hpo_ids if h not in found]
+        if missing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Nieznane terminy HPO: {', '.join(missing[:5])}",
+            )
+
+    now = datetime.now(timezone.utc)
+    current_user.symptom_description = data.symptom_description or None
+    current_user.diagnosis_confirmed = data.diagnosis_confirmed
+    current_user.orpha_id = data.orpha_id
+    current_user.consent_data_processing = data.consent_data_processing
+    current_user.consent_searchable_info = data.consent_searchable_info
+    current_user.searchable = data.searchable
+    current_user.location_city = data.location_city
+    current_user.location_country = data.location_country
+    current_user.onboarding_completed = True
+    current_user.status = "active"
+
+    await db.execute(delete(UserHpoProfile).where(UserHpoProfile.user_id == current_user.id))
+    for hpo_id in data.hpo_ids:
+        db.add(
+            UserHpoProfile(
+                user_id=current_user.id,
+                hpo_id=hpo_id,
+                confidence=1.0,
+                source="onboarding",
+                created_at=now,
+            )
+        )
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    from app.workers.v2.scoring_tasks import compute_user_vectors
+
+    compute_user_vectors.delay(str(current_user.id))
+
+    return UserOut.model_validate(current_user)
+
+
+@router.get("/orphanet/search", response_model=list[OrphaSearchResult])
+@limiter.limit("30/minute")
+async def onboarding_orphanet_search(
+    request: Request,
+    q: str = Query(min_length=2, description="Nazwa choroby lub kod ORPHA"),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_active_user),
+):
+    from app.services.v2.orphanet_search_service import search_orphanet_diseases
+
+    return await search_orphanet_diseases(db, q, limit=10)
 
 
 @router.get("/check-nick")

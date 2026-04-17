@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -295,38 +294,9 @@ async def search_orphanet(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    from app.config import settings
-    from app.services.v2.orphanet_client import OrphanetClient
+    from app.services.v2.orphanet_search_service import search_orphanet_diseases
 
-    if not settings.orphanet_api_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Brak ORPHANET_API_KEY — wyszukiwanie niedostępne",
-        )
-
-    existing = await db.execute(select(OrphaDiseaseModel.orpha_id))
-    existing_ids = set(existing.scalars().all())
-
-    try:
-        async with OrphanetClient() as client:
-            diseases = await client.search_by_name(q, limit=10)
-    except httpx.HTTPError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Orphanet API niedostępne: {e!s}",
-        ) from e
-
-    return [
-        OrphaSearchResult(
-            orpha_id=d.orpha_id,
-            orpha_code=d.orpha_code,
-            name_pl=d.name_pl,
-            name_en=d.name_en,
-            hpo_count=len(d.hpo_associations),
-            already_imported=d.orpha_id in existing_ids,
-        )
-        for d in diseases
-    ]
+    return await search_orphanet_diseases(db, q, limit=10)
 
 
 @router.post("/orphanet/import", status_code=status.HTTP_201_CREATED)

@@ -1,6 +1,11 @@
 {
   "nav": {
     "dashboard": "Dashboard",
+    "lenses": "Thematic lenses",
+    "lensesShort": "Lenses",
+    "myPosts": "My posts",
+    "myPostsShort": "Posts",
+    "topics": "My topics",
     "groups": "Groups",
     "groupChat": "Group chat",
     "forum": "Forum",

@@ -1,29 +1,27 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import useAuthStore from "../store/authStore";
 import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/ui/Avatar";
-import Button from "../components/ui/Button";
-import { SkeletonCard } from "../components/ui/Skeleton";
-import ErrorMessage from "../components/ui/ErrorMessage";
-import { useProfile } from "../hooks/useProfile";
 import { useTranslation } from "react-i18next";
-import GroupTile from "../components/group/GroupTile";
+import { lensesApi } from "../api/v2/lenses";
+import { postsApi } from "../api/v2/posts";
+import { topicsApi } from "../api/v2/topics";
+import { MatchBadge } from "../components/v2/MatchBadge";
+import ErrorMessage from "../components/ui/ErrorMessage";
 
-function TileCard({ to, icon, titleDesktop, titleMobile, subtitleDesktop, subtitleMobile }) {
+function TileCard({ to, icon, title, subtitle, children }) {
   return (
     <Link
       to={to}
-      className="bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] p-5 hover:border-zebra-300 dark:hover:border-teal-600 hover:shadow-sm transition group min-h-[96px]"
+      className="bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] p-4 sm:p-5 hover:border-zebra-300 dark:hover:border-teal-600 hover:shadow-sm transition flex flex-col min-h-[120px] sm:min-h-[140px]"
     >
-      <p className="text-2xl leading-none mb-3">{icon}</p>
-      <p className="font-semibold text-slate-800 dark:text-slate-100">
-        <span className="hidden sm:inline">{titleDesktop}</span>
-        <span className="sm:hidden">{titleMobile}</span>
-      </p>
-      <p className="text-xs text-[var(--zp-app-text-muted)] mt-1">
-        <span className="hidden sm:inline">{subtitleDesktop}</span>
-        <span className="sm:hidden">{subtitleMobile}</span>
-      </p>
+      <p className="text-2xl leading-none mb-2 shrink-0">{icon}</p>
+      <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm sm:text-base">{title}</p>
+      {subtitle && (
+        <p className="text-xs text-[var(--zp-app-text-muted)] mt-0.5 mb-2">{subtitle}</p>
+      )}
+      <div className="flex-1 min-h-0 mt-1 text-sm">{children}</div>
     </Link>
   );
 }
@@ -31,113 +29,174 @@ function TileCard({ to, icon, titleDesktop, titleMobile, subtitleDesktop, subtit
 export default function Dashboard() {
   const { t } = useTranslation("app");
   const { user } = useAuthStore();
-  const navigate = useNavigate();
-  const { group, profile, loading, error, hasProfile, refetch } = useProfile();
-
   const firstName = user?.display_name?.split(" ")[0] || t("dashboard.userFallback");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lenses, setLenses] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [invitations, setInvitations] = useState([]);
+  const [chats, setChats] = useState([]);
+  const [proposals, setProposals] = useState([]);
+
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [L, P, I, C, Pr] = await Promise.all([
+        lensesApi.list("all", 5, 0),
+        postsApi.list(),
+        topicsApi.invitations().catch(() => []),
+        topicsApi.list().catch(() => []),
+        postsApi.myProposals().catch(() => []),
+      ]);
+      setLenses(L || []);
+      const sortedPosts = [...(P || [])].sort((a, b) => {
+        const tb = new Date(b.published_at || b.created_at).getTime();
+        const ta = new Date(a.published_at || a.created_at).getTime();
+        return tb - ta;
+      });
+      setPosts(sortedPosts.slice(0, 3));
+      setInvitations(I || []);
+      setChats(C || []);
+      setProposals(Pr || []);
+    } catch (e) {
+      setError(e.message || "Nie udało się wczytać pulpitu");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const proposalSummary = useMemo(() => {
+    const counts = { pending: 0, approved: 0, rejected: 0 };
+    for (const p of proposals) {
+      const k = p.status;
+      if (k in counts) counts[k] += 1;
+    }
+    return counts;
+  }, [proposals]);
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto w-full">
         <div className="flex items-center gap-3 mb-6">
           <div className="shrink-0">
             <Avatar name={user?.display_name} size="lg" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 truncate">
               {t("dashboard.greeting", { name: firstName })}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm">
-              {hasProfile
-                ? t("dashboard.connectedToGroup")
-                : t("dashboard.startWithSymptoms")}
+              Skrót soczewek, postów, zaproszeń i czatów
             </p>
           </div>
         </div>
 
-        {error && (
-          <ErrorMessage message={error} onRetry={refetch} />
-        )}
+        {error && <ErrorMessage message={error} onRetry={loadDashboard} />}
 
-        {loading && (
-          <div className="space-y-4">
-            <SkeletonCard />
-            <SkeletonCard />
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <TileCard to="/lenses" icon="🔎" title="Top soczewki" subtitle="Według Twojego dopasowania">
+            {loading ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Wczytywanie…</p>
+            ) : lenses.length === 0 ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Brak danych — otwórz soczewki</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {lenses.map((l) => (
+                  <li key={l.id} className="flex items-center justify-between gap-2 text-xs sm:text-sm">
+                    <span className="truncate text-slate-700 dark:text-slate-200">
+                      {l.emoji ? `${l.emoji} ` : ""}
+                      {l.name}
+                    </span>
+                    {l.user_score != null ? (
+                      <MatchBadge score={l.user_score} />
+                    ) : (
+                      <span className="text-[10px] text-[var(--zp-app-text-muted)] shrink-0">{l.post_count} post.</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TileCard>
 
-        {!loading && !hasProfile && (
-          <div className="bg-[var(--zp-app-card)] rounded-2xl border border-dashed border-[var(--zp-app-border)] p-10 text-center">
-            <div className="text-5xl mb-4">📝</div>
-            <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-2">
-              {t("dashboard.describeToJoin")}
-            </h2>
-            <p className="text-slate-400 dark:text-slate-500 text-sm mb-6 max-w-sm mx-auto">
-              {t("dashboard.systemWillFind")}
-            </p>
-            <Link to="/symptoms/new">
-              <Button size="lg">{t("dashboard.describeSymptoms")}</Button>
-            </Link>
-          </div>
-        )}
+          <TileCard to="/my-posts" icon="📝" title="Moje posty" subtitle="Ostatnia aktywność">
+            {loading ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Wczytywanie…</p>
+            ) : posts.length === 0 ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Nie masz jeszcze postów</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {posts.map((p) => (
+                  <li key={p.id} className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
+                    <span className="font-medium">{p.title}</span>
+                    <span className="text-[var(--zp-app-text-muted)] ml-1">({p.status})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TileCard>
 
-        {!loading && hasProfile && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <TileCard
-                to="/topics"
-                icon="🎯"
-                titleDesktop="Moje tematy"
-                titleMobile="Tematy"
-                subtitleDesktop="Dynamiczne czaty z innymi rodzicami"
-                subtitleMobile="Czaty tematyczne"
-              />
-              <GroupTile
-                group={group}
-                profile={profile}
-                onManage={() => navigate("/groups")}
-              />
+          <TileCard to="/topics" icon="✉️" title="Zaproszenia" subtitle="Do czatów tematycznych">
+            {loading ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Wczytywanie…</p>
+            ) : invitations.length === 0 ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Brak oczekujących zaproszeń</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {invitations.slice(0, 5).map((inv) => (
+                  <li key={inv.chat_id} className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
+                    <span className="font-medium">{inv.inviter_username}</span>
+                    <span className="text-[var(--zp-app-text-muted)]"> — {inv.query_preview}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TileCard>
 
-              {group?.id && (
-                <>
-                  <TileCard
-                    to={`/groups/${group.id}`}
-                    icon="💬"
-                    titleDesktop={t("dashboard.groupChat")}
-                    titleMobile={t("dashboard.groupChatShort")}
-                    subtitleDesktop={t("dashboard.chatWithMembers")}
-                    subtitleMobile={t("dashboard.newMessages")}
-                  />
-                  <TileCard
-                    to={`/groups/${group.id}/forum`}
-                    icon="📋"
-                    titleDesktop={t("dashboard.groupForum")}
-                    titleMobile={t("dashboard.groupForumShort")}
-                    subtitleDesktop={t("dashboard.postsAndDiscussions")}
-                    subtitleMobile={t("dashboard.newPosts")}
-                  />
-                </>
-              )}
-            </div>
+          <TileCard to="/topics" icon="💬" title="Aktywne czaty" subtitle="Moje tematy">
+            {loading ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Wczytywanie…</p>
+            ) : chats.length === 0 ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Brak czatów — znajdź temat</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {chats.slice(0, 5).map((c) => (
+                  <li key={c.id} className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 truncate">
+                    {c.query_text}
+                    <span className="text-[var(--zp-app-text-muted)] ml-1">({c.status})</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </TileCard>
+        </div>
 
-            <div className="mt-6 bg-[var(--zp-app-card)] rounded-2xl border border-[var(--zp-app-border)] p-5">
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">
-                {t("dashboard.recentActivity")}
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-800 dark:text-slate-100 truncate">
-                    {t("dashboard.recentActivityMessage")}
-                  </p>
-                  <p className="text-xs text-[var(--zp-app-text-muted)]">
-                    {t("dashboard.minutesAgo")}
-                  </p>
-                </div>
+        <div className="mt-3 sm:mt-4">
+          <TileCard to="/my-posts" icon="💡" title="Propozycje soczewek" subtitle="Status Twoich zgłoszeń">
+            {loading ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Wczytywanie…</p>
+            ) : proposals.length === 0 ? (
+              <p className="text-xs text-[var(--zp-app-text-muted)]">Nie wysłałeś jeszcze propozycji</p>
+            ) : (
+              <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+                <span className="rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100 px-2 py-1">
+                  Oczekujące: {proposalSummary.pending}
+                </span>
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-100 px-2 py-1">
+                  Zaakceptowane: {proposalSummary.approved}
+                </span>
+                <span className="rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-1">
+                  Odrzucone: {proposalSummary.rejected}
+                </span>
               </div>
-            </div>
-          </>
-        )}
+            )}
+          </TileCard>
+        </div>
       </div>
     </AppShell>
   );

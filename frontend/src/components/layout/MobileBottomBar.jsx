@@ -2,15 +2,14 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
-  Users,
-  MessageSquare,
-  BookOpen,
+  Layers,
+  FileText,
   Mail,
   User,
 } from "lucide-react";
 import UnreadBadge from "./UnreadBadge";
 
-export default function MobileBottomBar({ isActive, groupBase }) {
+export default function MobileBottomBar({ isActive }) {
   const { t } = useTranslation("common");
 
   return (
@@ -20,7 +19,7 @@ export default function MobileBottomBar({ isActive, groupBase }) {
     >
       <Link
         to="/dashboard"
-        className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
+        className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium ${
           isActive("/dashboard")
             ? "text-zebra-600 dark:text-teal-400"
             : "text-slate-500 dark:text-slate-300"
@@ -30,55 +29,30 @@ export default function MobileBottomBar({ isActive, groupBase }) {
         <span>{t("nav.home")}</span>
       </Link>
       <Link
-        to="/groups"
-        className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
-          isActive("/groups")
+        to="/lenses"
+        className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium ${
+          isActive("/lenses")
             ? "text-zebra-600 dark:text-teal-400"
             : "text-slate-500 dark:text-slate-300"
         }`}
       >
-        <Users className="w-6 h-6" aria-hidden />
-        <span>{t("nav.groups")}</span>
+        <Layers className="w-6 h-6" aria-hidden />
+        <span className="max-w-[4.5rem] truncate text-center">{t("nav.lensesShort")}</span>
       </Link>
-      {groupBase ? (
-        <Link
-          to={groupBase}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
-            isActive(groupBase)
-              ? "text-zebra-600 dark:text-teal-400"
-              : "text-slate-500 dark:text-slate-300"
-          }`}
-        >
-          <MessageSquare className="w-6 h-6" aria-hidden />
-          <span>{t("nav.chat")}</span>
-        </Link>
-      ) : (
-        <span className="flex flex-col items-center gap-0.5 px-3 py-1 text-slate-300 dark:text-slate-500 text-xs">
-          <MessageSquare className="w-6 h-6" aria-hidden />
-          <span>{t("nav.chat")}</span>
-        </span>
-      )}
-      {groupBase ? (
-        <Link
-          to={`${groupBase}/forum`}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
-            isActive(`${groupBase}/forum`)
-              ? "text-zebra-600 dark:text-teal-400"
-              : "text-slate-500 dark:text-slate-300"
-          }`}
-        >
-          <BookOpen className="w-6 h-6" aria-hidden />
-          <span>{t("nav.forum")}</span>
-        </Link>
-      ) : (
-        <span className="flex flex-col items-center gap-0.5 px-3 py-1 text-slate-300 dark:text-slate-500 text-xs">
-          <BookOpen className="w-6 h-6" aria-hidden />
-          <span>{t("nav.forum")}</span>
-        </span>
-      )}
+      <Link
+        to="/my-posts"
+        className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium ${
+          isActive("/my-posts")
+            ? "text-zebra-600 dark:text-teal-400"
+            : "text-slate-500 dark:text-slate-300"
+        }`}
+      >
+        <FileText className="w-6 h-6" aria-hidden />
+        <span className="max-w-[4.5rem] truncate text-center">{t("nav.myPostsShort")}</span>
+      </Link>
       <Link
         to="/messages"
-        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
+        className={`relative flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium ${
           isActive("/messages")
             ? "text-zebra-600 dark:text-teal-400"
             : "text-slate-500 dark:text-slate-300"
@@ -92,7 +66,7 @@ export default function MobileBottomBar({ isActive, groupBase }) {
       </Link>
       <Link
         to="/profile"
-        className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs font-medium ${
+        className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-medium ${
           isActive("/profile")
             ? "text-zebra-600 dark:text-teal-400"
             : "text-slate-500 dark:text-slate-300"
