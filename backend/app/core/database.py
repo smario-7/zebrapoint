@@ -36,17 +36,21 @@ def _database_url_with_ipv4(url: str) -> str:
         return url
 
 
-def _to_asyncpg_url(url: str) -> str:
+def _to_async_sqlalchemy_url(url: str) -> str:
     if url.startswith("postgresql+asyncpg://"):
         return url
     if url.startswith("postgresql+psycopg2://"):
         return "postgresql+asyncpg://" + url[len("postgresql+psycopg2://") :]
     if url.startswith("postgresql://"):
         return "postgresql+asyncpg://" + url[len("postgresql://") :]
+    if url.startswith("sqlite+aiosqlite://"):
+        return url
+    if url.startswith("sqlite://"):
+        return "sqlite+aiosqlite://" + url[len("sqlite://") :]
     return url
 
 
-database_url = _to_asyncpg_url(_database_url_with_ipv4(settings.database_url))
+database_url = _to_async_sqlalchemy_url(_database_url_with_ipv4(settings.database_url))
 
 async_engine = create_async_engine(
     database_url,
