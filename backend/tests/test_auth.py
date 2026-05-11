@@ -1,3 +1,10 @@
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Endpointy v1 usunięte z main — auth jest w /api/v2/auth (zobacz tests/v2/)."
+)
+
+
 class TestRegister:
   def test_register_success(self, client):
     resp = client.post("/auth/register", json={

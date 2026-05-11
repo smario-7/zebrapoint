@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<JDBOR date="fixture" version="test">
+  <HPODisorderSetStatusList count="1">
+    <HPODisorderSetStatus id="1">
+      <Disorder id="1">
+        <OrphaCode>910011</OrphaCode>
+        <Name lang="en">Bad HPO row</Name>
+        <HPODisorderAssociationList count="2">
+          <HPODisorderAssociation id="1">
+            <HPO id="1">
+              <HPOId>not-an-hpo</HPOId>
+            </HPO>
+          </HPODisorderAssociation>
+          <HPODisorderAssociation id="2">
+            <HPO id="2">
+              <HPOId>HP:0000001</HPOId>
+            </HPO>
+          </HPODisorderAssociation>
+        </HPODisorderAssociationList>
+      </Disorder>
+    </HPODisorderSetStatus>
+  </HPODisorderSetStatusList>
+</JDBOR>

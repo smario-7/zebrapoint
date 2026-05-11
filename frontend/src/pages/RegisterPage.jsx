@@ -102,7 +102,9 @@ export default function RegisterPage() {
           {error && (
             <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-4 py-3 text-sm">
               <p>{error}</p>
-              {registerErrorDetail?.field === "display_name" && registerErrorDetail?.suggestions?.length > 0 && (
+              {(registerErrorDetail?.field === "username" ||
+                registerErrorDetail?.field === "display_name") &&
+                registerErrorDetail?.suggestions?.length > 0 && (
                 <div className="mt-2">
                   <p className="text-[var(--zp-app-text-primary)] text-xs mb-1">{t("register.alternativesLabel")}</p>
                   <div className="flex flex-wrap gap-1.5">

@@ -25,7 +25,19 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     log_dir: str = ""
     access_token_cookie_name: str = "access_token"
+    refresh_token_cookie_name: str = "refresh_token"
     cookie_secure: bool = False
+
+    anthropic_api_key: str = ""
+    hpo_extraction_enabled: bool = True
+    match_score_threshold: float = 0.40
+    max_lenses_per_post: int = 10
+
+    redis_cache_url: str = "redis://redis:6379/1"
+    redis_auth_url: str = "redis://redis:6379/2"
+
+    orphanet_api_key: str = ""
+    orphadata_cache_dir: str = ""
 
     @field_validator("secret_key")
     @classmethod
@@ -55,6 +67,15 @@ class Settings(BaseSettings):
         if self.cookie_secure:
             return True
         return self.environment.lower() == "production"
+
+    def resolved_orphadata_cache_dir(self) -> Path:
+        """Katalog na pliki XML Orphadata; domyślnie scripts/v2/cache/orphadata."""
+        if self.orphadata_cache_dir.strip():
+            path = Path(self.orphadata_cache_dir).expanduser().resolve()
+        else:
+            path = (_BACKEND_DIR / "scripts" / "v2" / "cache" / "orphadata").resolve()
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
 
 settings = Settings()

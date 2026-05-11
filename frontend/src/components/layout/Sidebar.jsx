@@ -4,9 +4,9 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
-  Users,
-  MessageSquare,
-  BookOpen,
+  Layers,
+  FileText,
+  Hash,
   Mail,
   User,
   Shield,
@@ -16,7 +16,6 @@ import {
 import useAuthStore from "../../store/authStore";
 import useThemeStore from "../../store/themeStore";
 import Avatar from "../ui/Avatar";
-import { useProfile } from "../../hooks/useProfile";
 import LogoBrand from "../ui/LogoBrand";
 import useBootstrapStore from "../../store/bootstrapStore";
 import UnreadBadge from "./UnreadBadge";
@@ -62,7 +61,6 @@ function NavLinkWithBadge({ to, icon, label, isActive }) {
 export default function Sidebar() {
   const { t, i18n } = useTranslation("common");
   const { user, logout } = useAuthStore();
-  const { group } = useProfile();
   const startUnreadPolling = useBootstrapStore((s) => s.startUnreadPolling);
   const dark = useThemeStore((s) => s.dark);
   const toggleTheme = useThemeStore((s) => s.toggle);
@@ -81,20 +79,14 @@ export default function Sidebar() {
 
   const isActive = (path) => {
     if (path === "/dashboard") return location.pathname === "/dashboard";
-    if (path === "/groups") return location.pathname === "/groups";
+    if (path === "/lenses") return location.pathname === "/lenses";
+    if (path === "/my-posts") return location.pathname === "/my-posts";
+    if (path === "/topics") return location.pathname.startsWith("/topics");
     if (path === "/admin") return location.pathname.startsWith("/admin");
-    if (path === "/messages")
-      return location.pathname.startsWith("/messages");
+    if (path === "/messages") return location.pathname.startsWith("/messages");
     if (path === "/profile") return location.pathname === "/profile";
-    if (path.startsWith("/groups/") && path.includes("/forum"))
-      return location.pathname.includes("/forum");
-    if (path.startsWith("/groups/"))
-      return location.pathname.startsWith("/groups/") && !location.pathname.includes("/forum");
     return false;
   };
-
-  const groupId = group?.id;
-  const groupBase = groupId ? `/groups/${groupId}` : null;
 
   const desktopNav = (
     <>
@@ -105,27 +97,23 @@ export default function Sidebar() {
         isActive={isActive("/dashboard")}
       />
       <NavLink
-        to="/groups"
-        icon={Users}
-        label={t("nav.groups")}
-        isActive={isActive("/groups")}
+        to="/lenses"
+        icon={Layers}
+        label={t("nav.lenses")}
+        isActive={isActive("/lenses")}
       />
-      {groupBase && (
-        <>
-          <NavLink
-            to={groupBase}
-            icon={MessageSquare}
-            label={t("nav.groupChat")}
-            isActive={isActive(groupBase)}
-          />
-          <NavLink
-            to={`${groupBase}/forum`}
-            icon={BookOpen}
-            label={t("nav.forum")}
-            isActive={isActive(`${groupBase}/forum`)}
-          />
-        </>
-      )}
+      <NavLink
+        to="/my-posts"
+        icon={FileText}
+        label={t("nav.myPosts")}
+        isActive={isActive("/my-posts")}
+      />
+      <NavLink
+        to="/topics"
+        icon={Hash}
+        label={t("nav.topics")}
+        isActive={isActive("/topics")}
+      />
       <NavLinkWithBadge
         to="/messages"
         icon={Mail}
@@ -151,7 +139,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop: lewy sidebar */}
       <aside
         className="hidden md:flex md:flex-col md:w-56 md:shrink-0 bg-slate-800 dark:bg-slate-950 text-slate-300 dark:text-slate-400 h-screen sticky top-0 border-r border-slate-700/50 dark:border-slate-800"
         aria-label={t("aria.mainNav")}
@@ -205,7 +192,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      <MobileBottomBar isActive={isActive} groupBase={groupBase} />
+      <MobileBottomBar isActive={isActive} />
     </>
   );
 }

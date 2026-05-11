@@ -42,7 +42,7 @@ services:
       celery -A app.tasks.celery_app worker
       --loglevel=INFO
       --logfile=/logs/celery.log
-      -Q ml,notifications,default
+      -Q ml,notifications,default,v2
     depends_on:
       - redis
     healthcheck:

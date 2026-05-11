@@ -1,26 +1,26 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../../services/api";
 import { useTranslation } from "react-i18next";
 
+import { adminApi } from "../../api/v2/admin";
+
 function StatCard({ label, value, color, link, urgent }) {
-  const { t } = useTranslation("admin");
-  const content = (
+  const inner = (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 ${
-        urgent ? "border-red-300 dark:border-red-900 shadow-sm shadow-red-100 dark:shadow-red-900/20" : ""
+      className={`rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 ${
+        urgent ? "border-amber-300 dark:border-amber-800" : ""
       }`}
     >
       <p className="text-slate-400 dark:text-slate-500 text-xs mb-1">{label}</p>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
       {urgent && (
-        <p className="text-xs text-red-500 mt-1 font-medium">
-          {t("dashboard.requiresAttention")}
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 font-medium">
+          Wymaga uwagi
         </p>
       )}
     </div>
   );
-  return link ? <Link to={link}>{content}</Link> : content;
+  return link ? <Link to={link} className="block hover:opacity-95 transition">{inner}</Link> : inner;
 }
 
 export default function AdminDashboard() {
@@ -30,82 +30,79 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      api.get("/admin/reports/stats"),
-      api.get("/admin/pipeline/status").catch(() => ({ data: [] })),
-    ])
-      .then(([statsRes, pipelineRes]) => {
-        setStats({
-          reports: statsRes.data,
-          pipeline: Array.isArray(pipelineRes.data) ? pipelineRes.data[0] ?? null : null,
-        });
-      })
-      .catch(() => setStats({ reports: {}, pipeline: null }))
+    adminApi
+      .stats()
+      .then(setStats)
+      .catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-slate-400 dark:text-slate-500">{t("dashboard.loading")}</p>;
+  if (loading) {
+    return <p className="text-slate-400 dark:text-slate-500">{t("v2monitor.loading")}</p>;
+  }
 
-  const { reports = {}, pipeline } = stats || {};
+  const s = stats;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">
-        {t("dashboard.title")}
-      </h1>
+      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">{t("v2monitor.title")}</h1>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">{t("v2monitor.subtitle")}</p>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard
-          label={t("dashboard.pendingReports")}
-          value={reports.pending ?? 0}
-          color="text-red-600"
-          link="/admin/reports"
-          urgent={(reports.pending ?? 0) > 0}
-        />
-        <StatCard
-          label={t("dashboard.reviewed")}
-          value={reports.reviewed ?? 0}
-          color="text-emerald-600"
-        />
-        <StatCard
-          label={t("dashboard.totalReports")}
-          value={reports.total ?? 0}
-          color="text-slate-600"
-        />
-        <StatCard
-          label={t("dashboard.lastRetrain")}
-          value={
-            pipeline
-              ? t("dashboard.groupsCount", { count: pipeline.clusters_found })
-              : t("dashboard.noData")
-          }
-          color="text-zebra-600"
-        />
-      </div>
+      {!s && (
+        <p className="text-red-500 text-sm">{t("v2monitor.loadFailed")}</p>
+      )}
 
-      {pipeline && (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-3">
-            {t("dashboard.lastPipeline")}
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-            {[
-              { label: t("dashboard.profiles"), value: pipeline.profiles_count },
-              { label: t("dashboard.clusters"), value: pipeline.clusters_found },
-              { label: t("dashboard.noise"), value: pipeline.noise_count },
-              { label: t("dashboard.reassigned"), value: pipeline.reassigned },
-            ].map((item) => (
-              <div key={item.label} className="bg-slate-50 dark:bg-slate-900/90 rounded-xl p-3">
-                <p className="text-slate-400 dark:text-slate-500 text-xs">{item.label}</p>
-                <p className="font-bold text-slate-800 dark:text-slate-100 text-lg">{item.value}</p>
-              </div>
-            ))}
+      {s && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <StatCard label={t("v2monitor.usersTotal")} value={s.users_total} color="text-slate-700 dark:text-slate-200" />
+            <StatCard label={t("v2monitor.usersActive")} value={s.users_active} color="text-emerald-600" />
+            <StatCard
+              label={t("v2monitor.postsPublished")}
+              value={s.posts_published}
+              color="text-slate-700 dark:text-slate-200"
+            />
+            <StatCard
+              label={t("v2monitor.postsNoEmbed")}
+              value={s.posts_without_embedding}
+              color="text-amber-600"
+              link="/admin/content"
+              urgent={s.posts_without_embedding > 0}
+            />
           </div>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-3">
-            {new Date(pipeline.run_at).toLocaleString(locale)} · {pipeline.duration_ms}ms
-            · {t("dashboard.status")}: {pipeline.status}
-          </p>
-        </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <StatCard label={t("v2monitor.lensesTotal")} value={s.lenses_total} color="text-slate-700 dark:text-slate-200" />
+            <StatCard label={t("v2monitor.lensesActive")} value={s.lenses_active} color="text-teal-600" />
+            <StatCard
+              label={t("v2monitor.lensesNoEmbed")}
+              value={s.lenses_without_embedding}
+              color="text-amber-600"
+              link="/admin/lenses"
+              urgent={s.lenses_without_embedding > 0}
+            />
+            <StatCard
+              label={t("v2monitor.proposalsPending")}
+              value={s.proposals_pending}
+              color="text-purple-600"
+              link="/admin/proposals"
+              urgent={s.proposals_pending > 0}
+            />
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 sm:p-5 text-sm text-slate-600 dark:text-slate-300 space-y-2">
+            <p>
+              <span className="font-medium text-slate-800 dark:text-slate-100">{t("v2monitor.lastOrphanet")}:</span>{" "}
+              {s.last_orphanet_sync
+                ? new Date(s.last_orphanet_sync).toLocaleString(locale)
+                : "—"}
+            </p>
+            <p>
+              <span className="font-medium text-slate-800 dark:text-slate-100">{t("v2monitor.hpoVersion")}:</span>{" "}
+              {s.last_hpo_sync || "—"}
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

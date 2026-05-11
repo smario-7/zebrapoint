@@ -1,6 +1,9 @@
 import axios from "axios";
 import toast from "react-hot-toast";
 
+/** Prefiks routera auth zgodny z `app.api.v2.auth`. */
+export const API_V2_AUTH_BASE = "/api/v2/auth";
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
   headers: { "Content-Type": "application/json" },
@@ -25,7 +28,10 @@ api.interceptors.response.use(
     const reqUrl = error.config?.url || "";
 
     if (status === 401) {
-      if (!reqUrl.includes("/auth/me") && !reqUrl.includes("/auth/login")) {
+      const authProbe =
+        reqUrl.includes(`${API_V2_AUTH_BASE}/me`) ||
+        reqUrl.includes(`${API_V2_AUTH_BASE}/login`);
+      if (!authProbe) {
         window.dispatchEvent(new CustomEvent("zp:unauthorized"));
       }
       return Promise.reject(error);

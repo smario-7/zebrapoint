@@ -25,7 +25,8 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     const result = await login(data.email, data.password);
     if (result.success) {
-      navigate("/dashboard");
+      const u = useAuthStore.getState().user;
+      navigate(u?.onboarding_completed === false ? "/onboarding" : "/dashboard");
     }
   };
 

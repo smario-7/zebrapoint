@@ -1,0 +1,4 @@
+* text=auto
+
+# ingnorowanie notebook przy wykrywaniu jezyka programowania
+*.ipynb linguist-detectable=false

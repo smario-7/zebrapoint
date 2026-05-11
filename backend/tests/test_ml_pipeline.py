@@ -2,11 +2,16 @@
 Testy ML pipeline (Sprint 7): group_characteristics, group_naming,
 should_retrain, run_pipeline. Używają mocków dla bazy i HDBSCAN.
 """
+import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Endpointy v1 usunięte z main — backend v2 (zobacz tests/v2/)."
+)
+
 import uuid
 from unittest.mock import MagicMock, patch
 
 import numpy as np
-import pytest
 
 from app.services.group_characteristics import (
     extract_keywords,

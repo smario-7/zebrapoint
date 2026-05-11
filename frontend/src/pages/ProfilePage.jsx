@@ -10,7 +10,7 @@ import Avatar from "../components/ui/Avatar";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import NickInput from "../components/auth/NickInput";
-import api from "../services/api";
+import api, { API_V2_AUTH_BASE } from "../services/api";
 import { useProfile } from "../hooks/useProfile";
 import { SkeletonCard } from "../components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
@@ -86,7 +86,7 @@ export default function ProfilePage() {
     if (!parsed.success) return;
     setNameSaving(true);
     try {
-      await api.patch("/auth/me", { display_name: parsed.data.display_name });
+      await api.patch(`${API_V2_AUTH_BASE}/me`, { username: parsed.data.display_name });
       await fetchMe();
       setEditingName(false);
       setNickValue(user?.display_name ?? "");
@@ -106,7 +106,7 @@ export default function ProfilePage() {
 
   const onChangePassword = async (data) => {
     try {
-      await api.patch("/auth/me/password", {
+      await api.patch(`${API_V2_AUTH_BASE}/me/password`, {
         current_password: data.current_password,
         new_password: data.new_password,
       });
