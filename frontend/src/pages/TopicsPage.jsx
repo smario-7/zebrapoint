@@ -162,7 +162,7 @@ export default function TopicsPage() {
                 Opisz, czego szukasz
               </label>
               <textarea
-                className="w-full rounded-xl border border-[var(--zp-app-border)] bg-white dark:bg-slate-900 px-3 py-2 text-sm min-h-[100px]"
+                className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm min-h-[100px] text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Np. wsparcie przy diagnostyce rzadkiej choroby neurologicznej..."
@@ -174,7 +174,7 @@ export default function TopicsPage() {
                   Liczba osób
                 </label>
                 <select
-                  className="rounded-xl border border-[var(--zp-app-border)] bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                  className="rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)] focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400"
                   value={targetCount}
                   onChange={(e) => setTargetCount(Number(e.target.value))}
                 >
@@ -185,7 +185,7 @@ export default function TopicsPage() {
                   ))}
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-[var(--zp-app-text-primary)] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={includeLocation}

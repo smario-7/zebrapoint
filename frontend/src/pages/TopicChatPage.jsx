@@ -189,7 +189,7 @@ export default function TopicChatPage() {
         {detail?.status === "active" && (
           <form onSubmit={sendMessage} className="flex flex-col sm:flex-row gap-2">
             <textarea
-              className="flex-1 rounded-xl border border-[var(--zp-app-border)] bg-white dark:bg-slate-900 px-3 py-2 text-sm min-h-[80px]"
+              className="flex-1 rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm min-h-[80px] text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] focus:outline-none focus:ring-2 focus:ring-zebra-500 dark:focus:ring-teal-400"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Napisz wiadomość…"
