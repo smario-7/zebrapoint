@@ -3,12 +3,14 @@ Router auth v2: rejestracja, logowanie, odświeżanie tokenu, profil.
 """
 import logging
 import random
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from redis.asyncio import Redis
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.auth.jwt import (
     create_access_token,
@@ -32,7 +34,12 @@ from app.schemas.v2.auth import (
     RegisterRequest,
     UpdatePasswordRequest,
 )
-from app.schemas.v2.user import UpdateProfileRequest, UserOut
+from app.schemas.v2.user import (
+    HealthProfileUpdate,
+    UpdateProfileRequest,
+    UserOut,
+    user_to_user_out,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +47,18 @@ router = APIRouter(prefix="/api/v2/auth", tags=["Auth v2"])
 
 _NICK_MIN = 3
 _NICK_MAX = 30
+
+
+async def _load_user_for_user_out(db: AsyncSession, user_id: uuid.UUID) -> User:
+    result = await db.execute(
+        select(User)
+        .where(User.id == user_id)
+        .options(
+            selectinload(User.hpo_profile).joinedload(UserHpoProfile.hpo_term),
+            joinedload(User.orpha_disease),
+        )
+    )
+    return result.scalar_one()
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
@@ -128,7 +147,8 @@ async def register(
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    return UserOut.model_validate(user)
+    loaded = await _load_user_for_user_out(db, user.id)
+    return user_to_user_out(loaded)
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -170,7 +190,8 @@ async def login(
         )
 
     _set_auth_cookies(response, access_token, refresh_token)
-    return LoginResponse(user=UserOut.model_validate(user))
+    loaded = await _load_user_for_user_out(db, user.id)
+    return LoginResponse(user=user_to_user_out(loaded))
 
 
 @router.post("/refresh")
@@ -231,8 +252,12 @@ async def logout(
 
 
 @router.get("/me", response_model=UserOut)
-async def get_me(current_user: User = Depends(get_current_active_user)):
-    return UserOut.model_validate(current_user)
+async def get_me(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    loaded = await _load_user_for_user_out(db, current_user.id)
+    return user_to_user_out(loaded)
 
 
 @router.patch("/me/password")
@@ -276,9 +301,6 @@ async def patch_me(
             )
         current_user.username = data.username
 
-    if data.symptom_description is not None:
-        current_user.symptom_description = data.symptom_description
-
     if data.location_city is not None:
         current_user.location_city = data.location_city
     if data.location_country is not None:
@@ -289,8 +311,76 @@ async def patch_me(
         current_user.onboarding_completed = data.onboarding_completed
 
     await db.commit()
-    await db.refresh(current_user)
-    return UserOut.model_validate(current_user)
+    loaded = await _load_user_for_user_out(db, current_user.id)
+    return user_to_user_out(loaded)
+
+
+@router.patch("/me/health-profile", response_model=UserOut)
+async def update_health_profile(
+    data: HealthProfileUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not current_user.onboarding_completed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Najpierw dokończ konfigurację profilu (onboarding).",
+        )
+
+    if data.diagnosis_confirmed and data.orpha_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Przy potwierdzonej diagnozie wymagane jest wybranie choroby z katalogu Orphanet.",
+        )
+
+    if data.hpo_ids:
+        r = await db.scalars(select(HpoTerm.hpo_id).where(HpoTerm.hpo_id.in_(data.hpo_ids)))
+        found = set(r.all())
+        missing = [h for h in data.hpo_ids if h not in found]
+        if missing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Nieznane terminy HPO: {', '.join(missing[:10])}",
+            )
+
+    if data.orpha_id is not None:
+        r = await db.execute(select(OrphaDisease.orpha_id).where(OrphaDisease.orpha_id == data.orpha_id))
+        if r.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Nieznana choroba Orphanet.",
+            )
+
+    now = datetime.now(timezone.utc)
+    await db.execute(delete(UserHpoProfile).where(UserHpoProfile.user_id == current_user.id))
+    for hpo_id in data.hpo_ids:
+        db.add(
+            UserHpoProfile(
+                user_id=current_user.id,
+                hpo_id=hpo_id,
+                confidence=1.0,
+                source="profile_edit",
+                created_at=now,
+            )
+        )
+
+    current_user.symptom_description = data.symptom_description
+    current_user.diagnosis_confirmed = data.diagnosis_confirmed
+    current_user.orpha_id = data.orpha_id if data.diagnosis_confirmed else None
+    current_user.consent_searchable_info = data.consent_searchable_info
+    current_user.searchable = data.searchable
+    if data.location_city is not None:
+        current_user.location_city = data.location_city.strip() or None
+    current_user.location_country = data.location_country or "PL"
+
+    await db.commit()
+    loaded = await _load_user_for_user_out(db, current_user.id)
+
+    from app.workers.v2.scoring_tasks import compute_user_vectors
+
+    compute_user_vectors.delay(str(current_user.id))
+
+    return user_to_user_out(loaded)
 
 
 @router.post("/onboarding", response_model=UserOut)
@@ -356,7 +446,8 @@ async def complete_onboarding(
 
     compute_user_vectors.delay(str(current_user.id))
 
-    return UserOut.model_validate(current_user)
+    loaded = await _load_user_for_user_out(db, current_user.id)
+    return user_to_user_out(loaded)
 
 
 @router.get("/orphanet/search", response_model=list[OrphaSearchResult])

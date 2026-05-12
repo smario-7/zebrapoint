@@ -57,6 +57,9 @@ class User(Base, TimestampMixin):
     hpo_profile: Mapped[list["UserHpoProfile"]] = relationship(  # noqa: F821
         "UserHpoProfile", back_populates="user", lazy="selectin"
     )
+    orpha_disease: Mapped["OrphaDisease | None"] = relationship(  # noqa: F821
+        "OrphaDisease", back_populates="users", foreign_keys="User.orpha_id"
+    )
     posts: Mapped[list["Post"]] = relationship("Post", back_populates="author")  # noqa: F821
     lens_scores: Mapped[list["UserLensScore"]] = relationship(  # noqa: F821
         "UserLensScore", back_populates="user"
