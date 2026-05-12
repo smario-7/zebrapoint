@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import { lensesApi } from "../api/v2/lenses";
-import { postsApi } from "../api/v2/posts";
 import AppShell from "../components/layout/AppShell";
 import { LensCard } from "../components/v2/LensCard";
 import { MatchBadge } from "../components/v2/MatchBadge";
@@ -75,16 +75,15 @@ function LensPostsList({ lens, onOpenPost }) {
 }
 
 export default function Lenses() {
+  const location = useLocation();
   const [filter, setFilter] = useState("all");
-  const [lenses, setLenses] = useState([]);
-  const [loadingLenses, setLoadingLenses] = useState(true);
+  const [lenses, setLenses] = useState(null);
   const [selectedLens, setSelectedLens] = useState(null);
   const [rightView, setRightView] = useState("posts");
   const [selectedPost, setSelectedPost] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingLenses(true);
     lensesApi
       .list(filter, 80, 0)
       .then((rows) => {
@@ -95,9 +94,6 @@ export default function Lenses() {
           toast.error(e.message || "Nie udało się wczytać soczewek");
           setLenses([]);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingLenses(false);
       });
     return () => {
       cancelled = true;
@@ -105,12 +101,26 @@ export default function Lenses() {
   }, [filter]);
 
   useEffect(() => {
-    if (selectedLens && !lenses.some((l) => l.id === selectedLens.id)) {
+    if (lenses === null || !selectedLens) return;
+    if (lenses.some((l) => l.id === selectedLens.id)) return;
+    queueMicrotask(() => {
       setSelectedLens(null);
       setSelectedPost(null);
       setRightView("posts");
-    }
+    });
   }, [lenses, selectedLens]);
+
+  useEffect(() => {
+    const lensId = location.state?.lensId;
+    if (!lensId || lenses === null || lenses.length === 0) return;
+    const found = lenses.find((l) => String(l.id) === String(lensId));
+    if (!found) return;
+    queueMicrotask(() => {
+      setSelectedLens(found);
+      setRightView("posts");
+      setSelectedPost(null);
+    });
+  }, [location.state, lenses]);
 
   function selectLens(lens) {
     setSelectedLens(lens);
@@ -141,17 +151,20 @@ export default function Lenses() {
                   size="sm"
                   type="button"
                   className="!text-xs !px-2 !py-1 !h-auto"
-                  onClick={() => setFilter(f.id)}
+                  onClick={() => {
+                    setFilter(f.id);
+                    setLenses(null);
+                  }}
                 >
                   {f.label}
                 </Button>
               ))}
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto space-y-2 pr-1">
-              {loadingLenses && (
+              {lenses === null && (
                 <p className="text-xs text-[var(--zp-app-text-muted)] p-2">Ładowanie…</p>
               )}
-              {!loadingLenses &&
+              {lenses !== null &&
                 lenses.map((lens) => (
                   <LensCard
                     key={lens.id}

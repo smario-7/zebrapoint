@@ -4,8 +4,8 @@ import useBootstrapStore from "../store/bootstrapStore";
 import i18n from "../i18n";
 
 /**
- * Hook do listy konwersacji DM.
- * Zliczanie nieprzeczytanych jest globalnie w `bootstrapStore` (cache/polling).
+ * Lista „konwersacji” w UI wiadomości — w v2 to czaty tematyczne (GET /api/v2/topics).
+ * Pola mapujemy do kształtu oczekiwanego przez DmConversationsPanel (nick, podgląd, czas).
  */
 export function useConversations() {
   const [conversations, setConversations] = useState([]);
@@ -17,8 +17,16 @@ export function useConversations() {
     setLoading(true);
     setError(null);
     try {
-      const convRes = await api.get("/dm/conversations");
-      setConversations(convRes.data ?? []);
+      const { data } = await api.get("/api/v2/topics");
+      const rows = Array.isArray(data) ? data : [];
+      const mapped = rows.map((c) => ({
+        id: c.id,
+        other_user_nick:
+          (c.query_text && String(c.query_text).slice(0, 48)) || "Mój temat",
+        last_message_at: c.created_at,
+        last_message_text: `${c.member_count ?? 0} w czacie · ${c.pending_count ?? 0} zaproszeń`,
+      }));
+      setConversations(mapped);
     } catch {
       setError(i18n.t("hooks.conversationsLoadError", { ns: "app" }));
       setConversations([]);

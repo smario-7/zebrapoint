@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import api, { API_V2_AUTH_BASE } from "../services/api";
 import useAuthStore from "../store/authStore";
 import Button from "../components/ui/Button";
+import HpoSearch from "../components/profile/HpoSearch";
+import OrphaSearch from "../components/profile/OrphaSearch";
 
 const STEPS = ["Zgody", "Objawy + HPO", "Diagnoza + Orphanet", "Wyszukiwanie", "Lokalizacja"];
 
@@ -20,27 +22,6 @@ const initialForm = () => ({
   location_city: "",
   location_country: "PL",
 });
-
-function useDebouncedCallback(fn, delay) {
-  const tRef = useRef(null);
-  const cb = useCallback(
-    (...args) => {
-      if (tRef.current) clearTimeout(tRef.current);
-      tRef.current = setTimeout(() => {
-        tRef.current = null;
-        fn(...args);
-      }, delay);
-    },
-    [fn, delay]
-  );
-  useEffect(
-    () => () => {
-      if (tRef.current) clearTimeout(tRef.current);
-    },
-    []
-  );
-  return cb;
-}
 
 function StepConsents({ data, onChange }) {
   return (
@@ -74,48 +55,6 @@ function StepConsents({ data, onChange }) {
 }
 
 function StepSymptoms({ data, onChange }) {
-  const [q, setQ] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const runSearch = useCallback(async (query) => {
-    const t = query.trim();
-    if (t.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data: rows } = await api.get("/api/v2/hpo/search", { params: { q: t } });
-      setSuggestions(rows || []);
-    } catch {
-      setSuggestions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const debounced = useDebouncedCallback(runSearch, 320);
-
-  useEffect(() => {
-    debounced(q);
-  }, [q, debounced]);
-
-  function addTerm(term) {
-    if (data.hpo_terms.some((x) => x.hpo_id === term.hpo_id)) return;
-    if (data.hpo_terms.length >= 50) {
-      toast.error("Możesz wybrać maksymalnie 50 terminów HPO");
-      return;
-    }
-    onChange({ ...data, hpo_terms: [...data.hpo_terms, term] });
-    setQ("");
-    setSuggestions([]);
-  }
-
-  function removeTerm(id) {
-    onChange({ ...data, hpo_terms: data.hpo_terms.filter((x) => x.hpo_id !== id) });
-  }
-
   return (
     <div className="space-y-4 text-sm">
       <div>
@@ -128,98 +67,16 @@ function StepSymptoms({ data, onChange }) {
           maxLength={20000}
         />
       </div>
-      <div>
-        <label className="block text-[var(--zp-app-text-muted)] mb-1">
-          Wyszukaj terminy HPO (min. 2 znaki)
-        </label>
-        <input
-          type="text"
-          className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-card)] px-3 py-2 text-[var(--zp-app-text-primary)]"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="np. hipotonia"
-        />
-        {loading && <p className="text-xs text-[var(--zp-app-text-muted)] mt-1">Szukam…</p>}
-        {suggestions.length > 0 && (
-          <ul className="mt-2 border border-[var(--zp-app-border)] rounded-xl divide-y divide-[var(--zp-app-border)] max-h-48 overflow-y-auto bg-[var(--zp-app-card)]">
-            {suggestions.map((row) => (
-              <li key={row.hpo_id}>
-                <button
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--zp-app-accent-bg)]"
-                  onClick={() => addTerm(row)}
-                >
-                  <span className="font-mono text-xs text-[var(--zp-app-text-muted)]">{row.hpo_id}</span>{" "}
-                  {row.label_pl || row.label_en}
-                  {row.label_pl && row.label_en && row.label_pl !== row.label_en && (
-                    <span className="text-[var(--zp-app-text-muted)]"> — {row.label_en}</span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      {data.hpo_terms.length > 0 && (
-        <div>
-          <p className="text-xs text-[var(--zp-app-text-muted)] mb-2">Wybrane terminy:</p>
-          <div className="flex flex-wrap gap-2">
-            {data.hpo_terms.map((t) => (
-              <button
-                key={t.hpo_id}
-                type="button"
-                onClick={() => removeTerm(t.hpo_id)}
-                className="inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-1 text-xs text-slate-800 dark:text-slate-100"
-              >
-                {t.label_pl || t.label_en}
-                <span aria-hidden>×</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <HpoSearch
+        terms={data.hpo_terms}
+        onTermsChange={(hpo_terms) => onChange({ ...data, hpo_terms })}
+        maxItems={50}
+      />
     </div>
   );
 }
 
 function StepDiagnosis({ data, onChange }) {
-  const [q, setQ] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const runSearch = useCallback(async (query) => {
-    const t = query.trim();
-    if (t.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const { data: rows } = await api.get(`${API_V2_AUTH_BASE}/orphanet/search`, { params: { q: t } });
-      setSuggestions(rows || []);
-    } catch {
-      setSuggestions([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const debounced = useDebouncedCallback(runSearch, 320);
-  useEffect(() => {
-    debounced(q);
-  }, [q, debounced]);
-
-  function pick(row) {
-    onChange({
-      ...data,
-      diagnosis_confirmed: true,
-      orpha_id: row.orpha_id,
-      orpha_label: row.name_pl || row.name_en,
-    });
-    setQ("");
-    setSuggestions([]);
-  }
-
   return (
     <div className="space-y-4 text-sm text-[var(--zp-app-text-primary)]">
       <p className="text-[var(--zp-app-text-muted)]">
@@ -255,53 +112,19 @@ function StepDiagnosis({ data, onChange }) {
           Mam potwierdzoną diagnozę — wyszukam chorobę
         </label>
       </div>
-      {data.diagnosis_confirmed && (
-        <>
-          <div>
-            <label className="block text-[var(--zp-app-text-muted)] mb-1">Szukaj choroby</label>
-            <input
-              type="text"
-              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-card)] px-3 py-2"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="nazwa lub kod ORPHA"
-            />
-            {loading && <p className="text-xs text-[var(--zp-app-text-muted)] mt-1">Szukam…</p>}
-            {suggestions.length > 0 && (
-              <ul className="mt-2 border border-[var(--zp-app-border)] rounded-xl divide-y max-h-48 overflow-y-auto bg-[var(--zp-app-card)]">
-                {suggestions.map((row) => (
-                  <li key={row.orpha_id}>
-                    <button
-                      type="button"
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-[var(--zp-app-accent-bg)]"
-                      onClick={() => pick(row)}
-                    >
-                      {row.name_pl || row.name_en}
-                      <span className="text-xs text-[var(--zp-app-text-muted)] ml-2">
-                        ORPHA:{row.orpha_id}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          {data.orpha_id != null && (
-            <p className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40 px-3 py-2 text-sm">
-              Wybrano: <strong>{data.orpha_label}</strong> (ORPHA:{data.orpha_id})
-              <button
-                type="button"
-                className="ml-2 text-blue-600 dark:text-teal-400 text-xs underline"
-                onClick={() =>
-                  onChange({ ...data, orpha_id: null, orpha_label: "", diagnosis_confirmed: true })
-                }
-              >
-                Zmień
-              </button>
-            </p>
-          )}
-        </>
-      )}
+      <OrphaSearch
+        value={data.orpha_id}
+        label={data.orpha_label}
+        diagnosisConfirmed={data.diagnosis_confirmed}
+        onChange={(id, name) =>
+          onChange({
+            ...data,
+            orpha_id: id,
+            orpha_label: name ?? "",
+            diagnosis_confirmed: id != null ? true : data.diagnosis_confirmed,
+          })
+        }
+      />
     </div>
   );
 }

@@ -26,6 +26,12 @@
   "groups": {
     "title": "Twoje grupy",
     "subtitle": "Wybierz grupę lub dołącz do nowej",
+    "v2PageSubtitle": "Opis objawów i soczewki dopasowane w wersji 2 aplikacji (zamiast grup).",
+    "symptomsSection": "Twój opis objawów",
+    "lensesMatched": "Soczewki dopasowane do Ciebie",
+    "lensesHint": "Lista aktualizuje się po zapisaniu opisu i zadaniach w tle (wektory, scoring).",
+    "allLensesLink": "Wszystkie soczewki →",
+    "noLensesYet": "Brak soczewek do wyświetlenia — ukończ onboarding lub poczekaj na przeliczenie dopasowań.",
     "createGroup": "Utwórz grupę",
     "createGroupSoon": "Tworzenie grup — wkrótce",
     "searchPlaceholder": "Szukaj grup…",
@@ -74,10 +80,11 @@
   },
   "groupManagementHooks": {
     "loadMatchesError": "Nie udało się pobrać dopasowań",
-    "updateDescSuccess": "Opis zaktualizowany — sprawdź nowe dopasowania",
+    "updateDescSuccess": "Opis zapisany — zostanie uwzględniony przy dopasowaniu soczewek.",
     "updateDescError": "Błąd aktualizacji opisu",
     "changeGroupSuccess": "Przeniesiono do grupy „{{name}}\"! 🎉",
-    "changeGroupError": "Błąd zmiany grupy"
+    "changeGroupError": "Błąd zmiany grupy",
+    "changeGroupV2Notice": "Soczewki są przypisywane automatycznie na podstawie Twojego opisu."
   },
   "hooks": {
     "membersLoadError": "Nie udało się pobrać listy członków.",
@@ -127,19 +134,14 @@
     "creatingGroup": "Tworzymy dla Ciebie nową grupę!",
     "foundGroup": "Znaleziono Twoją grupę!",
     "similarity": "Podobieństwo: {{percent}}%",
-    "redirecting": "Przekierowuję do czatu grupowego..."
-    ,
+    "descriptionSaved": "Opis zapisany!",
+    "redirecting": "Za chwilę przekierujemy Cię na pulpit…",
     "submitError": "Wystąpił błąd. Spróbuj ponownie."
   },
   "profile": {
     "title": "Mój Profil",
     "subtitle": "Zarządzaj kontem i preferencjami",
     "memberSince": "Członek od:",
-    "myGroup": "Moja grupa",
-    "members": "{{count}} członków",
-    "member": "{{count}} członek",
-    "noGroup": "Nie należysz jeszcze do żadnej grupy.",
-    "describeToJoin": "Opisz objawy, żeby dołączyć",
     "security": "Bezpieczeństwo",
     "account": "Konto",
     "nickLabel": "Pseudonim (nick)",
@@ -159,7 +161,25 @@
     "dangerZoneDesc": "Dezaktywacja konta jest trwała i nieodwracalna. Wszystkie Twoje dane zostaną usunięte.",
     "deactivateAccount": "Dezaktywuj konto (niebezpieczne)",
     "deactivateSoon": "Funkcja dezaktywacji konta będzie dostępna wkrótce.",
-    "changePasswordAction": "Zmień hasło"
+    "changePasswordAction": "Zmień hasło",
+    "sectionMedical": "Moje objawy i diagnoza",
+    "sectionMedicalHint": "Po zapisaniu soczewki przeliczają się w tle (kilka sekund).",
+    "symptomDescription": "Opis objawów",
+    "diagnosisToggle": "Mam potwierdzoną diagnozę w katalogu Orphanet",
+    "diagnosisOrphaRequired": "Przy potwierdzonej diagnozie wybierz chorobę z wyszukiwarki.",
+    "saveMedical": "Zapisz",
+    "sectionVisibility": "Widoczność i lokalizacja",
+    "searchableToggle": "Chcę, żeby inni mogli mnie znaleźć",
+    "consentSearchableToggle": "Zgoda na wykorzystanie profilu w wyszukiwaniu i dopasowaniach",
+    "locationCity": "Miasto",
+    "locationCountry": "Kraj (kod, np. PL)",
+    "saveVisibility": "Zapisz ustawienia",
+    "sectionConsents": "Zgody",
+    "consentDataProcessingReadonly": "Zgoda na przetwarzanie danych zdrowotnych (wymagana przy rejestracji)",
+    "consentDataProcessingNote": "Cofnięcie tej zgody jest możliwe wyłącznie przez usunięcie konta.",
+    "onboardingRequired": "Dokończ konfigurację profilu (onboarding), aby edytować dane medyczne tutaj.",
+    "healthSaveToast": "Dane zapisane. Soczewki zostaną odświeżone w tle.",
+    "healthSaveError": "Nie udało się zapisać profilu zdrowotnego."
   },
   "messages": {
     "title": "Wiadomości",

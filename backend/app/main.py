@@ -39,6 +39,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if settings.cookie_secure_flag():
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
         return response
 
 
@@ -48,6 +52,7 @@ async def lifespan(app: FastAPI):
 
     # ── STARTUP ──
     logger.info("ZebraPoint API — uruchamianie...")
+    settings.validate_environment_config()
     if settings.load_embeddings_on_startup:
         logger.info("Ładowanie modelu embeddingów (może potrwać do 30s)...")
         get_model()
@@ -62,13 +67,14 @@ async def lifespan(app: FastAPI):
     logger.info("Zamykanie aplikacji...")
 
 
+_is_development = settings.environment.lower() == "development"
 app = FastAPI(
     title="ZebraPoint API",
     description="API dla platformy wsparcia opiekunów osób z rzadkimi chorobami",
     version=APP_VERSION,
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if _is_development else None,
+    redoc_url="/redoc" if _is_development else None,
 )
 
 app.state.limiter = limiter

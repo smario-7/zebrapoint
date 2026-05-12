@@ -46,6 +46,21 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return float(np.dot(va, vb))
 
 
+def _has_vector(v: object) -> bool:
+    """
+    Czy wartość to niepusty wektor do użycia w scoringu.
+
+    Wektory z pgvector/asyncpg bywają numpy.ndarray — bool(ndarray) rzuca ValueError.
+    """
+    if v is None:
+        return False
+    if isinstance(v, np.ndarray):
+        return v.size > 0
+    if isinstance(v, (list, tuple, memoryview)):
+        return len(v) > 0
+    return False
+
+
 def _avg_vectors(vectors: list[list[float]]) -> list[float] | None:
     """Średnia z listy wektorów. Zwraca None dla pustej listy."""
     if not vectors:
@@ -83,11 +98,11 @@ def score_lens_for_user(
     breakdown: dict = {"type": lens_type}
 
     if lens_type == "diagnostic":
-        if user_diagnosis_vector and lens_embedding:
+        if _has_vector(user_diagnosis_vector) and _has_vector(lens_embedding):
             s = _cosine(user_diagnosis_vector, lens_embedding)
             breakdown.update({"method": "diagnosis_vector", "raw": round(s, 4)})
             score = s
-        elif user_hpo_vector and lens_embedding:
+        elif _has_vector(user_hpo_vector) and _has_vector(lens_embedding):
             s = _cosine(user_hpo_vector, lens_embedding) * _FALLBACK_MULTIPLIER
             breakdown.update({"method": "hpo_vector_fallback", "raw": round(s, 4)})
             score = s
@@ -96,11 +111,11 @@ def score_lens_for_user(
             breakdown["method"] = "no_vector"
 
     elif lens_type == "symptomatic":
-        if user_hpo_vector and lens_embedding:
+        if _has_vector(user_hpo_vector) and _has_vector(lens_embedding):
             s = _cosine(user_hpo_vector, lens_embedding)
             breakdown.update({"method": "hpo_vector", "raw": round(s, 4)})
             score = s
-        elif user_diagnosis_vector and lens_embedding:
+        elif _has_vector(user_diagnosis_vector) and _has_vector(lens_embedding):
             s = _cosine(user_diagnosis_vector, lens_embedding) * _FALLBACK_MULTIPLIER
             breakdown.update({"method": "diagnosis_vector_fallback", "raw": round(s, 4)})
             score = s
@@ -109,11 +124,11 @@ def score_lens_for_user(
             breakdown["method"] = "no_vector"
 
     elif lens_type == "topical":
-        if community_vector and user_post_vector:
+        if _has_vector(community_vector) and _has_vector(user_post_vector):
             s = _cosine(user_post_vector, community_vector)
             breakdown.update({"method": "community_vector", "raw": round(s, 4)})
             score = s
-        elif not community_vector:
+        elif not _has_vector(community_vector):
             score = _TOPICAL_NO_COMMUNITY
             breakdown["method"] = "no_community_default"
         else:

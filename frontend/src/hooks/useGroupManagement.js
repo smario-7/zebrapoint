@@ -1,107 +1,66 @@
-import { useState, useCallback, useRef } from "react";
-import api from "../services/api";
+import { useState, useCallback } from "react";
+import api, { API_V2_AUTH_BASE } from "../services/api";
 import toast from "react-hot-toast";
 import i18n from "../i18n";
-
-const CACHE_TTL_MS = 5 * 60 * 1000;
+import useBootstrapStore from "../store/bootstrapStore";
+import useAuthStore from "../store/authStore";
 
 /**
- * Hook zarządzający stanem widoku zarządzania grupą.
- * Odpowiada za: ładowanie TOP 3, aktualizację opisu, zmianę grupy.
+ * v2: brak grup — dopasowanie przez soczewki (Celery).
+ * Aktualizacja opisu objawów: PATCH /api/v2/auth/me/health-profile (pełny snapshot profilu).
  */
 export function useGroupManagement({ onGroupChanged } = {}) {
-  const [matches, setMatches] = useState([]);
-  const [loadingMatches, setLoadingMatches] = useState(false);
-  const [changingGroup, setChangingGroup] = useState(false);
+  const [matches] = useState([]);
+  const [loadingMatches] = useState(false);
+  const [changingGroup] = useState(false);
   const [updatingDesc, setUpdatingDesc] = useState(false);
-  const matchesCacheRef = useRef(null);
-  const cacheTimeRef = useRef(null);
 
-  const loadMatches = useCallback(async () => {
-    const now = Date.now();
-    if (
-      matchesCacheRef.current &&
-      cacheTimeRef.current &&
-      now - cacheTimeRef.current < CACHE_TTL_MS
-    ) {
-      setMatches(matchesCacheRef.current);
-      return;
-    }
-    setLoadingMatches(true);
-    try {
-      const { data } = await api.get("/symptoms/my-matches");
-      setMatches(data);
-      matchesCacheRef.current = data;
-      cacheTimeRef.current = now;
-    } catch (err) {
-      if (err.response?.status === 404) {
-        setMatches([]);
-      } else {
-        toast.error(
-          i18n.t("groupManagementHooks.loadMatchesError", { ns: "app" })
-        );
-      }
-    } finally {
-      setLoadingMatches(false);
-    }
-  }, []);
+  const loadMatches = useCallback(async () => {}, []);
 
-  const updateDescription = useCallback(async (newDescription) => {
-    setUpdatingDesc(true);
-    matchesCacheRef.current = null;
-    cacheTimeRef.current = null;
-    try {
-      const { data } = await api.patch("/symptoms/me", {
-        description: newDescription,
-      });
-      setMatches(data.matches);
-      toast.success("Opis zaktualizowany — sprawdź nowe dopasowania");
-      return true;
-    } catch (err) {
-      const msg =
-        err.response?.data?.detail ||
-        i18n.t("groupManagementHooks.updateDescError", { ns: "app" });
-      toast.error(Array.isArray(msg) ? msg[0]?.msg ?? msg : msg);
-      return false;
-    } finally {
-      setUpdatingDesc(false);
-    }
-  }, []);
-
-  const changeGroup = useCallback(
-    async (match, profileId) => {
-      if (changingGroup) return;
-      setChangingGroup(true);
+  const updateDescription = useCallback(
+    async (newDescription) => {
+      setUpdatingDesc(true);
       try {
-        const { data } = await api.post("/symptoms/choose-group", {
-          profile_id: profileId,
-          group_id: match.group_id,
-          score: match.score_pct / 100,
-        });
-        toast.success(
-          i18n.t("groupManagementHooks.changeGroupSuccess", {
-            ns: "app",
-            name: data.group_name,
-          })
-        );
-        matchesCacheRef.current = null;
-        cacheTimeRef.current = null;
-        setMatches([]);
-        if (onGroupChanged) {
-          await onGroupChanged(data);
+        await useBootstrapStore.getState().fetchIfNeeded({ force: true });
+        const u = useBootstrapStore.getState().user;
+        if (!u) {
+          toast.error(i18n.t("groupManagementHooks.updateDescError", { ns: "app" }));
+          return false;
         }
-        await loadMatches();
+        const payload = {
+          symptom_description: (newDescription || "").trim() || null,
+          hpo_ids: (u.hpo_profile || []).map((x) => x.hpo_id),
+          diagnosis_confirmed: !!u.diagnosis_confirmed,
+          orpha_id: u.diagnosis_confirmed ? u.orpha_id : null,
+          consent_searchable_info: !!u.consent_searchable_info,
+          searchable: !!u.searchable,
+          location_city: u.location_city ?? null,
+          location_country: u.location_country || "PL",
+        };
+        await api.patch(`${API_V2_AUTH_BASE}/me/health-profile`, payload);
+        await useAuthStore.getState().fetchMe();
+        await useBootstrapStore.getState().refresh();
+        toast.success(i18n.t("groupManagementHooks.updateDescSuccess", { ns: "app" }));
+        if (onGroupChanged) onGroupChanged();
+        return true;
       } catch (err) {
         const msg =
           err.response?.data?.detail ||
-          i18n.t("groupManagementHooks.changeGroupError", { ns: "app" });
+          i18n.t("groupManagementHooks.updateDescError", { ns: "app" });
         toast.error(Array.isArray(msg) ? msg[0]?.msg ?? msg : msg);
+        return false;
       } finally {
-        setChangingGroup(false);
+        setUpdatingDesc(false);
       }
     },
-    [changingGroup, onGroupChanged, loadMatches]
+    [onGroupChanged]
   );
+
+  const changeGroup = useCallback(async () => {
+    toast(
+      i18n.t("groupManagementHooks.changeGroupV2Notice", { ns: "app" })
+    );
+  }, []);
 
   return {
     matches,

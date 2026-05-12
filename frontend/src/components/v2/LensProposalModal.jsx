@@ -37,15 +37,15 @@ export default function LensProposalModal({ onClose }) {
       aria-labelledby="proposal-modal-title"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] shadow-xl">
+      <div className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] shadow-xl text-[var(--zp-app-text-primary)] [color-scheme:light] dark:[color-scheme:dark]">
         <div className="p-4 border-b border-[var(--zp-app-border)] flex items-center justify-between">
-          <h2 id="proposal-modal-title" className="font-semibold text-slate-900 dark:text-slate-100">
+          <h2 id="proposal-modal-title" className="font-semibold">
             Zaproponuj soczewkę
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-[var(--zp-app-text-muted)] hover:text-slate-900 dark:hover:text-white text-sm"
+            className="text-[var(--zp-app-text-muted)] hover:text-[var(--zp-app-text-primary)] text-sm"
           >
             Zamknij
           </button>
@@ -54,7 +54,7 @@ export default function LensProposalModal({ onClose }) {
           <div>
             <label className="block text-xs text-[var(--zp-app-text-muted)] mb-1">Nazwa tematu</label>
             <input
-              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] caret-[var(--zp-accent-primary)]"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -62,7 +62,7 @@ export default function LensProposalModal({ onClose }) {
           <div>
             <label className="block text-xs text-[var(--zp-app-text-muted)] mb-1">Typ</label>
             <select
-              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)]"
               value={type}
               onChange={(e) => setType(e.target.value)}
             >
@@ -73,7 +73,7 @@ export default function LensProposalModal({ onClose }) {
           <div>
             <label className="block text-xs text-[var(--zp-app-text-muted)] mb-1">Uzasadnienie</label>
             <textarea
-              className="w-full min-h-[120px] rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-2 text-sm"
+              className="w-full min-h-[120px] rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] caret-[var(--zp-accent-primary)]"
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
               placeholder="Dlaczego ta soczewka jest potrzebna społeczności?"

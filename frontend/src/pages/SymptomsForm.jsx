@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import api from "../services/api";
+import api, { API_V2_AUTH_BASE } from "../services/api";
 import useBootstrapStore from "../store/bootstrapStore";
 import AppShell from "../components/layout/AppShell";
 import { useTranslation } from "react-i18next";
@@ -37,22 +37,54 @@ export default function SymptomsForm() {
   const charCount = description.length;
   const isValid = charCount >= 100 && charCount <= 1000;
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await useBootstrapStore.getState().fetchIfNeeded();
+      } catch {
+        /* ignoruj */
+      }
+      if (cancelled) return;
+      const u = useBootstrapStore.getState().user;
+      if (u?.onboarding_completed) {
+        navigate("/dashboard", { replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
   const onSubmit = async (formData) => {
     setIsLoading(true);
     setApiError(null);
     try {
-      const { data } = await api.post("/symptoms/", formData);
+      await api.post(`${API_V2_AUTH_BASE}/onboarding`, {
+        symptom_description: formData.description,
+        consent_data_processing: true,
+        consent_searchable_info: false,
+        searchable: false,
+        diagnosis_confirmed: false,
+        hpo_ids: [],
+      });
       try {
         await useBootstrapStore.getState().refresh();
       } catch {
-        // Brak aktualizacji store nie blokuje dalszego kroku.
+        /* ignoruj */
       }
-      setMatchResult(data.match);
+      setMatchResult({ is_new: false, description_saved: true });
       setTimeout(() => {
-        navigate(`/groups/${data.match.group_id}`);
-      }, 2200);
+        navigate("/dashboard");
+      }, 1500);
     } catch (err) {
-      const msg = err.response?.data?.detail || t("symptoms.submitError");
+      const detail = err.response?.data?.detail;
+      const msg =
+        typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
+            ? detail[0]?.msg ?? t("symptoms.submitError")
+            : t("symptoms.submitError");
       setApiError(msg);
     } finally {
       setIsLoading(false);
@@ -64,24 +96,10 @@ export default function SymptomsForm() {
       <AppShell>
         <div className="min-h-[60vh] flex items-center justify-center px-4">
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-10 max-w-md w-full text-center">
-            <div className="text-6xl mb-4">
-              {matchResult.is_new ? "🌱" : "🦓"}
-            </div>
+            <div className="text-6xl mb-4">🦓</div>
             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-              {matchResult.is_new
-                ? t("symptoms.creatingGroup")
-                : t("symptoms.foundGroup")}
+              {t("symptoms.descriptionSaved")}
             </h2>
-            {!matchResult.is_new && (
-              <p className="text-zebra-600 dark:text-teal-400 font-medium mb-2">
-                {matchResult.group_name}
-              </p>
-            )}
-            {matchResult.score > 0 && (
-              <p className="text-slate-400 dark:text-slate-500 text-sm mb-4">
-                {t("symptoms.similarity", { percent: Math.round(matchResult.score * 100) })}
-              </p>
-            )}
             <p className="text-slate-500 dark:text-slate-400 text-sm">
               {t("symptoms.redirecting")}
             </p>

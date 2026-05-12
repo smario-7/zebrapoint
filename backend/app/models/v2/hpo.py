@@ -22,6 +22,10 @@ class HpoTerm(Base):
     source_version: Mapped[str] = mapped_column(Text, nullable=False)
     is_clinical: Mapped[bool | None] = mapped_column(Boolean, default=True)
 
+    user_profiles: Mapped[list["UserHpoProfile"]] = relationship(
+        "UserHpoProfile", back_populates="hpo_term"
+    )
+
 
 class OrphaDisease(Base):
     __tablename__ = "orpha_diseases"
@@ -34,6 +38,10 @@ class OrphaDisease(Base):
     source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    users: Mapped[list["User"]] = relationship(
+        "User", back_populates="orpha_disease", foreign_keys="User.orpha_id"
+    )
 
 
 class UserHpoProfile(Base):
@@ -55,3 +63,4 @@ class UserHpoProfile(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="hpo_profile")
+    hpo_term: Mapped["HpoTerm"] = relationship("HpoTerm", back_populates="user_profiles")

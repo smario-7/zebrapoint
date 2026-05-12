@@ -47,15 +47,15 @@ export default function PostModal({ post, onClose, onSaved }) {
       aria-labelledby="post-modal-title"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] shadow-xl max-h-[90dvh] flex flex-col">
+      <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-[var(--zp-app-card)] border border-[var(--zp-app-border)] shadow-xl max-h-[90dvh] flex flex-col text-[var(--zp-app-text-primary)] [color-scheme:light] dark:[color-scheme:dark]">
         <div className="p-4 border-b border-[var(--zp-app-border)] flex items-center justify-between">
-          <h2 id="post-modal-title" className="font-semibold text-slate-900 dark:text-slate-100">
+          <h2 id="post-modal-title" className="font-semibold">
             {post ? "Edycja posta" : "Nowy post"}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-[var(--zp-app-text-muted)] hover:text-slate-900 dark:hover:text-white text-sm"
+            className="text-[var(--zp-app-text-muted)] hover:text-[var(--zp-app-text-primary)] text-sm"
           >
             Zamknij
           </button>
@@ -64,7 +64,7 @@ export default function PostModal({ post, onClose, onSaved }) {
           <div>
             <label className="block text-xs text-[var(--zp-app-text-muted)] mb-1">Tytuł</label>
             <input
-              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-2 text-sm"
+              className="w-full rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] caret-[var(--zp-accent-primary)]"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={500}
@@ -73,7 +73,7 @@ export default function PostModal({ post, onClose, onSaved }) {
           <div>
             <label className="block text-xs text-[var(--zp-app-text-muted)] mb-1">Treść</label>
             <textarea
-              className="w-full min-h-[200px] rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-bg)] px-3 py-2 text-sm"
+              className="w-full min-h-[200px] rounded-xl border border-[var(--zp-app-border)] bg-[var(--zp-app-input-bg)] px-3 py-2 text-sm text-[var(--zp-app-text-primary)] placeholder:text-[var(--zp-app-text-muted)] caret-[var(--zp-accent-primary)]"
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />

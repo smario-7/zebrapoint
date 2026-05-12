@@ -86,7 +86,7 @@ async def _compute_for_user_async(user_id: str) -> None:
     from app.models.v2.matching import PostLensMatch
     from app.models.v2.post import Post
     from app.models.v2.user import User
-    from app.services.v2.user_lens_scoring_service import _avg_vectors, score_lens_for_user
+    from app.services.v2.user_lens_scoring_service import _avg_vectors, _has_vector, score_lens_for_user
 
     engine = create_async_engine(database_url, echo=False)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -130,7 +130,7 @@ async def _compute_for_user_async(user_id: str) -> None:
                     .where(User.post_vector.is_not(None))
                     .distinct()
                 )
-                vectors = [row.post_vector for row in result if row.post_vector]
+                vectors = [row.post_vector for row in result if _has_vector(row.post_vector)]
                 community_vectors[lens_id] = _avg_vectors(vectors)
 
             scores = []

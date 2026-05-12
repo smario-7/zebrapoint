@@ -102,6 +102,7 @@ export default function ConversationPage() {
             title={t("messages.title")}
             subtitle={null}
             className="w-full"
+            linkPrefix="/topics"
           />
         </aside>
 

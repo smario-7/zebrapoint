@@ -1,5 +1,5 @@
-import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AppShell from "../components/layout/AppShell";
 import { useTranslation } from "react-i18next";
 import ErrorMessage from "../components/ui/ErrorMessage";
@@ -7,34 +7,34 @@ import { SkeletonCard } from "../components/ui/Skeleton";
 import { useProfile } from "../hooks/useProfile";
 import { useGroupManagement } from "../hooks/useGroupManagement";
 import SymptomEditor from "../components/group/SymptomEditor";
-import GroupMatchMini from "../components/group/GroupMatchMini";
-import GroupDescriptionPopover from "../components/group/GroupDescriptionPopover";
+import { LensCard } from "../components/v2/LensCard";
+import { lensesApi } from "../api/v2/lenses";
 
 export default function GroupsPage() {
   const { t } = useTranslation("app");
+  const navigate = useNavigate();
 
-  const { profile, group, loading, error, refetch } = useProfile();
-  const {
-    matches,
-    loadingMatches,
-    changingGroup,
-    updatingDesc,
-    loadMatches,
-    updateDescription,
-    changeGroup,
-  } = useGroupManagement({ onGroupChanged: refetch });
+  const { profile, loading, error, refetch } = useProfile();
+  const { updatingDesc, updateDescription } = useGroupManagement({ onGroupChanged: refetch });
+
+  const [lenses, setLenses] = useState(null);
 
   useEffect(() => {
-    loadMatches();
-  }, [loadMatches]);
+    let cancelled = false;
+    lensesApi
+      .list("all", 50, 0)
+      .then((rows) => {
+        if (!cancelled) setLenses(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => {
+        if (!cancelled) setLenses([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const realMatches = useMemo(() => {
-    return matches.filter(
-      (m) => !m.is_new_group && m.group_id !== "__new__"
-    );
-  }, [matches]);
-
-  const accentColor = group?.accent_color || "#0d9488";
+  const loadingLenses = lenses === null;
 
   return (
     <AppShell>
@@ -42,12 +42,18 @@ export default function GroupsPage() {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              {t("groupDrawer.title")}
+              {t("groups.title")}
             </h1>
             <p className="text-sm text-[var(--zp-app-text-muted)] mt-1">
-              {t("groups.subtitle")}
+              {t("groups.v2PageSubtitle")}
             </p>
           </div>
+          <Link
+            to="/lenses"
+            className="text-sm font-semibold text-zebra-600 dark:text-teal-400 hover:underline shrink-0"
+          >
+            {t("groups.allLensesLink")}
+          </Link>
         </div>
 
         {error && <ErrorMessage message={error} onRetry={refetch} />}
@@ -58,118 +64,53 @@ export default function GroupsPage() {
             <SkeletonCard />
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-6">
             <div className="rounded-2xl border border-[var(--zp-app-border)] bg-[var(--zp-app-card)]">
               <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
                 <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
-                  {t("groupDrawer.currentGroup")}
+                  {t("groups.symptomsSection")}
                 </p>
-                {group ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-xl flex-shrink-0"
-                        style={{
-                          backgroundColor: `${accentColor}22`,
-                          border: `2px solid ${accentColor}44`,
-                        }}
-                      >
-                        <div
-                          className="w-full h-full rounded-xl opacity-60"
-                          style={{ backgroundColor: accentColor }}
-                        />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="font-bold text-slate-800 dark:text-slate-100">
-                            {group.name}
-                          </p>
-                          {group.ai_description && (
-                            <GroupDescriptionPopover
-                              description={group.ai_description}
-                            />
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">
-                          {group.symptom_category || t("groupDrawer.general")} ·{" "}
-                          {t("groupDrawer.members", {
-                            count: group.member_count ?? 0,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-400 dark:text-slate-500 italic">
-                    {t("groupDrawer.noGroup")}
-                  </p>
-                )}
-              </div>
-
-              <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
                 <SymptomEditor
                   description={profile?.description}
                   onSave={updateDescription}
                   saving={updatingDesc}
                 />
               </div>
+            </div>
 
-              <div className="px-6 py-5">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                    {t("groupDrawer.nearestGroups")}
-                  </p>
-                  {!loadingMatches && realMatches.length > 0 && (
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      {t("groupDrawer.basedOnDescription")}
-                    </p>
-                  )}
-                </div>
-
-                {loadingMatches ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <SkeletonCard key={i} />
-                    ))}
-                  </div>
-                ) : realMatches.length === 0 ? (
-                  <div className="text-center py-8 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-600/50">
-                    <p className="text-4xl mb-2">🔍</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                      {profile ? t("groupDrawer.noMatches") : t("groupDrawer.fillFormFirst")}
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                      {profile ? t("groupDrawer.noMatchesHint") : t("groupDrawer.fillFormHint")}
-                    </p>
-                    {!profile && (
-                      <Link
-                        to="/symptoms/new"
-                        className="inline-block mt-3 text-sm font-semibold text-zebra-600 dark:text-teal-400 hover:text-zebra-700 dark:hover:text-teal-300"
-                      >
-                        {t("groupDrawer.goToForm")}
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {realMatches.map((match) => (
-                      <GroupMatchMini
-                        key={match.group_id}
-                        match={match}
-                        isCurrentGroup={match.group_id === group?.id}
-                        isChanging={changingGroup}
-                        onSelect={(m) => changeGroup(m, profile?.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-600/40">
-                  <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-                    {t("groupDrawer.matchNote")}
-                  </p>
-                </div>
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  {t("groups.lensesMatched")}
+                </p>
               </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                {t("groups.lensesHint")}
+              </p>
+
+              {loadingLenses ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : lenses.length === 0 ? (
+                <div className="text-center py-8 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-600/50">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {t("groups.noLensesYet")}
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {lenses.map((lens) => (
+                    <LensCard
+                      key={lens.id}
+                      lens={lens}
+                      onClick={() => navigate("/lenses", { state: { lensId: lens.id } })}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -177,4 +118,3 @@ export default function GroupsPage() {
     </AppShell>
   );
 }
-
