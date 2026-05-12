@@ -33,6 +33,7 @@ import OnboardingGuard from "./components/OnboardingGuard";
 import AdminGuard     from "./components/AdminGuard";
 import AnimatedRoutes from "./components/motion/AnimatedRoutes";
 import RouteTransition from "./components/motion/RouteTransition";
+import MainAppLayout from "./components/layout/MainAppLayout";
 
 function withTransition(element) {
   return <RouteTransition>{element}</RouteTransition>;
@@ -80,19 +81,21 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<OnboardingGuard />}>
           <Route path="/onboarding" element={withTransition(<Onboarding />)} />
-          <Route path="/dashboard" element={withTransition(<Dashboard />)} />
-          <Route path="/groups" element={withTransition(<GroupsPage />)} />
-          <Route path="/profile" element={withTransition(<ProfilePage />)} />
-          <Route path="/symptoms/new" element={withTransition(<SymptomsForm />)} />
-          <Route path="/groups/:groupId" element={withTransition(<GroupPage />)} />
-          <Route path="/groups/:groupId/forum" element={withTransition(<ForumPage />)} />
-          <Route path="/groups/:groupId/posts/:postId" element={withTransition(<PostDetailPage />)} />
-          <Route path="/messages" element={withTransition(<MessagesPage />)} />
-          <Route path="/messages/:conversationId" element={withTransition(<ConversationPage />)} />
-          <Route path="/topics" element={withTransition(<TopicsPage />)} />
-          <Route path="/topics/:chatId" element={withTransition(<TopicChatPage />)} />
-          <Route path="/lenses" element={withTransition(<Lenses />)} />
-          <Route path="/my-posts" element={withTransition(<MyPosts />)} />
+          <Route element={<MainAppLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/groups" element={<GroupsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/symptoms/new" element={<SymptomsForm />} />
+            <Route path="/groups/:groupId" element={<GroupPage />} />
+            <Route path="/groups/:groupId/forum" element={<ForumPage />} />
+            <Route path="/groups/:groupId/posts/:postId" element={<PostDetailPage />} />
+            <Route path="/messages" element={<MessagesPage />} />
+            <Route path="/messages/:conversationId" element={<ConversationPage />} />
+            <Route path="/topics" element={<TopicsPage />} />
+            <Route path="/topics/:chatId" element={<TopicChatPage />} />
+            <Route path="/lenses" element={<Lenses />} />
+            <Route path="/my-posts" element={<MyPosts />} />
+          </Route>
         </Route>
       </Route>
 

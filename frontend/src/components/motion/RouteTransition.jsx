@@ -23,7 +23,12 @@ const pageVariants = {
   }),
 };
 
-export default function RouteTransition({ children }) {
+const layoutClass = {
+  page: "absolute inset-0 w-full bg-[var(--zp-app-bg)]",
+  outlet: "relative w-full flex-1 min-h-0 flex flex-col bg-[var(--zp-app-bg)]",
+};
+
+export default function RouteTransition({ children, variant = "page" }) {
   const reduced = useReducedMotion();
   const MotionDiv = motion.div;
 
@@ -34,7 +39,7 @@ export default function RouteTransition({ children }) {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="absolute inset-0 w-full bg-[var(--zp-app-bg)]"
+      className={layoutClass[variant] ?? layoutClass.page}
     >
       {children}
     </MotionDiv>
