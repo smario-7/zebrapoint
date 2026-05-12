@@ -434,7 +434,7 @@ async def complete_onboarding(
                 user_id=current_user.id,
                 hpo_id=hpo_id,
                 confidence=1.0,
-                source="onboarding",
+                source="manual",
                 created_at=now,
             )
         )
