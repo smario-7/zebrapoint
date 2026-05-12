@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,8 +12,6 @@ import NickInput from "../components/auth/NickInput";
 import HpoSearch from "../components/profile/HpoSearch";
 import OrphaSearch from "../components/profile/OrphaSearch";
 import api, { API_V2_AUTH_BASE } from "../services/api";
-import { useProfile } from "../hooks/useProfile";
-import { SkeletonCard } from "../components/ui/Skeleton";
 import { useTranslation } from "react-i18next";
 
 function createNameSchema(t) {
@@ -47,7 +44,6 @@ export default function ProfilePage() {
   const { t, i18n } = useTranslation(["app", "auth"]);
   const locale = i18n.language === "en" ? "en-US" : "pl-PL";
   const { user, fetchMe } = useAuthStore();
-  const { group, loading } = useProfile();
   const [editingName, setEditingName] = useState(false);
   const [editingPassword, setEditingPassword] = useState(false);
   const [nickValue, setNickValue] = useState(user?.display_name ?? "");
@@ -198,10 +194,10 @@ export default function ProfilePage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8">
-          {/* Lewa kolumna: dane użytkownika i grupa */}
+          {/* Lewa kolumna: podsumowanie konta */}
           <div className="space-y-4">
             <section className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-6">
-              <div className="flex flex-col items-center text-center mb-6">
+              <div className="flex flex-col items-center text-center">
                 <Avatar name={user?.display_name} size="lg" className="mb-4" />
                 <p className="font-semibold text-slate-800 dark:text-slate-100 text-lg">
                   {user?.display_name}
@@ -217,38 +213,6 @@ export default function ProfilePage() {
                     : "—"}
                 </p>
               </div>
-              <h2 className="font-semibold text-slate-700 dark:text-slate-300 mb-3 text-sm">
-                {t("profile.myGroup")}
-              </h2>
-              {loading ? (
-                <SkeletonCard />
-              ) : group ? (
-                <div>
-                  <Link
-                    to="/groups"
-                    className="text-zebra-600 dark:text-teal-400 font-medium hover:underline"
-                  >
-                    {group.name}
-                  </Link>
-                  <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
-                    {t(
-                      group.member_count === 1 ? "profile.member" : "profile.members",
-                      { count: group.member_count }
-                    )}
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-slate-400 dark:text-slate-500 text-sm mb-3">
-                    {t("profile.noGroup")}
-                  </p>
-                  <Link to="/symptoms/new">
-                    <Button variant="secondary" size="sm">
-                      {t("profile.describeToJoin")}
-                    </Button>
-                  </Link>
-                </div>
-              )}
             </section>
           </div>
 
