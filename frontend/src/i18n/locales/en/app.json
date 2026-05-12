@@ -167,7 +167,7 @@
     "symptomDescription": "Symptom description",
     "diagnosisToggle": "I have a confirmed diagnosis in the Orphanet catalogue",
     "diagnosisOrphaRequired": "With a confirmed diagnosis, pick a disease from the search.",
-    "saveMedical": "Save medical data",
+    "saveMedical": "Save",
     "sectionVisibility": "Visibility and location",
     "searchableToggle": "Let others find me in search",
     "consentSearchableToggle": "Consent to use my profile in search and matching",

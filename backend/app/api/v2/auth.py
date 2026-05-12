@@ -54,9 +54,10 @@ async def _load_user_for_user_out(db: AsyncSession, user_id: uuid.UUID) -> User:
         select(User)
         .where(User.id == user_id)
         .options(
-            selectinload(User.hpo_profile).joinedload(UserHpoProfile.hpo_term),
+            selectinload(User.hpo_profile).selectinload(UserHpoProfile.hpo_term),
             joinedload(User.orpha_disease),
         )
+        .execution_options(populate_existing=True)
     )
     return result.scalar_one()
 
@@ -359,7 +360,7 @@ async def update_health_profile(
                 user_id=current_user.id,
                 hpo_id=hpo_id,
                 confidence=1.0,
-                source="profile_edit",
+                source="manual",
                 created_at=now,
             )
         )

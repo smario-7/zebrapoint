@@ -63,10 +63,25 @@ class Settings(BaseSettings):
             return fallback
 
     def cookie_secure_flag(self) -> bool:
-        """Secure=True wymaga HTTPS; w development zwykle False."""
+        """Secure=True wymaga HTTPS; w development zwykle False (chyba że COOKIE_SECURE)."""
         if self.cookie_secure:
             return True
-        return self.environment.lower() == "production"
+        return self.environment.lower() != "development"
+
+    def validate_environment_config(self) -> None:
+        """Poza development: wymagane originy CORS i wyłączone DEBUG."""
+        if self.environment.lower() == "development":
+            return
+        origins = [o.strip() for o in (self.frontend_origins or "").split(",") if o.strip()]
+        if not origins:
+            raise ValueError(
+                "Poza środowiskiem development wymagany jest niepusty FRONTEND_ORIGINS "
+                "(adresy frontu oddzielone przecinkami, np. https://app.example.com)."
+            )
+        if self.debug:
+            raise ValueError(
+                "DEBUG=true jest niedozwolone poza środowiskiem development. Ustaw DEBUG=false."
+            )
 
     def resolved_orphadata_cache_dir(self) -> Path:
         """Katalog na pliki XML Orphadata; domyślnie scripts/v2/cache/orphadata."""
