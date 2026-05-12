@@ -11,6 +11,7 @@ class UserOut(BaseModel):
     email: str
     username: str
     created_at: datetime
+    updated_at: datetime
     role: str
     status: str
     onboarding_completed: bool
@@ -18,14 +19,26 @@ class UserOut(BaseModel):
     location_city: str | None = None
     location_country: str
     post_count: int
+    symptom_description: str | None = None
 
 
 class UpdateProfileRequest(BaseModel):
     username: str | None = None
+    symptom_description: str | None = None
     location_city: str | None = None
     location_country: str | None = None
     searchable: bool | None = None
     onboarding_completed: bool | None = None
+
+    @field_validator("symptom_description")
+    @classmethod
+    def symptom_len(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        s = v.strip()
+        if len(s) > 20000:
+            raise ValueError("Opis objawów może mieć maksymalnie 20000 znaków")
+        return s or None
 
     @field_validator("username")
     @classmethod

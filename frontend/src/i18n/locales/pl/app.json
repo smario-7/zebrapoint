@@ -26,6 +26,12 @@
   "groups": {
     "title": "Twoje grupy",
     "subtitle": "Wybierz grupę lub dołącz do nowej",
+    "v2PageSubtitle": "Opis objawów i soczewki dopasowane w wersji 2 aplikacji (zamiast grup).",
+    "symptomsSection": "Twój opis objawów",
+    "lensesMatched": "Soczewki dopasowane do Ciebie",
+    "lensesHint": "Lista aktualizuje się po zapisaniu opisu i zadaniach w tle (wektory, scoring).",
+    "allLensesLink": "Wszystkie soczewki →",
+    "noLensesYet": "Brak soczewek do wyświetlenia — ukończ onboarding lub poczekaj na przeliczenie dopasowań.",
     "createGroup": "Utwórz grupę",
     "createGroupSoon": "Tworzenie grup — wkrótce",
     "searchPlaceholder": "Szukaj grup…",
@@ -74,10 +80,11 @@
   },
   "groupManagementHooks": {
     "loadMatchesError": "Nie udało się pobrać dopasowań",
-    "updateDescSuccess": "Opis zaktualizowany — sprawdź nowe dopasowania",
+    "updateDescSuccess": "Opis zapisany — zostanie uwzględniony przy dopasowaniu soczewek.",
     "updateDescError": "Błąd aktualizacji opisu",
     "changeGroupSuccess": "Przeniesiono do grupy „{{name}}\"! 🎉",
-    "changeGroupError": "Błąd zmiany grupy"
+    "changeGroupError": "Błąd zmiany grupy",
+    "changeGroupV2Notice": "Soczewki są przypisywane automatycznie na podstawie Twojego opisu."
   },
   "hooks": {
     "membersLoadError": "Nie udało się pobrać listy członków.",
@@ -127,8 +134,8 @@
     "creatingGroup": "Tworzymy dla Ciebie nową grupę!",
     "foundGroup": "Znaleziono Twoją grupę!",
     "similarity": "Podobieństwo: {{percent}}%",
-    "redirecting": "Przekierowuję do czatu grupowego..."
-    ,
+    "descriptionSaved": "Opis zapisany!",
+    "redirecting": "Za chwilę przekierujemy Cię na pulpit…",
     "submitError": "Wystąpił błąd. Spróbuj ponownie."
   },
   "profile": {

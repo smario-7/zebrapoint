@@ -276,6 +276,9 @@ async def patch_me(
             )
         current_user.username = data.username
 
+    if data.symptom_description is not None:
+        current_user.symptom_description = data.symptom_description
+
     if data.location_city is not None:
         current_user.location_city = data.location_city
     if data.location_country is not None:

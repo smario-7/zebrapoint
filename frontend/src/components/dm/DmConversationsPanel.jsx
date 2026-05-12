@@ -15,14 +15,14 @@ function timeAgo(date, lang) {
   return new Date(date).toLocaleDateString(locale);
 }
 
-function ConversationRow({ conv, active, lang, noMessagesLabel }) {
+function ConversationRow({ conv, active, lang, noMessagesLabel, linkPrefix }) {
   const activeCls = active
     ? "bg-zebra-50 dark:bg-teal-900/30 border border-zebra-100/70 dark:border-teal-800/60"
     : "bg-[var(--zp-app-card)] hover:bg-[var(--zp-app-accent-bg)] dark:hover:bg-teal-900/20 border border-[var(--zp-app-border)]";
 
   return (
     <Link
-      to={`/messages/${conv.id}`}
+      to={`${linkPrefix}/${conv.id}`}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl transition ${activeCls}`}
       aria-current={active ? "page" : undefined}
     >
@@ -67,6 +67,7 @@ export default function DmConversationsPanel({
   title,
   subtitle,
   className = "",
+  linkPrefix = "/messages",
 }) {
   const { t, i18n } = useTranslation("app");
   const lang = i18n.language;
@@ -145,6 +146,7 @@ export default function DmConversationsPanel({
               active={conv.id === activeConversationId}
               lang={lang}
               noMessagesLabel={t("messages.noMessages")}
+              linkPrefix={linkPrefix}
             />
           ))
         )}
